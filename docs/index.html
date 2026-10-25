@@ -673,7 +673,8 @@ function hafazanHariIni(){
   if(rows.length){ const r=rows[0]; return {ayat:r.ayat||r.ayat_arab,rujukan:r.rujukan||'',maksud:r.maksud||''}; }
   const cur=currentLesson(); const kz=SETS['kuiz'+cur.n]; const id=kz&&kz.ids.find(i=>Q[i].type==='fill'&&isArabic(Q[i].ar));
   if(id){ const q=Q[id]; return {ayat:q.ar.replace('____',q.opts[q.ans]),rujukan:`Pelajaran ${cur.n}${q.ms?' · m.s. '+q.ms:''}`}; }
-  return null;
+  const d=CFG.hafazanLalai||{ayat:'فَلَمْ تَجِدُوا مَاءً فَتَيَمَّمُوا صَعِيدًا طَيِّبًا',rujukan:'Surah al-Maidah 5:6 (potongan) · dalil tayamum'};
+  return d&&d.ayat?d:null;
 }
 function isLocked(n){ if(!SHEETS) return false; if(state.user&&state.user.guru) return false; const p=pelOf(n); return !!(p&&p.st==='kunci'); }
 function rebuildSets(){ if(SHEETS&&typeof buildBank.lastRows!=='undefined') buildBank(buildBank.lastRows.so,buildBank.lastRows.sp,buildBank.lastRows.pl); }
