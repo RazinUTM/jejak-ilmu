@@ -1,0 +1,14 @@
+{
+  "name": "jejak-ilmu-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "import": "node import_bank.mjs",
+    "murid": "node cipta_murid.mjs",
+    "liga": "node liga.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "csv-parse": "^5.5.6"
+  }
+}

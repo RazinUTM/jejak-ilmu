@@ -1,0 +1,1447 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#6d4cc4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+<link rel="icon" href="img/icon-192.png">
+<title>Jejak Ilmu · Ustazah Nafisah</title>
+<script src="js/config.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Naskh+Arabic:wght@400;600;700&family=Amiri+Quran&family=Great+Vibes&display=swap">
+<style>
+/* Layout: phone-first single column; at ≥900px a left navigation rail, student views stay a narrow column, the teacher dashboard widens to a two-column grid. Brand: Ustazah Nafisah's lavender + gold, transparent avatar poses used by context. */
+:root{
+  --bg:#f6f2fb; --surface:#ffffff; --surface-2:#ede7f6; --fg:#241b33; --muted:#6c607d; --line:#ded5ec;
+  --accent:#6d4cc4; --accent-ink:#ffffff; --accent-soft:#e9e1f8; --accent-deep:#3e2a80;
+  --band-a:#7b58d6; --band-b:#43307f;
+  --gold:#c6962d; --gold-ink:#3b2a05; --gold-soft:#f7ebd0; --gold-text:#6b4a08;
+  --good:#1e9b68; --warn:#dca12b; --bad:#d2523c; --info:#3a7bd5;
+  --scrim:rgba(24,16,40,.5);
+  --shadow:0 10px 30px rgba(44,30,70,.10);
+  --display:"Bricolage Grotesque","Plus Jakarta Sans",system-ui,sans-serif;
+  --body:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --script:"Great Vibes","Brush Script MT","Segoe Script",cursive;
+  --jawi:"Noto Naskh Arabic","Scheherazade New","Traditional Arabic","Times New Roman",serif;
+  --quran:"Amiri Quran","Noto Naskh Arabic","Scheherazade New",serif;
+  --r:20px; --r-s:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#130f1e; --surface:#1c1730; --surface-2:#262040; --fg:#eee8f8; --muted:#a99ebf; --line:#352c50;
+    --accent:#b39cf2; --accent-ink:#1b1230; --accent-soft:#2d2452; --accent-deep:#241a44;
+    --band-a:#5a42ad; --band-b:#2a1d5e;
+    --gold:#e8bb5b; --gold-ink:#2a1d05; --gold-soft:#3a2f16; --gold-text:#f3d58e;
+    --good:#3fc48a; --warn:#f0b253; --bad:#f07a66; --info:#6ea4f0;
+    --scrim:rgba(0,0,0,.62);
+    --shadow:0 10px 30px rgba(0,0,0,.45);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#130f1e; --surface:#1c1730; --surface-2:#262040; --fg:#eee8f8; --muted:#a99ebf; --line:#352c50;
+  --accent:#b39cf2; --accent-ink:#1b1230; --accent-soft:#2d2452; --accent-deep:#241a44;
+  --band-a:#5a42ad; --band-b:#2a1d5e;
+  --gold:#e8bb5b; --gold-ink:#2a1d05; --gold-soft:#3a2f16; --gold-text:#f3d58e;
+  --good:#3fc48a; --warn:#f0b253; --bad:#f07a66; --info:#6ea4f0;
+  --scrim:rgba(0,0,0,.62);
+  --shadow:0 10px 30px rgba(0,0,0,.45);
+  color-scheme:dark;
+}
+
+html,body{height:100%}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+.banner{background:var(--gold-soft);color:var(--gold-text);font-size:12px;font-weight:700;padding:8px 14px;border-radius:12px;margin-top:12px}
+.field input.wide{width:100%;font-size:16px}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+img{max-width:100%}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,[tabindex]:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:8px}
+h1,h2,h3,h4{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em;line-height:1.15}
+p{margin:0}
+.jawi{font-family:var(--jawi);direction:rtl;unicode-bidi:isolate;line-height:1.7}
+.quran{font-family:var(--quran);direction:rtl;unicode-bidi:isolate;font-size:1.75rem;line-height:2.2;text-align:right}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.wordmark{font-family:var(--script);font-weight:400;color:var(--gold);letter-spacing:.01em;line-height:1}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* Ustazah avatar (transparent bust on a theme-aware disc) and poses */
+.ust{border-radius:50%;object-fit:cover;object-position:top;flex:none;background:var(--accent-soft);box-shadow:0 0 0 2px var(--gold),0 0 0 5px color-mix(in srgb,var(--gold) 28%,transparent)}
+.ust.xs{width:28px;height:28px;box-shadow:0 0 0 1.5px var(--gold)}
+.ust.s{width:38px;height:38px}
+.ust.m{width:56px;height:56px}
+.ust.l{width:72px;height:72px;box-shadow:0 0 0 3px var(--gold),0 0 0 7px color-mix(in srgb,var(--gold) 28%,transparent)}
+.band .ust{box-shadow:0 0 0 2px var(--gold),0 0 0 5px rgba(255,255,255,.22)}
+.pose{display:block;height:auto;width:auto;object-fit:contain}
+.pose-disc{width:124px;height:124px;border-radius:50%;background:radial-gradient(circle at 50% 35%,var(--accent-soft),color-mix(in srgb,var(--accent-soft) 60%,var(--surface)));display:grid;place-items:end center;overflow:hidden;flex:none;box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--gold) 55%,transparent)}
+.pose-disc img{height:118px;width:auto}
+
+.app{min-height:100%;position:relative;background:var(--bg)}
+.view{--maxw:440px;display:block}
+.view-guru{--maxw:1120px}
+.band>.inner,.view>.body{width:100%;max-width:var(--maxw);margin-inline:auto}
+.screen{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
+.stack{display:flex;flex-direction:column;gap:14px}
+.row{display:flex;align-items:center;gap:10px}
+.grow{flex:1;min-width:0}
+.wrap{flex-wrap:wrap}
+.deco-figure{display:none}
+
+@media (min-width:600px) and (max-width:899.98px){
+  .app{max-width:480px;margin:0 auto;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+  .view{--maxw:480px}
+}
+@media (min-width:900px){
+  body{background:
+    radial-gradient(1200px 600px at 10% -10%, color-mix(in srgb,var(--accent) 10%,transparent), transparent 60%),
+    radial-gradient(900px 500px at 100% 110%, color-mix(in srgb,var(--gold) 10%,transparent), transparent 60%),
+    var(--bg)}
+  .app{padding-left:96px;background:transparent}
+  .view{--maxw:520px}
+  .view-cabaran{--maxw:560px}
+  .view-guru{--maxw:1120px}
+  .screen{padding-bottom:48px}
+  .band>.inner{padding-block:26px 30px}
+}
+@media (min-width:1240px){
+  .deco-figure{display:block;position:fixed;right:36px;bottom:0;width:230px;z-index:1;filter:drop-shadow(0 12px 24px rgba(40,20,80,.25))}
+  .view-guru ~ .deco-figure{display:none}
+}
+
+/* Header band */
+.band{background:linear-gradient(140deg,var(--band-a) 0%,var(--band-b) 100%);color:#fff;position:relative;overflow:hidden}
+.band::before{content:"";position:absolute;inset:0;background:
+  radial-gradient(320px 220px at 88% 18%, rgba(255,255,255,.16), transparent 62%),
+  radial-gradient(260px 200px at 8% 100%, rgba(255,255,255,.10), transparent 60%);pointer-events:none}
+.band::after{content:"";position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22'%3E%3Ccircle cx='3' cy='3' r='1.4' fill='rgba(255,255,255,0.17)'/%3E%3C/svg%3E");mask-image:linear-gradient(100deg,transparent 35%,#000 75%);-webkit-mask-image:linear-gradient(100deg,transparent 35%,#000 75%);pointer-events:none}
+.band>*{position:relative;z-index:1}
+.band .inner{padding-block:18px 22px}
+.band h1{font-size:26px;font-weight:800}
+.band .sub{opacity:.88;font-size:13px}
+.band .date{font-size:12px;opacity:.8;font-weight:600}
+.band .eyebrow{color:rgba(255,255,255,.75)}
+.hdr-acts{display:flex;gap:8px;align-items:center;flex:none}
+.tbtn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25)}
+.tbtn svg{width:19px;height:19px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:16px;max-width:640px}
+.stat{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:10px 12px;backdrop-filter:blur(6px)}
+.stat b{display:block;font-family:var(--display);font-size:20px;font-weight:800;line-height:1.1}
+.stat span{font-size:11px;opacity:.85;font-weight:600}
+.lvlbar{height:6px;background:rgba(255,255,255,.22);border-radius:99px;overflow:hidden;margin-top:6px}
+.lvlbar i{display:block;height:100%;background:var(--gold);border-radius:99px}
+.poster{display:none}
+@media (min-width:900px){
+  .view-guru .band .inner{display:flex;align-items:flex-end;gap:24px;padding-bottom:0}
+  .view-guru .band .inner>.grow{flex:1;padding-bottom:30px}
+  .poster{display:block;height:210px;width:auto;margin-bottom:-6px;filter:drop-shadow(0 10px 20px rgba(0,0,0,.3));flex:none}
+}
+
+/* Pesanan Ustazah */
+.pesan{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 14px 12px;margin-top:-18px;position:relative;z-index:2;box-shadow:var(--shadow)}
+.pesan .bubble{flex:1;min-width:0}
+.pesan .who{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.pesan .who .wordmark{font-size:24px}
+.pesan .txt{font-size:14px;margin-top:4px;line-height:1.45}
+.pesan .acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.player{display:flex;align-items:center;gap:10px;margin-top:10px;padding:8px 10px;border-radius:12px;background:var(--surface-2)}
+.player .pb{width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:13px;flex:none}
+.player .bar{flex:1}
+.player .t{font-size:11.5px;font-weight:700;color:var(--muted);white-space:nowrap}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.card.tight{padding:12px 14px}
+.card.gold{background:linear-gradient(135deg,var(--gold-soft),var(--surface));border-color:color-mix(in srgb,var(--gold) 40%,var(--line))}
+.card.hi{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));background:linear-gradient(160deg,var(--accent-soft),var(--surface) 60%)}
+.section{padding-block:16px 0}
+.section h2{font-size:18px;font-weight:800;margin-bottom:10px}
+.section .head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+.section .head h2{margin:0}
+.link{color:var(--accent);font-weight:700;font-size:13px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;font-weight:700;background:var(--accent);color:var(--accent-ink);transition:transform .08s ease}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:var(--surface-2);color:var(--fg)}
+.btn.gold{background:var(--gold);color:var(--gold-ink)}
+.btn.line{background:transparent;border:1.5px solid var(--line);color:var(--fg)}
+.btn.danger{background:color-mix(in srgb,var(--bad) 14%,var(--surface));color:var(--bad)}
+.btn.sm{min-height:36px;padding:0 14px;font-size:13px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.45;cursor:default;transform:none}
+.icon{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);font-weight:800}
+
+.bar{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .5s ease}
+.bar.gold>i{background:var(--gold)}
+.bar.thin{height:5px}
+
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:700;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.pill.acc{background:var(--accent-soft);color:var(--accent)}
+.pill.gold{background:var(--gold-soft);color:var(--gold-text)}
+.pill.good{background:color-mix(in srgb,var(--good) 16%,var(--surface));color:var(--good)}
+.pill.warn{background:color-mix(in srgb,var(--warn) 18%,var(--surface));color:color-mix(in srgb,var(--warn) 70%,var(--fg))}
+.pill.bad{background:color-mix(in srgb,var(--bad) 14%,var(--surface));color:var(--bad)}
+.pill.info{background:color-mix(in srgb,var(--info) 14%,var(--surface));color:var(--info)}
+
+/* Liga */
+.liga-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.liga-glyph{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:20px;flex:none;background:var(--gold-soft);color:var(--gold-text)}
+.liga-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px}
+.liga-step{padding:8px 6px;border-radius:12px;text-align:center;font-size:11.5px;font-weight:700;background:var(--surface-2);color:var(--muted);border:1.5px solid transparent}
+.liga-step.now{background:var(--gold-soft);color:var(--gold-text);border-color:color-mix(in srgb,var(--gold) 50%,transparent)}
+.liga-step span{display:block;font-size:16px;line-height:1.2}
+.lrow{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;font-size:13.5px}
+.lrow .pos{width:22px;font-weight:800;color:var(--muted);font-size:12px}
+.lrow.me{background:var(--accent-soft);font-weight:800}
+.lrow.me .pos{color:var(--accent)}
+.lrow .xp{margin-left:auto;font-weight:700;white-space:nowrap}
+.lrow .habit{font-size:11.5px;color:var(--muted);font-weight:500;display:block}
+.zone{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:6px 10px 2px}
+.zone.up{color:var(--good)}.zone.down{color:var(--muted)}
+.zone::after{content:"";flex:1;height:1px;background:currentColor;opacity:.3}
+.segs{display:flex;background:var(--surface-2);border-radius:999px;padding:3px;gap:2px}
+.segs button{flex:1;padding:8px 10px;border-radius:999px;font-size:12.5px;font-weight:700;color:var(--muted)}
+.segs button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+
+/* Journey map */
+.bidang{margin-top:18px}
+.bidang .bh{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.bidang .swatch{width:12px;height:12px;border-radius:4px;transform:rotate(45deg);flex:none}
+.bidang .bh h2{font-size:17px}
+.bidang .bh .jawi{font-size:15px;color:var(--muted)}
+.lesson{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 12px;border-radius:16px;background:var(--surface);border:1px solid var(--line)}
+.lesson+.lesson{margin-top:8px}
+.lesson.active{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.lesson.locked{opacity:.6}
+.lesson .t{font-weight:700;font-size:14px;line-height:1.3}
+.lesson .t .jawi{display:block;font-size:15px;font-weight:400;color:var(--muted)}
+.lesson .t.jawionly .jawi{color:var(--fg);font-size:17px;font-weight:600}
+.lesson .m{font-size:11.5px;color:var(--muted);margin-top:2px}
+.ring{--p:0;--c:var(--accent);width:44px;height:44px;border-radius:50%;background:conic-gradient(var(--c) calc(var(--p)*1%),var(--surface-2) 0);display:grid;place-items:center;flex:none}
+.ring>b{width:34px;height:34px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:13px}
+.ring.lock>b{font-size:14px}
+.toggle{display:inline-flex;background:var(--surface-2);border-radius:999px;padding:3px;gap:2px}
+.band .toggle{background:rgba(255,255,255,.16)}
+.toggle button{padding:6px 12px;border-radius:999px;font-size:12px;font-weight:700;color:var(--muted)}
+.band .toggle button{color:rgba(255,255,255,.8)}
+.toggle button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+
+/* Challenges */
+.mode{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:14px;border-radius:18px;background:var(--surface);border:1px solid var(--line)}
+.mode .ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;flex:none;font-family:var(--display);font-weight:800;font-size:18px}
+.mode .ic.jawi{font-size:22px;font-weight:600}
+.mode h3{font-size:15px;font-weight:800}
+.mode .d{font-size:12.5px;color:var(--muted);margin-top:2px}
+.mode .best{font-size:11.5px;font-weight:700;color:var(--accent);white-space:nowrap}
+
+/* Report */
+.radar{width:100%;max-width:300px;margin:0 auto;display:block}
+.radar text{font-family:var(--body);font-size:11px;font-weight:700;fill:var(--fg)}
+.radar .grid{fill:none;stroke:var(--line)}
+.radar .axis{stroke:var(--line)}
+.radar .area{fill:color-mix(in srgb,var(--accent) 28%,transparent);stroke:var(--accent);stroke-width:2}
+.radar .pt{fill:var(--accent)}
+.radar .v{fill:var(--muted);font-weight:600}
+.sprow{display:grid;grid-template-columns:54px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.sprow:first-child{border-top:0}
+.sprow code{font-family:var(--body);font-weight:800;font-size:12px;color:var(--accent)}
+.sprow .n{font-size:13px;font-weight:600;line-height:1.25}
+.sprow .n small{display:block;color:var(--muted);font-weight:500;font-size:11.5px;margin-top:2px}
+.heat{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.heat i{aspect-ratio:1;border-radius:3px;background:var(--surface-2);display:block}
+.heat i.l1{background:color-mix(in srgb,var(--accent) 30%,var(--surface-2))}
+.heat i.l2{background:color-mix(in srgb,var(--accent) 55%,var(--surface-2))}
+.heat i.l3{background:var(--accent)}
+.badges{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.badge{text-align:center;padding:12px 6px;border-radius:16px;background:var(--surface-2);font-size:11.5px;font-weight:700;line-height:1.25}
+.badge .b{width:44px;height:44px;margin:0 auto 6px;border-radius:50%;display:grid;place-items:center;background:var(--gold-soft);color:var(--gold-text);font-family:var(--display);font-weight:800;font-size:16px}
+.badge.lock{opacity:.5}
+.badge.lock .b{background:var(--line);color:var(--muted)}
+.ulasan{display:flex;gap:12px;align-items:flex-start}
+.ulasan .q{font-size:14px;line-height:1.5}
+.ulasan .sig{margin-top:6px;font-size:22px}
+.tiles4{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.tiles4 div{background:var(--surface-2);border-radius:14px;padding:10px 12px}
+.tiles4 b{display:block;font-family:var(--display);font-size:22px;font-weight:800;line-height:1.1}
+.tiles4 span{font-size:11.5px;color:var(--muted);font-weight:600}
+
+/* Teacher */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+table.ht{border-collapse:collapse;min-width:560px;width:100%;font-size:12px}
+table.ht th,table.ht td{padding:7px 8px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+table.ht th{font-size:11px;color:var(--muted);font-weight:800;background:var(--surface-2);position:sticky;top:0}
+table.ht th:first-child,table.ht td:first-child{text-align:left;position:sticky;left:0;background:var(--surface);font-weight:700;z-index:1}
+table.ht th:first-child{background:var(--surface-2);z-index:2}
+table.ht td.c{font-weight:800;min-width:44px}
+.m0{color:var(--muted);background:var(--surface-2)}
+.m1{background:color-mix(in srgb,var(--bad) 30%,var(--surface))}
+.m2{background:color-mix(in srgb,var(--warn) 32%,var(--surface))}
+.m3{background:color-mix(in srgb,var(--good) 18%,var(--surface))}
+.m4{background:color-mix(in srgb,var(--good) 38%,var(--surface))}
+.m5{background:color-mix(in srgb,var(--good) 62%,var(--surface));color:#fff}
+.legend{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:11px;color:var(--muted);font-weight:600}
+.legend i{width:14px;height:14px;border-radius:3px;display:inline-block;vertical-align:middle;margin-right:3px}
+.student{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.student:first-child{border-top:0}
+.student .av{width:36px;height:36px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:800;font-size:13px;flex:none}
+.student .nm{font-weight:700;font-size:14px}
+.student .why{font-size:12px;color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;font-weight:700;color:var(--muted)}
+.field select,.field input,.field textarea{font:inherit;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);min-height:44px}
+.field textarea{min-height:88px;resize:vertical}
+.g-side{display:flex;flex-direction:column}
+@media (min-width:900px){
+  .view-guru .body{display:grid;grid-template-columns:minmax(0,1fr) 360px;grid-template-areas:"cerapan side" "heat side" "tindak side";gap:0 20px;align-items:start}
+  .g-cerapan{grid-area:cerapan}.g-heat{grid-area:heat}.g-side{grid-area:side}.g-tindak{grid-area:tindak}
+  .g-tindak .stack{flex-direction:row;flex-wrap:wrap}
+  .g-tindak .btn.block{width:auto;flex:1}
+}
+
+/* Tab bar → rail on desktop */
+.tabbar{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:440px;display:flex;background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px));z-index:20}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px 8px;font-size:10.5px;font-weight:700;color:var(--muted);position:relative;border-radius:14px}
+.tab svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.tab[aria-current="page"]{color:var(--accent)}
+.tab .demo{position:absolute;top:8px;right:calc(50% - 18px);width:7px;height:7px;border-radius:50%;background:var(--gold)}
+.brand{display:none}
+@media (min-width:600px) and (max-width:899.98px){ .tabbar{max-width:480px} }
+@media (min-width:900px){
+  .tabbar{top:0;bottom:0;right:auto;width:96px;max-width:none;flex-direction:column;justify-content:flex-start;gap:4px;border-top:0;border-right:1px solid var(--line);padding:14px 8px calc(16px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+  .brand{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0 14px;text-align:center}
+  .brand .name{font-family:var(--display);font-weight:800;font-size:12px;line-height:1.1}
+  .brand .wordmark{font-size:17px}
+  .tab{flex:0 0 auto;width:100%;padding:12px 4px;font-size:11px}
+  .tab[aria-current="page"]{background:var(--accent-soft)}
+  .tab .demo{right:10px;top:10px}
+}
+
+/* Layers */
+.layer{position:fixed;inset:0;z-index:40;background:var(--bg);overflow:auto;overscroll-behavior:contain}
+.layer .inner{max-width:440px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--bg)}
+@media (min-width:900px){ .layer .inner{max-width:560px} }
+.qbar{display:flex;align-items:center;gap:12px;padding-block:12px}
+.qcount{font-size:12px;font-weight:800;color:var(--muted);min-width:38px;text-align:right}
+.qtype{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.qtext{font-family:var(--display);font-size:20px;font-weight:800;line-height:1.25;margin-top:6px}
+.qjawi{font-size:19px;color:var(--muted);margin-top:6px}
+.qmeta{font-size:12px;color:var(--muted);margin-top:8px}
+.arabic-box{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px 16px;margin-top:14px;position:relative}
+.arabic-box .quran{font-size:2.1rem}
+.hl{color:var(--bad);font-weight:700}
+.opts{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.opt{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:13px 14px;border:2px solid var(--line);border-radius:16px;background:var(--surface);font-weight:600;min-height:52px;line-height:1.3;transition:transform .08s ease}
+.opt:not(:disabled):active{transform:scale(.99)}
+.opt .k{width:28px;height:28px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;font-size:12px;font-weight:800;flex:none}
+.opt.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 14%,var(--surface))}
+.opt.correct .k{background:var(--good);color:#fff}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--surface))}
+.opt.wrong .k{background:var(--bad);color:#fff}
+.opt:disabled{cursor:default}
+.opt .quran{font-size:1.5rem;line-height:1.6;flex:1;text-align:right}
+.slots{display:flex;flex-direction:column;gap:8px;margin-top:14px;min-height:48px}
+.slot{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--accent-soft);border:1.5px solid transparent;width:100%;text-align:left;font-weight:600;font-size:14px}
+.slot .n{width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:12px;font-weight:800;flex:none}
+.slot.ok{border-color:var(--good)}
+.slot.ko{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--surface))}
+.pool{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{padding:10px 12px;border-radius:12px;background:var(--surface);border:1.5px solid var(--line);font-weight:600;font-size:14px;text-align:left}
+.feedback{margin-top:16px;padding:14px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--line)}
+.feedback.ok{border-color:color-mix(in srgb,var(--good) 50%,var(--line));background:color-mix(in srgb,var(--good) 8%,var(--surface))}
+.feedback.ko{border-color:color-mix(in srgb,var(--bad) 50%,var(--line));background:color-mix(in srgb,var(--bad) 7%,var(--surface))}
+.feedback .fh{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.feedback .fh img{height:64px;width:auto;flex:none}
+.feedback .fh b{font-family:var(--display);font-size:16px;font-weight:800;line-height:1.15}
+.feedback .fh small{display:block;font-size:11px;color:var(--muted);font-weight:700}
+.feedback .ref{font-size:12px;color:var(--muted);margin-top:8px;font-weight:600}
+.timer{height:5px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin-top:10px}
+.timer i{display:block;height:100%;background:var(--gold);border-radius:99px;transition:width 1s linear}
+.qfoot{margin-top:auto;padding-top:18px}
+.bigword{font-size:3.2rem;text-align:center;padding:24px 10px;background:var(--surface);border:1px solid var(--line);border-radius:18px;margin-top:14px;line-height:1.5}
+.result-hero{display:flex;align-items:center;gap:14px;margin-top:14px}
+.result-hero .say{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:12px 14px;font-size:14px;flex:1;min-width:0}
+.result-hero .say .wordmark{font-size:22px;display:block;margin-top:4px}
+.score{width:140px;height:140px;margin:14px auto 6px;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--p)*1%),var(--surface-2) 0);display:grid;place-items:center}
+.score>div{width:114px;height:114px;border-radius:50%;background:var(--bg);display:grid;place-items:center;text-align:center}
+.score b{font-family:var(--display);font-size:32px;font-weight:800;line-height:1}
+.score span{font-size:12px;color:var(--muted);font-weight:700}
+.delta{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:13px;gap:10px}
+.delta:first-child{border-top:0}
+.delta .up{color:var(--good);font-weight:800}
+.delta .down{color:var(--bad);font-weight:800}
+
+/* Tasmik recorder */
+.blurred .quran{filter:blur(9px);user-select:none;transition:filter .3s}
+.peek-btn{position:absolute;inset:0;display:grid;place-items:center;border-radius:18px;background:color-mix(in srgb,var(--surface) 40%,transparent)}
+.peek-btn span{background:var(--surface);border:1.5px solid var(--line);border-radius:999px;padding:8px 14px;font-weight:700;font-size:13px;box-shadow:var(--shadow)}
+.wave{display:flex;align-items:center;justify-content:center;gap:3px;height:56px;margin-top:14px}
+.wave i{width:4px;border-radius:2px;background:var(--accent);height:12px;animation:wv 1s ease-in-out infinite}
+@keyframes wv{0%,100%{height:8px}50%{height:46px}}
+.rec-dot{width:12px;height:12px;border-radius:50%;background:var(--bad);display:inline-block;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.2}}
+.rec-time{font-family:var(--display);font-size:34px;font-weight:800;text-align:center;margin-top:6px}
+.janji{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:14px;background:var(--surface-2);margin-top:12px;font-size:13.5px}
+.janji input{width:20px;height:20px;margin-top:2px;accent-color:var(--accent);flex:none}
+.amanah{display:flex;gap:12px;align-items:flex-start;background:var(--gold-soft);color:var(--gold-text);border-radius:18px;padding:14px;margin-top:14px}
+.amanah img{height:92px;width:auto;flex:none;margin:-22px 0 -14px}
+.amanah ul{margin:6px 0 0;padding-left:18px;font-size:13px;display:flex;flex-direction:column;gap:3px}
+.amanah b{font-family:var(--display)}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:6px;font-size:10.5px;font-weight:800;background:var(--surface-2);color:var(--muted)}
+.tag.good{background:color-mix(in srgb,var(--good) 16%,var(--surface));color:var(--good)}
+.tag.warn{background:color-mix(in srgb,var(--warn) 20%,var(--surface));color:color-mix(in srgb,var(--warn) 70%,var(--fg))}
+
+/* Gate (muka depan) */
+.gate .hero{background:linear-gradient(140deg,var(--band-a),var(--band-b));color:#fff;position:relative;overflow:hidden;padding-top:env(safe-area-inset-top,0px)}
+.gate .hero .hero-in{display:flex;align-items:flex-end;gap:10px;padding-block:22px 0;max-width:440px;margin:0 auto;min-height:230px}
+.gate .hero .txt{flex:1;padding-bottom:26px}
+.gate .hero .wordmark{font-size:40px;display:block}
+.gate .hero h1{font-size:24px;font-weight:800;margin-top:6px}
+.gate .hero .sub{opacity:.88;font-size:13px;margin-top:4px}
+.gate .hero img{height:220px;width:auto;flex:none;margin-right:-10px;filter:drop-shadow(0 10px 20px rgba(0,0,0,.3))}
+.gate .hero .hdr-acts{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:max(14px,env(safe-area-inset-right,0px))}
+.gate .form{max-width:440px;margin:0 auto;padding-block:18px 24px}
+.step{margin-top:16px}
+.step .eyebrow{margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{padding:10px 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-weight:700;font-size:13.5px}
+.chips button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.names{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.names button{padding:10px 8px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);font-weight:700;font-size:13px}
+.names button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.pin{display:flex;gap:10px;align-items:center}
+.pin input{flex:1;font:inherit;font-family:var(--display);font-size:26px;letter-spacing:.5em;text-align:center;padding:10px 12px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);min-height:56px;max-width:220px}
+.or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;font-weight:700;margin:18px 0 10px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+@media (min-width:900px){ .gate .hero .hero-in,.gate .form{max-width:560px} }
+
+/* Bottom sheet */
+.sheet{position:fixed;inset:0;z-index:30;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center}
+.sheet .panel{width:100%;max-width:440px;max-height:88%;overflow:auto;background:var(--surface);border-radius:24px 24px 0 0;padding:8px 0 calc(16px + env(safe-area-inset-bottom,0px));box-shadow:var(--shadow)}
+@media (min-width:900px){ .sheet{align-items:center} .sheet .panel{max-width:560px;border-radius:24px;max-height:86%} }
+.sheet .handle{width:40px;height:4px;border-radius:99px;background:var(--line);margin:4px auto 12px}
+.sheet h2{font-size:20px;font-weight:800}
+.notes h3{font-size:15px;font-weight:800;margin-top:18px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.notes h3 .jawi{font-size:17px;font-weight:600;color:var(--muted)}
+.notes ol,.notes ul{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:5px;font-size:14px}
+.notes .def{display:grid;grid-template-columns:70px 1fr;gap:8px;font-size:14px;margin-top:8px}
+.notes .def b{color:var(--accent)}
+.notes .ayat{background:var(--surface-2);border-radius:16px;padding:14px;margin-top:10px}
+.notes .ayat .mk{font-size:13px;margin-top:10px;color:var(--muted)}
+.flow{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.flow div{display:flex;gap:10px;align-items:center;font-size:14px}
+.flow .n{width:24px;height:24px;border-radius:8px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:800;font-size:12px;flex:none}
+.flow .s{font-size:11px;color:var(--muted);font-weight:700;margin-left:auto}
+.spek{background:var(--gold-soft);color:var(--gold-text);border-radius:16px;padding:12px 14px;font-size:13px;margin-top:14px}
+.spek b{display:block;font-family:var(--display);margin-bottom:4px}
+.profile{display:flex;gap:12px;align-items:center;padding:12px;border-radius:16px;background:var(--surface-2)}
+.profile .wordmark{font-size:26px;display:block}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:50;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;font-size:13px;max-width:min(92vw,400px);text-align:center;box-shadow:var(--shadow)}
+@media (min-width:900px){ .toast{bottom:32px} }
+.conf{position:fixed;inset:0;pointer-events:none;z-index:45}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.note-demo{font-size:12px;color:var(--muted);padding:10px 12px;border:1px dashed var(--line);border-radius:12px}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <main id="screen" class="screen" aria-live="polite"></main>
+  <nav class="tabbar" id="tabbar" aria-label="Navigasi utama"></nav>
+</div>
+<div id="gate" class="layer gate" hidden></div>
+<div id="sheet" class="sheet" hidden></div>
+<div id="layer" class="layer" hidden></div>
+<div id="toast" class="toast" hidden role="status"></div>
+<canvas id="conf" class="conf" hidden></canvas>
+
+<script>
+/* ---------- DATA (dari Buku Teks Pendidikan Islam Tingkatan 2 KSSM, DBP 2017) ---------- */
+const UST={nama:'Ustazah Nafisah',bust:'img/bust.webp',pose:{thumbs:'img/pose-thumbs.webp',think:'img/pose-think.webp',clap:'img/pose-clap.webp',point:'img/pose-point.webp'}};
+const BIDANG = [
+  {id:'quran',  rumi:'Al-Quran',                jawi:'القرءان',               hue:'#7b58d6', ms:'1–50'},
+  {id:'hadis',  rumi:'Hadis',                   jawi:'حديث',                  hue:'#3a7bd5', ms:'51–66'},
+  {id:'akidah', rumi:'Akidah',                  jawi:'عقيدة',                 hue:'#c6962d', ms:'67–88'},
+  {id:'fiqah',  rumi:'Fiqah',                   jawi:'فقه',                   hue:'#d2608a', ms:'89–144'},
+  {id:'sirah',  rumi:'Sirah dan Tamadun Islam', jawi:'سيرة دان تمدون إسلام', hue:'#2a9d8f', ms:'145–182'},
+  {id:'akhlak', rumi:'Akhlak Islamiah',         jawi:'اخلاق إسلامية',         hue:'#e07a3a', ms:'183–215'},
+];
+let PELAJARAN = [
+  {n:1,  b:'quran',  rumi:'Allah Pengurnia Hidayah',               jawi:'الله ڤڠورنيا هداية',               ms:'2–4',     m:95, st:'siap'},
+  {n:2,  b:'quran',  rumi:'Hanya Allah Yang Maha Esa',             jawi:'هاڽ الله يڠ مها اسا',              ms:'5–8',     m:88, st:'siap'},
+  {n:3,  b:'quran',  rumi:'Luasnya Kuasa Allah',                   jawi:'لواسڽ كواس الله',                  ms:'9–14',    m:90, st:'siap'},
+  {n:4,  b:'quran',  rumi:'Mudahnya Tajwid',                       jawi:'مودهڽ تجويد',                      ms:'15–20',   m:72, st:'siap'},
+  {n:5,  b:'quran',  rumi:'Manisnya Persaudaraan',                 jawi:'مانيسڽ ڤرساوداراءن',               ms:'21–28',   m:81, st:'siap'},
+  {n:6,  b:'quran',  rumi:'Mengharap Keampunan Allah',             jawi:'مڠهارڤ كأمڤونن الله',              ms:'29–38',   m:76, st:'siap'},
+  {n:7,  b:'quran',  rumi:'Kesantunan Dakwah Rasulullah ﷺ',       jawi:'كسنتونن دعوة رسول الله ﷺ',        ms:'39–44',   m:64, st:'siap'},
+  {n:8,  b:'quran',  rumi:'Amanah Terhadap Harta dan Nyawa',       jawi:'امانه ترهادڤ هرتا دان ڽاوا',       ms:'45–50',   m:58, st:'siap'},
+  {n:9,  b:'hadis',  rumi:'Mungkar Dicegah Hidup Berkat',          jawi:'موڠكر دچڬه هيدوڤ بركة',            ms:'52–58',   m:86, st:'siap'},
+  {n:10, b:'hadis',  rumi:'Mencari Yang Halal',                    jawi:'منچاري يڠ حلال',                   ms:'59–66',   m:84, st:'siap'},
+  {n:11, b:'akidah', rumi:'Kekuatan dan Kekuasaan Allah',          jawi:'كقواتن دان ككواساءن الله',         ms:'68–74',   m:79, st:'siap'},
+  {n:12, b:'akidah', rumi:'Ketaatan Malaikat',                     jawi:'كطاعتن ملائكة',                    ms:'75–80',   m:70, st:'siap'},
+  {n:13, b:'akidah', rumi:'Panduan daripada Allah',                jawi:'ڤندوان درڤد الله',                 ms:'81–88',   m:66, st:'siap'},
+  {n:14, b:'fiqah',  rumi:'Solat Berjemaah Pengikat Hati',         jawi:'صلاة برجماعه ڤڠيكت هاتي',          ms:'90–96',   m:74, st:'siap'},
+  {n:15, b:'fiqah',  rumi:'Solat Jumaat Wadah Kesatuan',           jawi:'صلاة جمعة واده كساتوان',           ms:'97–104',  m:69, st:'siap'},
+  {n:16, b:'fiqah',  rumi:'Tayamum dengan Debu Suci',              jawi:'تيمم دڠن دبو سوچي',                ms:'105–112', m:60, st:'sedang'},
+  {n:17, b:'fiqah',  rumi:'Rukhsah Anugerah daripada Allah',       jawi:'رخصة انوڬره درڤد الله',            ms:'113–128', m:null, st:'buka'},
+  {n:18, b:'fiqah',  rumi:'Puasa Benteng Diri',                    jawi:'ڤواسا بينتيڠ ديري',                ms:'129–140', m:null, st:'buka'},
+  {n:19, b:'fiqah',  rumi:'Solat Sunat Menampung Kefarduan',       jawi:'صلاة سنة منمڤوڠ كفرضوان',          ms:'141–144', m:null, st:'buka'},
+  {n:20, b:'sirah',  rumi:'Terbitnya Fajar Dakwah',                jawi:'تربيتڽ فجر دعوة',                  ms:'146–156', m:null, st:'kunci'},
+  {n:21, b:'sirah',  rumi:'Hijrah Detik Bersejarah',               jawi:'هجرة دتيق برسجاره',                ms:'157–166', m:null, st:'kunci'},
+  {n:22, b:'sirah',  rumi:'Kepimpinan Rasulullah ﷺ di Madinah',   jawi:'كڤيمڤينن رسول الله ﷺ دمدينة',     ms:'167–174', m:null, st:'kunci'},
+  {n:23, b:'sirah',  rumi:'Wanita Suri Teladan Umat',              jawi:'وانيتا سوري تلادن اومة',           ms:'175–182', m:null, st:'kunci'},
+  {n:24, b:'akhlak', rumi:'Malu Perisai Iman',                     jawi:'مالو ڤريساي ايمان',                ms:'184–190', m:null, st:'kunci'},
+  {n:25, b:'akhlak', rumi:'Menyemai Kasih Menuai Sayang',          jawi:'مڽماي كاسيه منواي سايڠ',           ms:'191–198', m:null, st:'kunci'},
+  {n:26, b:'akhlak', rumi:'Muliakan Ibu Bapa Bahagiakan Keluarga', jawi:'مولياكن ايبو باڤ بهاڬياكن كلوارڬ', ms:'199–204', m:null, st:'kunci'},
+  {n:27, b:'akhlak', rumi:'Santuni Jiranmu',                       jawi:'سنتوني جيرنمو',                    ms:'205–210', m:null, st:'kunci'},
+  {n:28, b:'akhlak', rumi:'Masjid Destinasiku',                    jawi:'مسجد ديستيناسيكو',                 ms:'211–215', m:null, st:'kunci'},
+];
+let SP16 = [
+  {k:'4.10.1', n:'Maksud dan dalil naqli tayamum', jawi:'مقصود دان دليل نقلي تيمم'},
+  {k:'4.10.2', n:'Sebab diharuskan tayamum', jawi:'سبب دهاروسكن تيمم'},
+  {k:'4.10.3', n:'Syarat tayamum', jawi:'شرط تيمم'},
+  {k:'4.10.4', n:'Rukun tayamum', jawi:'روكون تيمم'},
+  {k:'4.10.5', n:'Sunat tayamum', jawi:'سنة تيمم'},
+  {k:'4.10.6', n:'Perkara yang membatalkan tayamum', jawi:'ڤركارا يڠ ممبطلكن تيمم'},
+  {k:'4.10.7', n:'Hikmah tayamum', jawi:'حكمة تيمم'},
+  {k:'4.10.8', n:'Cara bertayamum', jawi:'چارا برتيمم'},
+  {k:'4.10.9', n:'Amali tayamum (penilaian guru)', jawi:'عملي تيمم'},
+];
+let SP_NAMA = Object.fromEntries(SP16.map(s=>[s.k,s.n]));
+let SPS={16:SP16};
+const CFG=window.JEJAK_CONFIG||{}; const SHEETS=!!CFG.bankCsvUrl; const KELAS_CFG=CFG.kelas||['2 Amanah','2 Bestari','2 Cekal'];
+SP_NAMA['1.13.1']='Hukum nun sakinah dan tanwin'; SP_NAMA['5.5.2']='Faktor yang mendorong Hijrah'; SP_NAMA['JAWI']='Kemahiran membaca Jawi'; SP_NAMA['AKHLAK']='Akhlak: adab berjiran (contoh guru)';
+const TAJWID_OPTS = ['Izhar Halqi','Idgham Maal Ghunnah','Idgham Bila Ghunnah','Iqlab',"Ikhfa' Haqiqi"];
+
+let Q = {
+  t1:{type:'mcq',sp:'4.10.1',pel:16,ms:105,q:'Dari segi istilah, tayamum bermaksud…',jawi:'دري سڬي اصطلاح، تيمم برمقصود…',opts:['Menyapu debu tanah yang suci ke muka dan dua tangan dengan cara tertentu beserta niat bagi mengharuskan wuduk atau mandi wajib','Membasuh muka dan kedua-dua tangan dengan air mutlak','Menyapu air ke atas balutan luka ketika berwuduk','Mandi dengan debu untuk menghilangkan hadas besar'],ans:0,why:'Itulah takrif istilah dalam buku teks. Dari segi bahasa pula, tayamum bermaksud "melakukan sesuatu dengan tujuan".'},
+  t2:{type:'mcq',sp:'4.10.1',pel:16,ms:105,q:'Dalil naqli tayamum terdapat dalam…',opts:['Surah al-Maidah, ayat 6','Surah al-Baqarah, ayat 183','Surah al-Anfal, ayat 30','Surah al-Qiyamah, ayat 17'],ans:0,why:'Ayat 6 surah al-Maidah: "…sedang kamu tidak mendapat air, maka hendaklah kamu bertayamum dengan tanah (debu) yang suci…"'},
+  t3:{type:'mcq',sp:'4.10.2',pel:16,ms:106,q:'Yang manakah BUKAN sebab diharuskan tayamum?',jawi:'يڠ مانكه بوكن سبب دهاروسكن تيمم؟',opts:['Tiada air atau air tidak mencukupi kerana diperlukan untuk minum dan memasak','Cuaca sejuk yang boleh memudaratkan kesihatan','Malas mencari air walaupun air mudah didapati','Air berada di tempat yang terlalu jauh'],ans:2,why:'Empat sebab dalam buku teks: tiada air / tidak cukup air, sejuk yang memudaratkan, tidak dapat menggunakan air kerana penyakit, dan air terlalu jauh. Malas bukan keuzuran.'},
+  t4:{type:'mcq',sp:'4.10.3',pel:16,ms:106,q:'Antara syarat tayamum ialah…',jawi:'انتارا شرط تيمم اياله…',opts:['Telah masuk waktu solat','Boleh dilakukan sebelum masuk waktu solat','Debu boleh bercampur dengan tepung atau kapur','Tidak perlu menentukan arah kiblat'],ans:0,why:'Lima syarat: telah masuk waktu solat, mencari air selepas masuk waktu, menghilangkan najis dahulu, menggunakan debu tanah yang tidak bercampur bahan lain, dan menentukan arah kiblat.'},
+  t5:{type:'mcq',sp:'4.10.4',pel:16,ms:107,q:'Yang manakah RUKUN tayamum?',jawi:'يڠ مانكه روكون تيمم؟',opts:['Membaca basmalah','Niat','Mendahulukan tangan sebelah kanan','Berdoa selepas tayamum'],ans:1,why:'Rukun tayamum ada empat: niat, menyapu debu tanah ke muka, menyapu debu tanah ke tangan, dan tertib. Tiga pilihan lain ialah sunat tayamum.'},
+  t6:{type:'tf',sp:'4.10.5',pel:16,ms:107,q:'Merenggangkan jari ketika menepuk debu tanah ialah salah satu rukun tayamum.',opts:['Betul','Salah'],ans:1,why:'Ia salah satu daripada sembilan sunat tayamum, bukan rukun. Rukun hanya empat: niat, sapu muka, sapu tangan, tertib.'},
+  t9:{type:'mcq',sp:'4.10.6',pel:16,ms:110,q:'Yang manakah membatalkan tayamum?',opts:['Mendapat air sebelum solat bagi orang yang bertayamum kerana ketiadaan air','Membaca doa selepas bertayamum','Berjalan ke masjid selepas bertayamum','Memakai pakaian yang baharu'],ans:0,why:'Tayamum terbatal dengan perkara yang membatalkan wuduk, mendapat air sebelum solat (bagi yang bertayamum kerana ketiadaan air), boleh menggunakan air semula seperti sembuh daripada sakit, dan murtad.'},
+  t7:{type:'order',sp:'4.10.8',pel:16,ms:108,q:'Susun langkah tayamum mengikut urutan yang betul.',jawi:'سوسون لڠكه تيمم مڠيكوت اوروتن يڠ بتول.',items:['Membaca basmalah','Niat di dalam hati','Menepuk debu tanah dan menyapu muka','Menepuk debu tanah dan menyapu kedua-dua tangan (kanan dahulu)','Berdoa selepas tayamum'],why:'Urutan ini mengikut carta alir "Cara bertayamum" m.s. 108–109. Tertib (mengikut urutan) itu sendiri ialah rukun keempat.'},
+  t8:{type:'mcq',kbat:true,sp:'4.10.2',pel:16,ms:112,q:'Ali terjatuh ketika bermain bola. Luka di mukanya agak besar, dibalut dan pedih jika terkena air. Apakah cara bersuci yang paling tepat untuk Ali?',opts:['Tidak boleh bertayamum kerana air masih ada di rumahnya','Boleh bertayamum kerana tidak dapat menggunakan air disebabkan luka; anggota yang sihat tetap dibasuh dan balutan disapu','Tidak perlu bersuci dan boleh solat terus sehingga luka sembuh','Wajib membuka balutan dan membasuh luka dengan air'],ans:1,why:'"Tidak dapat menggunakan air kerana penyakit atau luka" ialah sebab ketiga diharuskan tayamum. Cara menyapu balutan dipelajari dalam Pelajaran 17 (m.s. 114).'},
+  t10:{type:'tf',kbat:true,sp:'4.10.6',pel:16,ms:112,q:'Satu tayamum boleh digunakan untuk dua solat fardu.',opts:['Betul','Salah'],ans:1,why:'Satu tayamum hanya untuk satu solat fardu. Solat sunat boleh ditunaikan berbilang kali dengan tayamum yang sama.'},
+  tj1:{type:'tajwid',sp:'1.13.1',pel:4,ms:16,ar:'مَ<b>نْ ءَ</b>امَنَ',ans:0,why:'Nun sakinah bertemu hamzah (ء), salah satu huruf halqi (ء ه ع ح غ خ). Nun dibaca jelas tanpa dengung.'},
+  tj2:{type:'tajwid',sp:'1.13.1',pel:4,ms:16,ar:'مِ<b>ن رَّ</b>بِّهِ',ans:2,why:'Nun sakinah bertemu ra (ر). Huruf idgham bila ghunnah ialah ل dan ر: bunyi nun digabungkan tanpa dengung.'},
+  tj3:{type:'tajwid',sp:'1.13.1',pel:4,ms:17,ar:'مِ<b>نۢ بَ</b>عْدِ',ans:3,why:'Nun sakinah bertemu ba (ب). Bunyi nun bertukar kepada mim dengan dengung. Dalam mushaf, ada tanda mim kecil.'},
+  tj4:{type:'tajwid',sp:'1.13.1',pel:4,ms:17,ar:'مِ<b>ن قَ</b>بْلُ',ans:4,why:'Nun sakinah bertemu qaf (ق), salah satu daripada 15 huruf ikhfa\'. Bunyi nun disembunyikan dengan dengung.'},
+  tj5:{type:'tajwid',sp:'1.13.1',pel:4,ms:16,ar:'مِ<b>نْ وَ</b>الٍ',ans:1,why:'Nun sakinah bertemu wau (و). Huruf idgham maal ghunnah ialah ي و م ن: digabungkan serta didengungkan.'},
+  tj6:{type:'tajwid',sp:'1.13.1',pel:4,ms:16,ar:'لَعَفُ<b>وٌّ غَ</b>فُورٌ',ans:0,why:'Tanwin bertemu ghain (غ), huruf halqi. Dibaca jelas tanpa dengung.'},
+  h1:{type:'fill',sp:'4.10.1',pel:16,ms:105,q:'Lengkapkan potongan ayat 6 surah al-Maidah.',ar:'فَلَمْ تَجِدُوا مَاءً فَتَيَمَّمُوا صَعِيدًا ____',opts:['طَيِّبًا','كَثِيرًا','قَرِيبًا','كَبِيرًا'],ans:0,why:'"…bertayamumlah dengan tanah (debu) yang suci (طَيِّبًا)…" Perkataan ini menegaskan syarat debu mestilah suci.'},
+  h2:{type:'fill',sp:'4.10.8',pel:16,ms:108,q:'Lengkapkan lafaz niat tayamum.',ar:'نَوَيْتُ التَّيَمُّمَ لِاسْتِبَاحَةِ ____ الصَّلَاةِ لِلّٰهِ تَعَالَى',opts:['فَرْضِ','سُنَّةِ','وَقْتِ','أَدَاءِ'],ans:0,why:'Maksudnya: "Sahaja aku bertayamum untuk mengharuskan solat fardu kerana Allah Taala." (m.s. 108)'},
+  s1:{type:'mcq',sp:'5.5.2',pel:21,ms:158,q:'Yang manakah BUKAN faktor yang mendorong berlakunya Hijrah?',opts:['Isyarat daripada Allah SWT','Memelihara akidah umat Islam','Pelawaan penduduk Yathrib (Madinah)','Mencari peluang perniagaan di Madinah'],ans:3,why:'Tiga faktor dalam buku teks: isyarat Allah (surah al-Anfal 8:30), memelihara akidah, dan pelawaan penduduk Yathrib selepas Bai\'ah Aqabah.'},
+  s2:{type:'order',sp:'5.5.2',pel:21,ms:158,q:'Susun peristiwa menuju Hijrah mengikut kronologi.',items:["Bai'ah Aqabah Pertama","Mus'ab bin Umair dihantar berdakwah ke Yathrib","Bai'ah Aqabah Kedua",'Rasulullah ﷺ berhijrah ke Madinah'],why:'Selepas Bai\'ah Aqabah Pertama, Mus\'ab bin Umair dihantar mengajar al-Quran di Yathrib; Bai\'ah Aqabah Kedua menyusul, kemudian barulah Hijrah.'},
+  j1:{type:'jawi',sp:'JAWI',w:'تيمم',opts:['tayamum','tamam','taman','timun'],ans:0},
+  j2:{type:'jawi',sp:'JAWI',w:'ڤرساوداراءن',opts:['persaudaraan','persediaan','perasaan','persidangan'],ans:0},
+  j3:{type:'jawi',sp:'JAWI',w:'كأمڤونن',opts:['keampunan','kemampuan','kempunan','keamanan'],ans:0},
+  j4:{type:'jawi',sp:'JAWI',w:'هجرة',opts:['hijrah','hajar','hujan','hajat'],ans:0},
+  j5:{type:'jawi',sp:'JAWI',w:'برجماعه',opts:['berjemaah','berjumpa','berjamu','berjimat'],ans:0},
+  j6:{type:'jawi',sp:'JAWI',w:'ككواساءن',opts:['kekuasaan','kekasih','kekayaan','kekuatan'],ans:0},
+  a1:{type:'mcq',kbat:true,sp:'AKHLAK',pel:27,ms:205,q:'Jiran sebelah rumah kamu, Pak Cik Lim, sedang sakit dan tinggal seorang diri. Apakah tindakan yang paling menepati adab berjiran?',opts:['Menziarahinya, bertanya khabar dan menawarkan bantuan seperti membeli ubat atau makanan','Membiarkannya kerana dia bukan beragama Islam','Hanya menghantar mesej WhatsApp sekali','Menunggu sehingga dia sendiri meminta tolong'],ans:0,why:'Islam menuntut kita berbuat baik kepada jiran tanpa mengira agama. Menziarahi orang sakit dan membantu keperluannya ialah tuntutan adab berjiran (Pelajaran 27).'},
+};
+// pick = bilangan soalan diambil secara rawak daripada kolam; susunan soalan dan pilihan jawapan dikocok setiap kali mula
+let SETS = {
+  harian:{t:'Cabaran Harian',ids:['t3','tj2','t7','j2','s1','t5','tj4','j4','h1','t9','t4','j5'],pick:5,xp:50},
+  kuiz16:{t:'Kuiz Pelajaran 16',ids:['t1','t2','t3','t4','t5','t6','t9','t7','t8','t10'],pick:8},
+  tajwid:{t:'Tajwid Tap',ids:['tj1','tj2','tj3','tj4','tj5','tj6']},
+  susun:{t:'Susun Langkah',ids:['t7','s2']},
+  jawi:{t:'Jawi Sprint',ids:['j1','j2','j3','j4','j5','j6'],timed:10},
+  hafazan:{t:'Hafazan: Sambung Ayat',ids:['h1','h2']},
+  sirah:{t:'Garis Masa Sirah',ids:['s1','s2']},
+  dilema:{t:'Dilema Akhlak (KBAT)',ids:['t8','a1','t10']},
+};
+const LEVELS=['Pemula','Pencari','Pelajar','Penjelajah','Pengembara','Pembimbing','Perintis','Pendakwah Muda','Cendekia','Hikmah'];
+
+const LIGA=[
+  {id:'pelita', nama:'Liga Pelita',  glyph:'✦', tag:'Setiap cahaya bermula kecil'},
+  {id:'purnama',nama:'Liga Purnama', glyph:'☾', tag:'Terang, tenang, konsisten'},
+  {id:'suria',  nama:'Liga Suria',   glyph:'☀', tag:'Menerangi orang lain'},
+];
+// [nama, XP minggu ini, streak, tabiat yang paling kerap]
+const LIGA_AHLI={
+  suria:[['Hannah L.',820,26,'Cabaran Harian 7/7 · Tasmik 3 kali'],['Amir Z.',790,19,'Tajwid Tap 11× · ulang kuiz sampai 100%'],['Nurul B.',760,21,'Belajar 15 minit setiap malam'],['Farah A.',700,14,'Sambung Ayat setiap pagi'],['Luqman H.',655,9,'Susun Langkah 8×'],['Syafiq R.',620,12,'Cabaran Harian 6/7'],['Insyirah M.',590,7,'Nota dulu, kuiz kemudian'],['Haris D.',540,5,'Jawi Sprint 9×'],['Mia Q.',500,4,'Ulang kuiz 3 kali seminggu'],['Aqil T.',470,3,'Cabaran Harian 5/7']],
+  purnama:[['Nurul B.',640,21,'Cabaran Harian 7/7'],['Balqis R.',590,15,'Tajwid Tap 9×'],['Sofea M.',520,9,'Sambung Ayat 6×'],['Aisyah (kamu)',480,12,'Susun Langkah 4×'],['Danish A.',455,5,'Cabaran Harian 5/7'],['Qistina H.',430,7,'Tasmik 2 kali'],['Rayyan K.',390,4,'Jawi Sprint 6×'],['Irfan S.',360,3,'Ulang kuiz 3×'],['Zara O.',310,2,'Cabaran Harian 3/7'],['Adam F.',260,1,'Baru mula minggu ni']],
+  pelita:[['Hazim N.',300,0,'Kembali selepas 8 hari'],['Haikal P.',260,0,'Nota Pelajaran 16'],['Dania S.',240,2,'Cabaran Harian 3/7'],['Firdaus K.',220,1,'Jawi Sprint 4×'],['Nabila R.',210,3,'Sambung Ayat 2×'],['Izzat M.',180,1,'Susun Langkah 2×'],['Alya F.',160,2,'Cabaran Harian 2/7'],['Hakim B.',140,0,'Baru log masuk semula'],['Sarah J.',120,1,'Nota + 1 kuiz'],['Zikri A.',90,0,'Belum aktif minggu ni']],
+};
+const KELAS_SENARAI={'2 Amanah':['Aisyah','Adam','Balqis','Danish','Haikal','Hazim','Irfan','Nurul','Qistina','Rayyan','Sofea','Zara'],'2 Bestari':['Amir','Farah','Hannah','Haris','Insyirah','Luqman','Mia','Syafiq','Aqil'],'2 Cekal':['Alya','Dania','Firdaus','Hakim','Izzat','Nabila','Sarah','Zikri']};
+
+let PESANAN=[
+  'Jom siapkan Cabaran Harian sebelum Maghrib. Lima soalan je, tak sampai tiga minit.',
+  'Ramai yang keliru rukun dengan sunat tayamum. Ingat: rukun cuma empat.',
+  'Hafazan sikit-sikit setiap hari lebih berkesan daripada hafal semalaman. Buka Sambung Ayat hari ni.',
+  'Baca Jawi macam naik basikal. Mula goyang, lama-lama laju. Cuba Jawi Sprint.',
+  'Misi Kelas tinggal 2,160 XP. Kalau semua buat Cabaran Harian, Jumaat ni kita capai!',
+];
+const PUJIAN=['Betul! Bagus.','Tepat sekali!','Mantap, teruskan!','Barakallahu fik, betul!'];
+const PUJUK=['Tak apa, baca penjelasan ni dulu.','Hampir! Cuba fahami sebabnya.','Salah pun dapat XP usaha. Yang penting faham lepas ni.','Ustazah pun pernah keliru benda ni dulu. Jom tengok.'];
+
+const KELAS = [
+  ['Aisyah',  [90,75,55,80,40,30,null,65],'Hari ini',12],
+  ['Danish',  [85,80,70,75,60,45,null,70],'Hari ini',5],
+  ['Nurul',   [95,90,85,90,80,70,null,88],'Semalam',21],
+  ['Haikal',  [40,35,20,30,null,null,null,25],'6 hari lalu',0],
+  ['Irfan',   [70,65,50,60,45,35,null,55],'Hari ini',3],
+  ['Sofea',   [88,82,78,85,70,60,null,80],'Hari ini',9],
+  ['Adam',    [60,55,45,50,30,25,null,40],'2 hari lalu',1],
+  ['Balqis',  [92,88,80,90,75,65,null,85],'Hari ini',15],
+  ['Hazim',   [50,45,40,55,35,null,null,45],'8 hari lalu',0],
+  ['Qistina', [80,70,65,75,55,50,null,70],'Semalam',7],
+  ['Rayyan',  [75,70,60,70,50,40,null,60],'Hari ini',4],
+  ['Zara',    [65,60,50,65,45,40,null,55],'Hari ini',2],
+];
+const TASMIK_DEMO=[{nama:'Irfan',ayat:'Al-Maidah 5:6',dur:'0:42',peeks:0},{nama:'Qistina',ayat:'Lafaz niat tayamum',dur:'0:18',peeks:1},{nama:'Zara',ayat:'Al-Maidah 5:6',dur:'0:51',peeks:2}];
+
+/* ---------- GOOGLE SHEETS LOADER (Fasa 1: tiada backend) ---------- */
+function parseCSV(text){
+  const rows=[]; let row=[], cell='', q=false; text=text.replace(/^\uFEFF/,'');
+  for(let i=0;i<text.length;i++){ const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){ cell+='"'; i++; } else q=false; } else cell+=c; }
+    else if(c==='"') q=true; else if(c===','){ row.push(cell); cell=''; } else if(c==='\n'){ row.push(cell); rows.push(row); row=[]; cell=''; } else if(c!=='\r') cell+=c; }
+  if(cell!==''||row.length){ row.push(cell); rows.push(row); }
+  const head=(rows.shift()||[]).map(h=>h.trim()); return rows.filter(r=>r.some(v=>v&&v.trim())).map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]||'').trim()])));
+}
+async function fetchCSV(url){ const res=await fetch(url,{cache:'no-store'}); if(!res.ok) throw new Error('HTTP '+res.status); return parseCSV(await res.text()); }
+const BIDANG_BY_NAME={'al-quran':'quran','hadis':'hadis','akidah':'akidah','fiqah':'fiqah','sirah dan tamadun islam':'sirah','sirah':'sirah','akhlak islamiah':'akhlak','akhlak':'akhlak'};
+const LETTER={A:0,B:1,C:2,D:3,E:4};
+function buildBank(soalanRows, spRows, pelRows){
+  if(pelRows&&pelRows.length){ PELAJARAN=pelRows.map(r=>({n:+r.n,b:BIDANG_BY_NAME[(r.bidang||'').toLowerCase()]||'quran',rumi:r.rumi,jawi:r.jawi||'',ms:r.ms||'',m:null,st:(r.status||'kunci').toLowerCase()})).filter(p=>p.n>=1&&p.n<=28).sort((a,b)=>a.n-b.n); }
+  if(spRows&&spRows.length){ SPS={}; SP_NAMA={}; for(const r of spRows){ if(!r.kod) continue; const n=+r.pelajaran||0; (SPS[n]||=(SPS[n]=[])).push({k:r.kod,n:r.nama,jawi:r.nama_jawi||''}); SP_NAMA[r.kod]=r.nama; } SP16=SPS[16]||[]; }
+  const Qn={}; const bad=[];
+  for(const r of soalanRows){
+    if(!r.id || /^n/i.test(r.aktif||'Y')) continue;
+    const jenis=(r.jenis||'').toLowerCase(); const pil=['A','B','C','D','E'].map(L=>r['pilihan_'+L]).filter(Boolean); const urut=[1,2,3,4,5,6].map(k=>r['urutan_'+k]).filter(Boolean);
+    const it={type:jenis,sp:r.sp_kod,pel:+r.pelajaran||0,ms:r.ms?+r.ms:null,q:r.soalan||'',jawi:r.soalan_jawi||'',why:r.penjelasan||'',kbat:/^y/i.test(r.kbat||'')};
+    if(jenis==='order'){ if(urut.length<3){bad.push(r.id);continue;} it.items=urut; }
+    else { const a=LETTER[(r.jawapan||'').toUpperCase()]; if(a==null){bad.push(r.id);continue;} it.ans=a;
+      if(jenis==='tajwid'){ it.ar=(r.arab_jawi||'').replace('[','<b>').replace(']','</b>'); }
+      else { if(a>=pil.length||pil.length<2){bad.push(r.id);continue;} it.opts=pil; if(jenis==='fill') it.ar=r.arab_jawi||''; if(jenis==='jawi') it.w=r.arab_jawi||''; } }
+    if(!['mcq','tf','order','tajwid','fill','jawi'].includes(jenis)){bad.push(r.id);continue;}
+    Qn[r.id]=it;
+  }
+  if(Object.keys(Qn).length){ Q=Qn; }
+  const ids=Object.keys(Q); const by=f=>ids.filter(id=>f(Q[id]));
+  const S={};
+  S.harian={t:'Cabaran Harian',ids:ids,pick:5,xp:50};
+  for(const p of PELAJARAN){ const l=by(q=>q.pel===p.n); if(l.length) S['kuiz'+p.n]={t:'Kuiz Pelajaran '+p.n,ids:l,pick:Math.min(8,l.length)}; }
+  const tj=by(q=>q.type==='tajwid'); if(tj.length) S.tajwid={t:'Tajwid Tap',ids:tj,pick:Math.min(6,tj.length)};
+  const od=by(q=>q.type==='order'); if(od.length) S.susun={t:'Susun Langkah',ids:od,pick:Math.min(4,od.length)};
+  const jw=by(q=>q.type==='jawi'); if(jw.length) S.jawi={t:'Jawi Sprint',ids:jw,pick:Math.min(6,jw.length),timed:10};
+  const fl=by(q=>q.type==='fill'); if(fl.length) S.hafazan={t:'Hafazan: Sambung Ayat',ids:fl,pick:Math.min(5,fl.length)};
+  const sr=by(q=>q.pel>=20&&q.pel<=23); if(sr.length) S.sirah={t:'Garis Masa Sirah',ids:sr,pick:Math.min(6,sr.length)};
+  const kb=by(q=>q.kbat); if(kb.length) S.dilema={t:'Dilema Akhlak (KBAT)',ids:kb,pick:Math.min(5,kb.length)};
+  S.kuiz16=S.kuiz16||{t:'Kuiz Pelajaran 16',ids:by(q=>q.pel===16)};
+  SETS=S;
+  return {n:Object.keys(Qn).length,bad};
+}
+async function loadBank(){
+  if(!SHEETS) return null;
+  try{
+    const [so,sp,pl,ps]=await Promise.all([fetchCSV(CFG.bankCsvUrl), CFG.spCsvUrl?fetchCSV(CFG.spCsvUrl):null, CFG.pelajaranCsvUrl?fetchCSV(CFG.pelajaranCsvUrl):null, CFG.pesananCsvUrl?fetchCSV(CFG.pesananCsvUrl).catch(()=>null):null]);
+    const r=buildBank(so,sp,pl);
+    if(ps&&ps.length){ const today=new Date().toISOString().slice(0,10); const ok=ps.filter(x=>x.teks&&(!x.tarikh||x.tarikh<=today)).sort((a,b)=>(b.tarikh||'').localeCompare(a.tarikh||'')); if(ok.length) PESANAN=[ok[0].teks]; }
+    try{ localStorage.setItem('jejak-bank-cache',JSON.stringify({so,sp,pl,ps,t:Date.now()})); }catch(e){}
+    return r;
+  }catch(e){
+    try{ const c=JSON.parse(localStorage.getItem('jejak-bank-cache')||'null'); if(c){ const r=buildBank(c.so,c.sp,c.pl); r.cached=true; return r; } }catch(e2){}
+    return {error:String(e)};
+  }
+}
+function recomputePelajaran(){ for(const p of PELAJARAN){ const v=(SPS[p.n]||[]).map(x=>state.sp[x.k]).filter(x=>x!=null); p.m=v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):(p.m&&!SHEETS?p.m:null); if(SHEETS&&p.st==='siap'&&v.length===0) p.st='buka'; }
+  if(SHEETS){ for(const b of BIDANG){ const v=PELAJARAN.filter(p=>p.b===b.id&&p.m!=null).map(p=>p.m); state.bidangM[b.id]=v.length?Math.round(v.reduce((a,c)=>a+c,0)/v.length):0; } } }
+function freshProgress(){ Object.assign(state,{xp:0,streak:1,dailyDone:false,lastSet:null,lastWrong:null,usaha:{hariAktif:1,dicuba:0,bangkit:0,hafazan:0,kuizUlang:0},tasmik:[],sp:{},best:{},bidangM:{quran:0,hadis:0,akidah:0,fiqah:0,sirah:0,akhlak:0}}); recomputePelajaran(); }
+
+/* ---------- STATE ---------- */
+const DEFAULT_STATE = {
+  view:'utama', skrip:'rumi', theme:'auto', user:null, nama:'Aisyah', kelas:'2 Amanah',
+  xp:1340, streak:12, dailyDone:false, lastSet:null, lastWrong:null,
+  usaha:{hariAktif:17,dicuba:214,bangkit:23,hafazan:4,kuizUlang:6},
+  tasmik:[],
+  sp:{'4.10.1':90,'4.10.2':75,'4.10.3':55,'4.10.4':80,'4.10.5':40,'4.10.6':30,'4.10.7':null,'4.10.8':65,'4.10.9':null,'1.13.1':72,'5.5.2':null,'JAWI':58,'AKHLAK':null},
+  best:{tajwid:'5/6',susun:null,jawi:'4/6',hafazan:null,sirah:null,dilema:null},
+  bidangM:{quran:78,hadis:85,akidah:72,fiqah:61,sirah:0,akhlak:0},
+};
+let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+const LS=SHEETS?'jejak-ilmu-v1':'jejak-ilmu-demo-v3';
+function save(){ try{ localStorage.setItem(LS, JSON.stringify(state)); }catch(e){} }
+function load(){ try{ const s=localStorage.getItem(LS); if(s){ const o=JSON.parse(s); state={...state,...o,usaha:{...state.usaha,...(o.usaha||{})}}; } }catch(e){} }
+
+/* ---------- HELPERS ---------- */
+const $=(s,el=document)=>el.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const lvl=()=>Math.min(10,Math.floor(state.xp/200)+1);
+const lvlPct=()=>Math.round(((state.xp-(lvl()-1)*200)/200)*100);
+const pelOf=n=>PELAJARAN.find(p=>p.n===n);
+const bidOf=id=>BIDANG.find(b=>b.id===id);
+const ust=(size='s',extra='')=>`<img class="ust ${size} ${extra}" src="${UST.bust}" alt="${UST.nama}" width="56" height="56">`;
+const pose=(k,h=80,extra='')=>`<img class="pose ${extra}" src="${UST.pose[k]}" alt="" style="height:${h}px">`;
+function title(p,cls=''){
+  if(state.skrip==='jawi') return `<span class="t jawionly ${cls}"><span class="jawi">${p.jawi}</span></span>`;
+  if(state.skrip==='dua') return `<span class="t ${cls}">${esc(p.rumi)}<span class="jawi">${p.jawi}</span></span>`;
+  return `<span class="t ${cls}">${esc(p.rumi)}</span>`;
+}
+function nameOf(p){ return state.skrip==='jawi' ? `<span class="jawi">${p.jawi}</span>` : esc(p.rumi); }
+function tp(m){ if(m==null) return {k:'—',c:''}; if(m<40) return {k:'≈TP1',c:'bad'}; if(m<55) return {k:'≈TP2',c:'warn'}; return {k:'≈TP3',c:'good'}; }
+function mClass(m){ if(m==null) return 'm0'; if(m<40) return 'm1'; if(m<55) return 'm2'; if(m<70) return 'm3'; if(m<85) return 'm4'; return 'm5'; }
+function toast(msg,ms=2800){ const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,ms); }
+function buzz(p){ try{ navigator.vibrate && navigator.vibrate(p); }catch(e){} }
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+const todayStr=()=>{ try{ return new Date().toLocaleDateString('ms-MY',{weekday:'long',day:'numeric',month:'short'}); }catch(e){ return new Date().toDateString(); } };
+const dayIndex=()=>{ const d=new Date(); return Math.floor((d-new Date(d.getFullYear(),0,0))/864e5); };
+const fmt=s=>`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+const ICONS={
+  utama:'<svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-6h4v6"/></svg>',
+  peta:'<svg viewBox="0 0 24 24"><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/></svg>',
+  cabaran:'<svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></svg>',
+  laporan:'<svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6 16v-5M11 16V7M16 16v-3M21 16V4"/></svg>',
+  guru:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/><path d="M17 3l3 1.5L17 6"/></svg>',
+};
+const GEAR='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
+const THEME_ICON={
+  auto:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17A8.5 8.5 0 0 0 12 3.5z" fill="#fff" stroke="none"/></svg>',
+  light:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg>',
+  dark:'<svg viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>',
+};
+const THEME_LABEL={auto:'Auto (ikut peranti)',light:'Cerah',dark:'Gelap'};
+function applyTheme(){ try{ const r=document.documentElement; if(state.theme==='auto') r.removeAttribute('data-theme'); else r.setAttribute('data-theme',state.theme); }catch(e){} }
+const themeBtn=()=>`<button class="tbtn" data-act="theme" aria-label="Tukar tema (${THEME_LABEL[state.theme]})" title="Tema: ${THEME_LABEL[state.theme]}">${THEME_ICON[state.theme]}</button>`;
+
+/* ---------- VIEWS ---------- */
+function ligaCard(){
+  const me=3, rows=LIGA_AHLI.purnama;
+  return `<div class="card">
+    <div class="liga-head"><div class="liga-glyph">${LIGA[1].glyph}</div><div class="grow"><div class="eyebrow">Liga minggu ini${SHEETS?' · pratonton (data contoh)':''}</div><h3 style="font-size:16px">${LIGA[1].nama}</h3></div><span class="pill">#${me+1}/10</span></div>
+    <div class="zone up">Zon naik · 3 teratas ke Liga Suria</div>
+    ${rows.map((r,i)=>`<div class="lrow ${i===me?'me':''}"><span class="pos num">${i+1}</span><span class="grow">${esc(r[0])}</span><span class="xp num">${r[1]} XP</span></div>${i===7?'<div class="zone down">Zon turun · 2 terbawah ke Liga Pelita</div>':''}`).join('')}
+    <div class="liga-steps">${LIGA.map((l,i)=>`<div class="liga-step ${i===1?'now':''}"><span>${l.glyph}</span>${esc(l.nama.replace('Liga ',''))}</div>`).join('')}</div>
+    <div class="row" style="margin-top:12px;gap:8px"><button class="btn sm ghost" data-act="liga">Lihat semua liga</button><span class="small muted">Belajar tabiat kawan di Liga Suria</span></div>
+    <p class="small muted" style="margin-top:10px">Kedudukan ikut <b>XP minggu ini</b> (usaha), bukan markah. Disusun semula setiap Isnin, 10 orang sekumpulan merentas kelas Ustazah.</p>
+  </div>`;
+}
+function vUtama(){
+  const p16=pelOf(16)||PELAJARAN[0];
+  const pct=lvlPct();
+  const pesan=PESANAN[dayIndex()%PESANAN.length];
+  return `
+  <header class="band"><div class="inner gut">
+    <div class="row">
+      <div class="grow">
+        <div class="date">${esc(todayStr())}</div>
+        <h1>Assalamualaikum, ${esc(state.nama)}</h1>
+        <div class="sub">${esc(state.kelas)} · Level ${lvl()} <b>${LEVELS[lvl()-1]}</b></div>
+      </div>
+      <div class="hdr-acts">${themeBtn()}<button class="tbtn" data-act="settings" aria-label="Tetapan">${GEAR}</button></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b class="num">${state.streak}</b><span>hari berturut</span></div>
+      <div class="stat"><b class="num">${state.xp.toLocaleString('ms-MY')}</b><span>XP terkumpul</span></div>
+      <div class="stat"><b class="num">${pct}%</b><span>ke Level ${lvl()+1}</span><div class="lvlbar"><i style="width:${pct}%"></i></div></div>
+    </div>
+  </div></header>
+
+  <div class="gut stack body" style="padding-top:0">
+    <div class="pesan">
+      ${pose('point',96)}
+      <div class="bubble">
+        <div class="who"><span class="wordmark">${UST.nama}</span><span class="small muted">· pesanan hari ini</span></div>
+        <p class="txt">${esc(pesan)}</p>
+        ${SHEETS?'':'<div class="player" id="player"><button class="pb" data-act="play-pesan" aria-label="Main pesanan suara">▶</button><div class="bar thin"><i id="pp" style="width:0%"></i></div><span class="t">0:32 · suara</span></div>'}
+        <div class="acts"><button class="btn sm" data-act="quiz" data-set="harian">${state.dailyDone?'Ulang Cabaran Harian':'Mula Cabaran Harian'}</button><button class="btn sm ghost" data-act="lesson" data-n="16">Sambung Pelajaran 16</button></div>
+      </div>
+    </div>
+
+    <div class="card ${state.dailyDone?'':'hi'}">
+      <div class="eyebrow">Cabaran Harian</div>
+      <h2 style="font-size:19px;margin-top:4px">${state.dailyDone?'Selesai untuk hari ini':'5 soalan · 3 minit · +50 XP'}</h2>
+      <p class="small muted" style="margin-top:4px">5 soalan dipilih rawak daripada 12, susunan dikocok setiap kali. Salah pun dapat +3 XP usaha.</p>
+      <div class="row" style="margin-top:12px;gap:8px">
+        <button class="btn ${state.dailyDone?'ghost':''}" data-act="quiz" data-set="harian">${state.dailyDone?'Ulang (soalan baharu)':'Mula sekarang'}</button>
+        <span class="pill gold">🔥 Streak ${state.streak}</span>
+      </div>
+    </div>
+
+    <button class="card" data-act="lesson" data-n="${p16.n}" style="text-align:left">
+      <div class="eyebrow">Sambung belajar</div>
+      <div class="row" style="margin-top:8px">
+        <div class="ring" style="--p:${p16.m||0};--c:${bidOf(p16.b).hue}"><b>${p16.n}</b></div>
+        <div class="grow"><div style="font-weight:800">${nameOf(p16)}</div><div class="small muted">${esc(bidOf(p16.b).rumi)} · m.s. ${p16.ms} · ${p16.m==null?'belum dicuba':p16.m+'% dikuasai'}</div></div>
+        <span class="pill acc">Teruskan</span>
+      </div>
+      <div class="bar" style="margin-top:12px"><i style="width:${p16.m||0}%"></i></div>
+    </button>
+
+    <div class="section" style="padding-top:4px">
+      <div class="head"><h2>Hafazan hari ini</h2><button class="link" data-act="quiz" data-set="hafazan">Sambung ayat</button></div>
+      <div class="card">
+        <p class="quran">فَلَمْ تَجِدُوا مَاءً فَتَيَمَّمُوا صَعِيدًا طَيِّبًا</p>
+        <p class="small muted" style="margin-top:8px">Surah al-Maidah 5:6 (potongan) · dalil tayamum${SHEETS?'':' · ulangan ke-3 (jarak 4 hari)'}</p>
+        <div class="row" style="margin-top:12px;gap:8px"><button class="btn sm gold" data-act="tasmik">Rakam tasmik</button><span class="small muted">Hantar bacaan kamu kepada Ustazah</span></div>
+      </div>
+    </div>
+
+    <div class="card gold">
+      <div class="row">
+        <div class="grow"><div class="eyebrow">Misi Kelas ${esc(state.kelas)}${SHEETS?' · pratonton':''}</div><h3 style="font-size:16px;margin-top:4px">7,840 / 10,000 XP minggu ini</h3><p class="small muted" style="margin-top:4px">Ganjaran: kelas pilih aktiviti PdP hari Jumaat.</p></div>
+        <b class="num" style="font-family:var(--display);font-size:22px">78%</b>
+      </div>
+      <div class="bar gold" style="margin-top:10px"><i style="width:78%"></i></div>
+    </div>
+
+    <div class="section" style="padding-top:4px">${ligaCard()}</div>
+  </div>`;
+}
+
+function vPeta(){
+  return `
+  <header class="band"><div class="inner gut">
+    <div class="row">
+      <div class="grow"><div class="eyebrow">Peta Pembelajaran</div><h1>28 pelajaran · 6 bidang</h1><div class="sub">Ikut susunan Buku Teks PI Tingkatan 2 KSSM dan RPT ${UST.nama}</div></div>
+      <div class="hdr-acts">${themeBtn()}</div>
+    </div>
+    <div class="row" style="margin-top:14px;justify-content:space-between">
+      <span class="small" style="opacity:.85">Paparan tajuk</span>
+      <div class="toggle" role="group" aria-label="Tulisan">
+        <button data-act="skrip" data-v="rumi" aria-pressed="${state.skrip==='rumi'}">Rumi</button>
+        <button data-act="skrip" data-v="jawi" aria-pressed="${state.skrip==='jawi'}">Jawi</button>
+        <button data-act="skrip" data-v="dua" aria-pressed="${state.skrip==='dua'}">Kedua-dua</button>
+      </div>
+    </div>
+  </div></header>
+  <div class="gut body">
+  ${BIDANG.map(b=>{
+    const ls=PELAJARAN.filter(p=>p.b===b.id);
+    const done=ls.filter(p=>p.st==='siap').length;
+    return `<section class="bidang">
+      <div class="bh"><span class="swatch" style="background:${b.hue}"></span><h2 class="grow">${esc(b.rumi)} <span class="jawi">${b.jawi}</span></h2><span class="pill">${done}/${ls.length} siap</span></div>
+      ${ls.map(p=>{
+        const locked=p.st==='kunci';
+        const ring=locked?`<div class="ring lock"><b>🔒</b></div>`:`<div class="ring" style="--p:${p.m||0};--c:${b.hue}"><b>${p.n}</b></div>`;
+        const stat=p.st==='siap'?`<span class="pill good">${p.m}%</span>`:p.st==='sedang'?`<span class="pill acc">${p.m}% · sedang</span>`:p.st==='buka'?`<span class="pill">Belum mula</span>`:`<span class="pill">Dibuka oleh Ustazah ikut RPT</span>`;
+        return `<button class="lesson ${p.st==='sedang'?'active':''} ${locked?'locked':''}" data-act="lesson" data-n="${p.n}">${ring}<div class="grow">${title(p)}<div class="m">Pelajaran ${p.n} · m.s. ${p.ms}</div></div>${stat}</button>`;
+      }).join('')}
+    </section>`;
+  }).join('')}
+  <p class="small muted" style="padding-block:16px 4px">Ustazah boleh buka mana-mana pelajaran lebih awal, atau kunci semula untuk mengikut Rancangan Pengajaran Tahunan.</p>
+  </div>`;
+}
+
+function vCabaran(){
+  const modes=[
+    {set:'tajwid',ic:'نْ',cls:'jawi',hue:'#7b58d6',t:'Tajwid Tap',d:'Kenal pasti hukum nun sakinah & tanwin pada kalimah. 6 soalan, susunan dikocok.'},
+    {set:'susun',ic:'1→5',hue:'#d2608a',t:'Susun Langkah',d:'Susun langkah tayamum dan kronologi Hijrah mengikut urutan.'},
+    {set:'jawi',ic:'ڤ',cls:'jawi',hue:'#c6962d',t:'Jawi Sprint',d:'Baca perkataan Jawi dari buku teks dalam 10 saat setiap satu.'},
+    {set:'hafazan',ic:'آ',cls:'jawi',hue:'#3a7bd5',t:'Sambung Ayat',d:'Lengkapkan potongan ayat dan lafaz yang perlu dihafaz.'},
+    {set:'sirah',ic:'622',hue:'#2a9d8f',t:'Garis Masa Sirah',d:'Faktor dan kronologi Hijrah (Pelajaran 21). Pratonton.'},
+    {set:'dilema',ic:'?',hue:'#e07a3a',t:'Dilema Akhlak',d:'Soalan KBAT berbentuk situasi. Fikir, pilih, baca justifikasi.'},
+  ];
+  return `
+  <header class="band"><div class="inner gut">
+    <div class="row"><div class="grow"><div class="eyebrow">Cabaran</div><h1>Pilih mod permainan</h1><div class="sub">Setiap mod melatih kemahiran berbeza. Skor terbaik disimpan untuk lencana.</div></div><div class="hdr-acts">${themeBtn()}</div></div>
+  </div></header>
+  <div class="gut stack body" style="padding-top:16px">
+    <button class="mode" data-act="tasmik" style="border-color:color-mix(in srgb,var(--gold) 50%,var(--line))">
+      <div class="ic" style="background:var(--gold-soft);color:var(--gold-text)">🎙</div>
+      <div class="grow"><h3>Rakam Tasmik</h3><div class="d">Rakam hafazan dengan suara sendiri, hantar kepada Ustazah. Teks disembunyikan semasa rakaman.</div></div>
+      <div class="best">${state.usaha.hafazan} dihantar</div>
+    </button>
+    ${modes.filter(m=>SETS[m.set]).map(m=>`<button class="mode" data-act="quiz" data-set="${m.set}">
+      <div class="ic ${m.cls||''}" style="background:color-mix(in srgb,${m.hue} 18%,var(--surface));color:${m.hue}">${m.ic}</div>
+      <div class="grow"><h3>${esc(m.t)}</h3><div class="d">${esc(m.d)}</div></div>
+      <div class="best">${state.best[m.set]?('Terbaik '+esc(state.best[m.set])):'Baharu'}</div>
+    </button>`).join('')}
+    <div class="card" style="margin-top:4px">
+      <div class="eyebrow">Boss Battle · Bidang Fiqah</div>
+      <h3 style="font-size:16px;margin-top:4px">20 soalan campuran Pelajaran 14–19</h3>
+      <p class="small muted" style="margin-top:4px">Dibuka selepas Pelajaran 19 siap. Lulus 80% untuk lencana <b>Faqih Muda</b>.</p>
+      <div class="bar" style="margin-top:10px"><i style="width:50%"></i></div>
+      <p class="small muted" style="margin-top:6px">3 daripada 6 pelajaran siap</p>
+    </div>
+  </div>`;
+}
+
+function radarSVG(){
+  const vals=BIDANG.map(b=>state.bidangM[b.id]||0);
+  const cx=130,cy=120,R=78,n=6;
+  const pt=(i,r)=>{ const a=-Math.PI/2+i*(2*Math.PI/n); return [cx+r*Math.cos(a), cy+r*Math.sin(a)]; };
+  const poly=r=>Array.from({length:n},(_,i)=>pt(i,r).map(v=>v.toFixed(1)).join(',')).join(' ');
+  const grid=[25,50,75,100].map(p=>`<polygon class="grid" points="${poly(R*p/100)}"/>`).join('');
+  const axes=Array.from({length:n},(_,i)=>{ const [x,y]=pt(i,R); return `<line class="axis" x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/>`; }).join('');
+  const area=Array.from({length:n},(_,i)=>pt(i,R*vals[i]/100).map(v=>v.toFixed(1)).join(',')).join(' ');
+  const dots=vals.map((v,i)=>{ const [x,y]=pt(i,R*v/100); return `<circle class="pt" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5"/>`; }).join('');
+  const short=['Al-Quran','Hadis','Akidah','Fiqah','Sirah','Akhlak'];
+  const labels=short.map((s,i)=>{ const [x,y]=pt(i,R+22); const anchor=Math.abs(x-cx)<6?'middle':(x>cx?'start':'end'); return `<text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="${anchor}">${s}</text><text class="v" x="${x.toFixed(1)}" y="${(y+16).toFixed(1)}" text-anchor="${anchor}">${vals[i]?vals[i]+'%':'belum'}</text>`; }).join('');
+  return `<svg class="radar" viewBox="0 0 260 250" role="img" aria-label="Penguasaan mengikut bidang">${grid}${axes}<polygon class="area" points="${area}"/>${dots}${labels}</svg>`;
+}
+function heatCells(){
+  let s=7; const rnd=()=>{ s=(s*16807)%2147483647; return s/2147483647; };
+  const cells=[]; for(let i=0;i<56;i++){ const daysAgo=55-i; let l=0; if(daysAgo<12) l=1+Math.floor(rnd()*3); else { const r=rnd(); l=r<.35?0:r<.6?1:r<.85?2:3; } cells.push(l); }
+  return cells.map(l=>`<i class="${l?'l'+l:''}"></i>`).join('');
+}
+function vLaporan(){
+  const u=state.usaha;
+  const rows=SP16.map(s=>{ const m=state.sp[s.k]; const t=tp(m); return `<div class="sprow"><code>${s.k}</code><div class="n">${esc(s.n)}<small>${m==null?(s.k==='4.10.9'?'Dinilai Ustazah semasa amali':'Belum dicuba'):m+'% · '+(m<55?'perlu ulang kaji':m<70?'sederhana':'baik')}</small><div class="bar thin" style="margin-top:6px"><i style="width:${m||0}%"></i></div></div><span class="pill ${t.c}">${t.k}</span></div>`; }).join('');
+  const weak=SP16.filter(s=>state.sp[s.k]!=null&&state.sp[s.k]<55).sort((a,b)=>state.sp[a.k]-state.sp[b.k]);
+  const badges=[
+    {t:'Pejuang Minggu',s:'Aktif 5 hari seminggu',ic:'5',on:true},
+    {t:'Bangkit ×20',s:'Salah → betul 20 kali',ic:'↻',on:true},
+    {t:'Suara Amanah',s:'3 tasmik tanpa intai',ic:'🎙',on:u.hafazan>=3},
+    {t:'Hafiz Junior',s:'10 ayat dihafaz',ic:'آ',on:true},
+    {t:'Ahli Tajwid',s:'90% Tajwid Tap',ic:'نْ',on:false},
+    {t:'Faqih Muda',s:'Boss Fiqah 80%',ic:'ف',on:false},
+  ];
+  return `
+  <header class="band"><div class="inner gut">
+    <div class="row"><div class="grow"><div class="eyebrow">Kad Laporan</div><h1>${esc(state.nama)} · ${esc(state.kelas)}</h1><div class="sub">Dikemas kini secara automatik selepas setiap kuiz</div></div>
+    <div class="hdr-acts">${themeBtn()}<button class="btn sm gold" data-act="share">Kongsi</button></div></div>
+  </div></header>
+  <div class="gut stack body" style="padding-top:16px">
+    <div class="card hi">
+      <div class="row" style="align-items:flex-start;gap:12px">
+        ${pose('clap',92)}
+        <div class="grow">
+          <div class="eyebrow">Usaha kamu · bulan ini</div>
+          <h3 style="font-size:16px;margin-top:4px">Markah boleh naik turun. Usaha yang Ustazah paling hargai.</h3>
+        </div>
+      </div>
+      <div class="tiles4">
+        <div><b class="num">${u.hariAktif}<span style="font-size:13px;font-weight:600"> /25</span></b><span>hari aktif</span></div>
+        <div><b class="num">${u.dicuba}</b><span>soalan dicuba</span></div>
+        <div><b class="num">${u.bangkit}</b><span>bangkit (salah → betul)</span></div>
+        <div><b class="num">${u.hafazan}</b><span>tasmik dihantar</span></div>
+      </div>
+      <p class="small muted" style="margin-top:10px">${u.kuizUlang} kali kamu ulang kuiz yang sama sampai faham. Itu tabiat pelajar yang akan berjaya.</p>
+    </div>
+
+    <div class="card">
+      <div class="ulasan">${ust('m')}<div class="grow"><div class="eyebrow">Ulasan Ustazah · minggu ini</div><p class="q" style="margin-top:4px">${esc(state.nama)}, tajwid kamu dah stabil. Minggu ni fokus pada perkara yang membatalkan tayamum, dan jangan lupa hantar rakaman tasmik al-Maidah ayat 6 sebelum Khamis ya.</p><span class="wordmark sig">${UST.nama}</span></div></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Penguasaan mengikut bidang</div>
+      ${radarSVG()}
+      <p class="small muted">Sirah dan Akhlak belum dibuka. Fiqah paling rendah (61%) kerana Pelajaran 16 masih berjalan.</p>
+    </div>
+
+    ${weak.length?`<div class="card"><div class="row" style="align-items:flex-start;gap:12px">${pose('think',84)}<div class="grow"><div class="eyebrow">Fokus minggu ini</div>
+      <h3 style="font-size:16px;margin-top:4px">${esc(weak[0].n)} (${weak[0].k})</h3>
+      <p class="small muted" style="margin-top:4px">Penguasaan ${state.sp[weak[0].k]}%. Baca semula m.s. 110 dan cuba kuiz fokus 5 soalan.</p></div></div>
+      <div class="row" style="margin-top:10px"><button class="btn sm" data-act="quiz" data-set="kuiz16">Kuiz Pelajaran 16</button><button class="btn sm ghost" data-act="nota" data-n="16">Nota Ustazah</button></div></div>`:''}
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:6px"><div class="eyebrow">Pelajaran 16 · Standard Pembelajaran</div><span class="pill acc">${(pelOf(16).m||0)}%</span></div>
+      ${rows}
+      <p class="small muted" style="margin-top:10px">≈TP ialah <b>cadangan</b> daripada kuiz, maksimum TP3 (tahu, faham, boleh buat). TP4–TP6 memerlukan pemerhatian adab dan amali oleh guru, bukan skor kuiz. Peperiksaan sebenar tetap bertulis.</p>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:10px"><div class="eyebrow">Konsistensi · 8 minggu</div><span class="pill gold">🔥 ${state.streak} hari</span></div>
+      <div class="heat" aria-label="Aktiviti harian 8 minggu">${heatCells()}</div>
+      <p class="small muted" style="margin-top:8px">Setiap petak = satu hari. Lebih gelap, lebih banyak XP. Streak boleh dibekukan sekali seminggu (cuti, sakit) supaya tidak jadi tekanan.</p>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:10px">Lencana</div>
+      <div class="badges">${badges.map(b=>`<div class="badge ${b.on?'':'lock'}"><div class="b ${/[^\x00-\x7F]/.test(b.ic)&&b.ic.length<3&&!/[🎙↻]/.test(b.ic)?'jawi':''}">${b.ic}</div>${esc(b.t)}<div class="muted" style="font-weight:500;font-size:10.5px">${esc(b.s)}</div></div>`).join('')}</div>
+    </div>
+  </div>`;
+}
+
+function vGuru(){
+  const spk=['4.10.1','4.10.2','4.10.3','4.10.4','4.10.5','4.10.6','4.10.7','4.10.8'];
+  const avg=spk.map((k,i)=>{ const v=KELAS.map(r=>r[1][i]).filter(x=>x!=null); return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):null; });
+  const weakest=avg.map((v,i)=>({v,i})).filter(o=>o.v!=null).sort((a,b)=>a.v-b.v)[0];
+  const attention=KELAS.map(r=>{ const low=r[1].filter(x=>x!=null&&x<50).length; const idle=/hari lalu/.test(r[2])?parseInt(r[2]):0; const why=[]; if(idle>=5) why.push(`tidak aktif ${idle} hari`); if(low>=3) why.push(`${low} SP di bawah 50%`); return {n:r[0],why}; }).filter(o=>o.why.length);
+  const tasmik=[...state.tasmik.map(t=>({...t,baru:true})),...TASMIK_DEMO];
+  const gigih=[['Irfan',34,3,'naik 2 tangga dari minggu lepas'],['Zara',29,2,'aktif 6 hari berturut'],['Adam',21,4,'ulang kuiz 4 kali sampai faham']];
+  return `
+  <header class="band"><div class="inner gut">
+    <div class="grow">
+      <div class="row" style="gap:14px">
+        ${ust('l')}
+        <div class="grow">
+          <span class="wordmark" style="font-size:34px;display:block">${UST.nama}</span>
+          <div class="sub">Guru Pendidikan Islam · Papan Pemuka Kelas ${esc(state.kelas)}</div>
+          <div class="small" style="opacity:.8;margin-top:2px">Pelajaran 16 · Tayamum dengan Debu Suci · minggu ini</div>
+        </div>
+        <div class="hdr-acts">${themeBtn()}<span class="pill gold">Demo</span></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><b class="num">26<span style="font-size:13px;opacity:.8">/30</span></b><span>aktif 7 hari</span></div>
+        <div class="stat"><b class="num">61%</b><span>purata P16</span></div>
+        <div class="stat"><b class="num">21<span style="font-size:13px;opacity:.8">/30</span></b><span>kuiz siap</span></div>
+      </div>
+    </div>
+    <img class="poster" src="${UST.pose.point}" alt="" loading="lazy">
+  </div></header>
+  <div class="gut body">
+    ${SHEETS?'<div class="banner">Fasa 1: papan guru ini menunjukkan DATA CONTOH. Data murid sebenar akan dipaparkan selepas Fasa 2 (Supabase).</div>':''}
+    <div class="g-cerapan">
+      <div class="card hi" style="margin-top:16px">
+        <div class="eyebrow">Cerapan automatik</div>
+        <h3 style="font-size:16px;margin-top:4px">${esc(SP_NAMA[spk[weakest.i]])} (${spk[weakest.i]}) paling lemah: purata ${weakest.v}%</h3>
+        <p class="small muted" style="margin-top:4px">Soalan paling banyak salah: "Yang manakah membatalkan tayamum?" (58% salah). Cadangan: ulang 5 minit dalam PdP seterusnya, atau hantar kuiz fokus.</p>
+        <div class="row wrap" style="margin-top:10px;gap:8px"><button class="btn sm" data-act="tugasan">Hantar kuiz fokus</button><button class="btn sm ghost" data-act="toast" data-msg="Versi penuh: paparan soalan-demi-soalan dengan taburan jawapan kelas.">Lihat analisis soalan</button></div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div class="row" style="gap:12px;align-items:flex-start">${pose('point',72)}<div class="grow"><div class="eyebrow">Pesanan kepada murid</div><h3 style="font-size:15px;margin-top:4px">Hari ini: teks + suara 0:32</h3><p class="small muted" style="margin-top:4px">Murid dengar suara Ustazah di skrin utama mereka. Rakam yang baharu bila-bila masa; pesanan lama disimpan.</p></div></div>
+        <div class="row wrap" style="margin-top:10px;gap:8px"><button class="btn sm gold" data-act="pesanan">Rakam pesanan baharu</button><button class="btn sm ghost" data-act="toast" data-msg="Versi penuh: senarai pesanan lepas dengan bilangan murid yang mendengar.">Pesanan lepas (12)</button></div>
+      </div>
+    </div>
+
+    <div class="section g-heat">
+      <div class="head"><h2>Peta haba penguasaan</h2><span class="small muted">murid × SP</span></div>
+      <div class="tablewrap"><table class="ht">
+        <thead><tr><th>Murid</th>${spk.map(k=>`<th>${k}</th>`).join('')}<th>Aktif</th><th>Streak</th></tr></thead>
+        <tbody>
+        ${KELAS.map(r=>`<tr><td>${esc(r[0])}</td>${r[1].map(v=>`<td class="c ${mClass(v)}">${v==null?'·':v}</td>`).join('')}<td class="${/hari lalu/.test(r[2])?'muted':''}">${esc(r[2])}</td><td class="num">${r[3]?'🔥'+r[3]:'—'}</td></tr>`).join('')}
+        <tr><td><b>Purata kelas</b></td>${avg.map(v=>`<td class="c ${mClass(v)}"><b>${v==null?'·':v}</b></td>`).join('')}<td></td><td></td></tr>
+        </tbody></table></div>
+      <div class="legend" style="margin-top:8px"><span><i class="m1"></i>&lt;40</span><span><i class="m2"></i>40–54</span><span><i class="m3"></i>55–69</span><span><i class="m4"></i>70–84</span><span><i class="m5"></i>≥85</span><span><i class="m0"></i>belum</span></div>
+      <div class="card tight" style="margin-top:12px">
+        <div class="row" style="justify-content:space-between"><div class="eyebrow">Paling gigih minggu ini</div><span class="small muted">usaha, bukan markah</span></div>
+        ${gigih.map((g,i)=>`<div class="student"><div class="av" style="background:var(--gold-soft);color:var(--gold-text)">${i+1}</div><div class="grow"><div class="nm">${esc(g[0])} <span class="small muted" style="font-weight:600">· ${g[1]} soalan · ulang ${g[2]}×</span></div><div class="why">${esc(g[3])}</div></div><button class="btn sm ghost" data-act="toast" data-msg="Versi penuh: hantar pujian peribadi (teks/suara) kepada murid.">Puji</button></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="g-side">
+      <div class="section">
+        <div class="head"><h2>Perlu perhatian</h2><span class="pill bad">${attention.length} murid</span></div>
+        <div class="card tight">
+          ${attention.map(a=>`<div class="student"><div class="av">${esc(a.n[0])}</div><div class="grow"><div class="nm">${esc(a.n)}</div><div class="why">${esc(a.why.join(' · '))}</div></div><button class="btn sm ghost" data-act="toast" data-msg="Versi penuh: hantar peringatan ke murid dan ibu bapa (WhatsApp/notifikasi).">Hubungi</button></div>`).join('')}
+          <p class="small muted" style="margin-top:8px">Dikesan automatik: tidak aktif ≥5 hari, atau ≥3 SP di bawah 50%. Murid begini mungkin perlukan pendekatan berbeza, bukan sekadar lebih kuiz.</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="head"><h2>Peti Tasmik</h2><span class="pill warn">${tasmik.length} rakaman</span></div>
+        <div class="card tight">
+          ${tasmik.map(t=>`<div class="student"><div class="av" style="background:var(--gold-soft);color:var(--gold-text)">▶</div><div class="grow"><div class="nm">${esc(t.nama)} · ${esc(t.ayat)} ${t.baru?'<span class="tag good">baharu</span>':''}</div><div class="why">${t.dur} · ${t.peeks?`<span class="tag warn">intai ${t.peeks}×</span>`:'<span class="tag good">tanpa intai</span>'}</div></div><button class="btn sm" data-act="toast" data-msg="Demo: rakaman audio tidak disertakan dalam prototaip.">Dengar</button></div>`).join('')}
+          <p class="small muted" style="margin-top:8px">"Intai" ialah bilangan kali murid membuka teks semasa merakam. Ia dicatat secara telus, bukan dihukum: murid tahu Ustazah nampak.</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="head"><h2>Isyarat integriti</h2><span class="pill">demo</span></div>
+        <div class="card tight">
+          <div class="student"><div class="av" style="background:color-mix(in srgb,var(--warn) 20%,var(--surface));color:var(--gold-text)">!</div><div class="grow"><div class="nm">Peranti sama, 2 akaun</div><div class="why">Adam dan Hazim log masuk dari telefon yang sama, Sabtu 9:12 malam, selang 4 minit.</div></div></div>
+          <div class="student"><div class="av" style="background:color-mix(in srgb,var(--warn) 20%,var(--surface));color:var(--gold-text)">!</div><div class="grow"><div class="nm">Terlalu pantas</div><div class="why">Hazim: Kuiz P16 10/10 dalam 1 min 40 s (purata kelas 6 min), selepas 8 hari tidak aktif.</div></div></div>
+          <p class="small muted" style="margin-top:8px">Ini <b>isyarat</b>, bukan bukti. Cadangan: tanya 3 soalan secara lisan dalam kelas. Kerana XP diberi untuk usaha dan peperiksaan sebenar bertulis, insentif untuk meniru memang rendah.</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="head"><h2>Liga minggu ini</h2><span class="small muted">disusun Isnin</span></div>
+        <div class="card tight">
+          ${LIGA.slice().reverse().map((l,i)=>`<div class="lrow"><span style="font-size:18px;width:26px">${l.glyph}</span><span class="grow"><b>${esc(l.nama)}</b><span class="small muted" style="display:block">${esc(l.tag)}</span></span><span class="xp num">${[10,10,10][i]} murid</span></div>`).join('')}
+          <p class="small muted" style="margin-top:8px">Minggu lepas: 3 murid naik, 2 turun. Ustazah boleh ubah nama liga dan saiz kumpulan.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section g-tindak">
+      <h2>Tindakan</h2>
+      <div class="stack" style="gap:8px">
+        <button class="btn block" data-act="tugasan">Cipta tugasan baharu</button>
+        <button class="btn block ghost" data-act="toast" data-msg="Versi penuh: muat turun CSV mengikut format Templat Pelaporan PBD (murid × Standard Kandungan × cadangan TP + bukti).">Eksport bukti PBD (CSV)</button>
+        <button class="btn block ghost" data-act="toast" data-msg="Versi penuh: bank soalan diselenggara Ustazah dalam Google Sheets dan disegerakkan ke aplikasi.">Bank soalan (Google Sheets)</button>
+        <button class="btn block ghost" data-act="toast" data-msg="Versi penuh: jana atau set semula PIN murid; murid tukar PIN sendiri selepas log masuk pertama.">Urus PIN murid</button>
+      </div>
+      <p class="note-demo" style="margin-top:12px">Semua data dalam paparan guru ialah data demo. Dalam versi penuh, data datang daripada log kuiz sebenar setiap murid, disimpan dengan nama dan kelas sahaja.</p>
+    </div>
+  </div>`;
+}
+
+/* ---------- SHEETS ---------- */
+function openSheet(html){ const s=$('#sheet'); s.innerHTML=`<div class="panel"><div class="handle"></div>${html}</div>`; s.hidden=false; document.body.style.overflow='hidden'; }
+function closeSheet(){ $('#sheet').hidden=true; document.body.style.overflow=''; }
+
+function sheetLesson(n){
+  const p=pelOf(n), b=bidOf(p.b);
+  const locked=p.st==='kunci';
+  let sp='';
+  const spl=SPS[n]||(n===16?SP16:[]);
+  if(spl.length){
+    sp=`<div style="margin-top:14px">${spl.map(s=>{ const m=state.sp[s.k]; const t=tp(m); return `<div class="sprow"><code>${s.k}</code><div class="n">${state.skrip==='jawi'?`<span class="jawi" style="font-size:16px">${s.jawi}</span>`:esc(s.n)}<div class="bar thin" style="margin-top:6px"><i style="width:${m||0}%"></i></div></div><span class="pill ${t.c}">${m==null?'—':m+'%'}</span></div>`; }).join('')}</div>`;
+  } else {
+    sp=`<p class="note-demo" style="margin-top:14px">Standard Pembelajaran untuk pelajaran ini belum dimasukkan dalam helaian SP. Soalan boleh ditambah dalam helaian Soalan bila-bila masa.</p>`;
+  }
+  const kz=SETS['kuiz'+n]; const nQ=kz?kz.ids.length:0;
+  const hasOrder=kz&&kz.ids.some(id=>Q[id].type==='order'), hasFill=kz&&kz.ids.some(id=>Q[id].type==='fill'), hasTajwid=kz&&kz.ids.some(id=>Q[id].type==='tajwid');
+  const acts = `${n===16?'<button class="btn" data-act="nota" data-n="16">Nota Ustazah</button>':''}${kz?`<button class="btn gold" data-act="quiz" data-set="kuiz${n}">Kuiz (${kz.pick&&kz.pick<nQ?kz.pick+' daripada '+nQ:nQ} soalan)</button>`:'<button class="btn ghost" disabled>Kuiz: belum ada soalan</button>'}${hasOrder?'<button class="btn ghost" data-act="quiz" data-set="susun">Susun langkah</button>':''}${hasFill?'<button class="btn ghost" data-act="quiz" data-set="hafazan">Sambung ayat</button>':''}${hasTajwid?'<button class="btn ghost" data-act="quiz" data-set="tajwid">Tajwid Tap</button>':''}${n===16?'<button class="btn ghost" data-act="tasmik">Rakam tasmik</button>':''}`;
+  openSheet(`<div class="gut">
+    <div class="row"><span style="width:12px;height:12px;border-radius:4px;transform:rotate(45deg);background:${b.hue};display:inline-block"></span><span class="eyebrow">${esc(b.rumi)} · Pelajaran ${p.n} · m.s. ${p.ms}</span><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div>
+    <h2 style="margin-top:8px">${esc(p.rumi)}</h2>
+    <p class="jawi" style="font-size:22px;text-align:left">${p.jawi}</p>
+    ${locked?'<p class="pill" style="margin-top:8px">🔒 Dibuka oleh Ustazah mengikut RPT</p>':''}
+    ${sp}
+    <div class="row wrap" style="margin-top:16px;gap:8px">${acts}</div>
+  </div>`);
+}
+
+function sheetNota16(){
+  const H=(r,j)=>`<h3>${esc(r)} <span class="jawi">${j}</span></h3>`;
+  openSheet(`<div class="gut notes">
+    <div class="row">${ust('s')}<div class="grow"><span class="eyebrow">Nota Ustazah · Pelajaran 16 · m.s. 105–112</span></div><button class="icon" data-act="close-sheet" aria-label="Tutup">✕</button></div>
+    <h2 style="margin-top:10px">Tayamum dengan Debu Suci</h2>
+    ${H('Maksud','مقصود')}
+    <div class="def"><b>Bahasa</b><span>Melakukan sesuatu dengan tujuan.</span><b>Istilah</b><span>Menyapu debu tanah yang suci ke muka dan dua tangan dengan cara tertentu beserta niat bagi mengharuskan wuduk atau mandi wajib.</span></div>
+    ${H('Dalil naqli','دليل نقلي')}
+    <div class="ayat"><p class="quran">… فَلَمْ تَجِدُوا مَاءً فَتَيَمَّمُوا صَعِيدًا طَيِّبًا فَامْسَحُوا بِوُجُوهِكُمْ وَأَيْدِيكُم مِّنْهُ …</p>
+    <p class="mk"><b>Maksud:</b> …sedang kamu tidak mendapat air (untuk berwuduk dan mandi), maka hendaklah kamu bertayamum dengan tanah (debu) yang suci, iaitu sapulah muka kamu dan kedua-dua tangan kamu dengan tanah (debu) itu… <i>(Surah al-Maidah 5:6)</i></p></div>
+    ${H('Sebab diharuskan','سبب دهاروسكن')}
+    <ol><li>Tiada air atau air tidak mencukupi kerana diperlukan untuk minum dan memasak.</li><li>Sejuk yang boleh memudaratkan kesihatan.</li><li>Tidak dapat menggunakan air kerana penyakit atau sakit seperti melecur.</li><li>Air berada di tempat yang terlalu jauh.</li></ol>
+    ${H('Syarat','شرط')}
+    <ol><li>Telah masuk waktu solat.</li><li>Mencari air selepas masuk waktu solat.</li><li>Menghilangkan najis terlebih dahulu.</li><li>Menggunakan debu tanah yang tidak bercampur dengan bahan lain seperti tepung atau kapur.</li><li>Menentukan arah kiblat sebelum bertayamum.</li></ol>
+    ${H('Rukun','روكون')}
+    <ol><li>Niat.</li><li>Menyapu debu tanah ke muka.</li><li>Menyapu debu tanah ke tangan.</li><li>Tertib.</li></ol>
+    ${H('Sunat','سنة')}
+    <ol><li>Membaca basmalah.</li><li>Merenggangkan jari ketika menepuk debu tanah.</li><li>Menipiskan debu dengan melaga-lagakan kedua-dua tangan.</li><li>Mendahulukan sebelah atas muka.</li><li>Melebihkan sedikit sapuan dari sempadan muka.</li><li>Mendahulukan tangan sebelah kanan.</li><li>Melebihkan sedikit sapuan hingga pertengahan lengan.</li><li>Berturut-turut antara sapuan muka dengan tangan.</li><li>Berdoa.</li></ol>
+    ${H('Cara bertayamum','چارا برتيمم')}
+    <div class="flow">
+      <div><span class="n">1</span>Membaca basmalah<span class="s">sunat</span></div>
+      <div><span class="n">2</span>Niat di dalam hati<span class="s">rukun</span></div>
+      <div><span class="n">3</span>Tepuk debu, renggangkan jari, tipiskan debu<span class="s">sunat</span></div>
+      <div><span class="n">4</span>Sapu debu ke muka (atas dahulu)<span class="s">rukun</span></div>
+      <div><span class="n">5</span>Tepuk debu semula, sapu kedua-dua tangan (kanan dahulu) hingga siku<span class="s">rukun</span></div>
+      <div><span class="n">6</span>Tertib dan berturut-turut<span class="s">rukun</span></div>
+      <div><span class="n">7</span>Berdoa selepas tayamum<span class="s">sunat</span></div>
+    </div>
+    <div class="ayat"><p class="eyebrow">Lafaz niat</p><p class="quran" style="font-size:1.5rem">نَوَيْتُ التَّيَمُّمَ لِاسْتِبَاحَةِ فَرْضِ الصَّلَاةِ لِلّٰهِ تَعَالَى</p><p class="mk">Sahaja aku bertayamum untuk mengharuskan solat fardu kerana Allah Taala.</p></div>
+    <div class="spek"><b>Spektrum Ilmu · syarat debu</b>Tanah yang berdebu dan bukan abu · suci dan tidak bernajis · tidak musta'mal · tidak bercampur dengan bahan lain.</div>
+    <p class="small muted" style="margin-top:14px">Buku teks m.s. 108 ada QR code video demonstrasi tayamum. Dalam versi penuh, video itu dimainkan terus di sini, dan murid boleh rakam amali sendiri untuk dinilai Ustazah (SP 4.10.9).</p>
+    <div class="row" style="margin-top:16px;gap:8px"><button class="btn gold" data-act="quiz" data-set="kuiz16">Uji diri: Kuiz Pelajaran 16</button></div>
+  </div>`);
+}
+
+function sheetSettings(){
+  openSheet(`<div class="gut">
+    <div class="row"><h2>Tetapan</h2><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div>
+    <div class="profile" style="margin-top:14px">${ust('m')}<div class="grow"><span class="wordmark">${UST.nama}</span><div class="small muted">Guru Pendidikan Islam · Kelas ${esc(state.kelas)}</div></div></div>
+    <div class="field" style="margin-top:14px"><label>Tema</label>
+      <div class="segs" role="group"><button data-act="theme-set" data-v="auto" aria-pressed="${state.theme==='auto'}">Auto</button><button data-act="theme-set" data-v="light" aria-pressed="${state.theme==='light'}">Cerah</button><button data-act="theme-set" data-v="dark" aria-pressed="${state.theme==='dark'}">Gelap</button></div></div>
+    <div class="field" style="margin-top:14px"><label>Paparan tulisan</label>
+      <div class="toggle" role="group"><button data-act="skrip" data-v="rumi" aria-pressed="${state.skrip==='rumi'}">Rumi</button><button data-act="skrip" data-v="jawi" aria-pressed="${state.skrip==='jawi'}">Jawi</button><button data-act="skrip" data-v="dua" aria-pressed="${state.skrip==='dua'}">Kedua-dua</button></div>
+      <p class="small muted">Buku teks ditulis sepenuhnya dalam Jawi. Mod "Kedua-dua" membantu murid yang masih lemah membaca Jawi.</p></div>
+    <div class="field" style="margin-top:14px"><label>Akaun</label><div class="row wrap" style="gap:8px"><span class="pill acc">${esc(state.nama)} · ${esc(state.kelas)}</span><button class="btn sm ghost" data-act="logout">Log keluar / tukar murid</button></div></div>
+    <div class="field" style="margin-top:14px"><label>Data demo</label><button class="btn ghost" data-act="reset">Set semula kemajuan demo</button></div>
+    <p class="note-demo" style="margin-top:16px">Prototaip klik-boleh. Kemajuan disimpan dalam pelayar ini sahaja. Versi penuh menyimpan di pelayan supaya Ustazah nampak kad laporan setiap murid.</p>
+  </div>`);
+}
+
+function sheetTugasan(){
+  openSheet(`<div class="gut">
+    <div class="row"><h2>Cipta tugasan</h2><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div>
+    <form id="ftugasan" class="stack" style="margin-top:14px;gap:12px">
+      <div class="field"><label for="f-pel">Pelajaran</label><select id="f-pel"><option>16 · Tayamum dengan Debu Suci</option><option>15 · Solat Jumaat Wadah Kesatuan</option><option>17 · Rukhsah Anugerah daripada Allah</option></select></div>
+      <div class="field"><label for="f-jenis">Jenis</label><select id="f-jenis"><option>Kuiz fokus · 4.10.6 Perkara membatalkan tayamum (5 soalan)</option><option>Kuiz penuh pelajaran (8 daripada 10, dikocok)</option><option>Susun langkah tayamum</option><option>Hafazan: al-Maidah 5:6 (rakam tasmik)</option><option>Amali tayamum (rakam video 1 minit)</option></select></div>
+      <div class="field"><label for="f-tarikh">Tarikh akhir</label><input id="f-tarikh" type="date"></div>
+      <div class="field"><label for="f-xp">Ganjaran XP</label><select id="f-xp"><option>30 XP</option><option>50 XP</option><option>100 XP (cabaran)</option></select></div>
+      <button class="btn block" type="submit">Hantar kepada 30 murid</button>
+    </form>
+  </div>`);
+  const d=new Date(); d.setDate(d.getDate()+3); try{ $('#f-tarikh').value=d.toISOString().slice(0,10); }catch(e){}
+}
+
+let ligaTab='suria';
+function sheetLiga(){
+  const rows=LIGA_AHLI[ligaTab]; const L=LIGA.find(l=>l.id===ligaTab);
+  openSheet(`<div class="gut">
+    <div class="row"><h2>Semua liga</h2><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div>
+    <div class="segs" style="margin-top:12px">${LIGA.slice().reverse().map(l=>`<button data-act="liga-tab" data-v="${l.id}" aria-pressed="${ligaTab===l.id}">${l.glyph} ${esc(l.nama.replace('Liga ',''))}</button>`).join('')}</div>
+    <div class="row" style="gap:12px;margin-top:12px;align-items:flex-start">${pose('point',70)}<p class="small" style="padding-top:6px">${ligaTab==='suria'?'Tengok lajur "tabiat". Kawan-kawan di Liga Suria bukan lebih pandai, mereka lebih konsisten. Pilih satu tabiat dan tiru minggu ni.':ligaTab==='purnama'?'Ini liga kamu. Tiga teratas naik ke Suria hari Isnin. Jurang antara #4 dan #3 hanya 40 XP, itu satu Cabaran Harian.':'Semua orang pernah di sini. Satu Cabaran Harian sehari sudah cukup untuk naik.'}</p></div>
+    <p class="eyebrow" style="margin-top:12px">${esc(L.nama)} · ${esc(L.tag)}</p>
+    ${rows.map((r,i)=>`<div class="lrow ${/kamu/.test(r[0])?'me':''}" style="align-items:flex-start"><span class="pos num" style="padding-top:2px">${i+1}</span><span class="grow">${esc(r[0])}<span class="habit">${esc(r[3])} · 🔥${r[2]}</span></span><span class="xp num">${r[1]} XP</span></div>`).join('')}
+    <p class="small muted" style="margin-top:12px">Nama penuh hanya dipaparkan untuk murid dalam kelas yang sama; kelas lain nampak nama pendek. Tiada markah ujian dipaparkan di sini, hanya usaha minggu ini.</p>
+  </div>`);
+}
+
+let rec=null; // mesin rakaman (demo) untuk tasmik & pesanan
+function stopRec(){ if(rec&&rec.timer) clearInterval(rec.timer); if(rec&&rec.peekT) clearTimeout(rec.peekT); }
+function sheetPesanan(){
+  rec={ctx:'pesanan',phase:'idle',t:0,timer:null};
+  openSheet(renderPesananSheet());
+}
+function renderPesananSheet(){
+  const today=PESANAN[dayIndex()%PESANAN.length];
+  const recUI = rec.phase==='idle' ? `<button class="btn gold block" data-act="rec-start">🎙 Mula rakam suara (maks 60 s)</button>`
+    : rec.phase==='rec' ? `<div class="row" style="justify-content:center;gap:10px"><span class="rec-dot"></span><span class="rec-time num" id="rec-time">${fmt(rec.t)}</span></div><div class="wave" aria-hidden="true">${Array.from({length:22},(_,i)=>`<i style="animation-delay:${(i*0.07)%1}s"></i>`).join('')}</div><button class="btn block" data-act="rec-stop">Berhenti</button>`
+    : `<div class="player"><button class="pb" data-act="toast" data-msg="Demo: tiada audio dirakam dalam prototaip.">▶</button><div class="bar thin"><i style="width:0%"></i></div><span class="t">${fmt(rec.t)} · rakaman baharu</span></div><div class="row" style="gap:8px;margin-top:10px"><button class="btn sm ghost" data-act="rec-reset">Rakam semula</button></div>`;
+  return `<div class="gut">
+    <div class="row"><h2>Pesanan kepada murid</h2><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div>
+    <p class="small muted" style="margin-top:6px">Murid nampak teks dan boleh dengar suara Ustazah di skrin utama. Suara 20–40 saat paling sesuai.</p>
+    <div class="field" style="margin-top:14px"><label for="f-teks">Teks pesanan</label><textarea id="f-teks">${esc(today)}</textarea></div>
+    <div class="field" style="margin-top:14px"><label>Suara (pilihan)</label>${recUI}</div>
+    <div class="field" style="margin-top:14px"><label for="f-kpd">Kepada</label><select id="f-kpd"><option>2 Amanah (30 murid)</option><option>Semua kelas saya (87 murid)</option><option>Murid dalam senarai "perlu perhatian" (3)</option></select></div>
+    <button class="btn block" style="margin-top:16px" data-act="pesanan-hantar" ${rec.phase==='rec'?'disabled':''}>Hantar pesanan</button>
+    <p class="note-demo" style="margin-top:12px">Prototaip: mikrofon tidak dirakam. Versi penuh guna MediaRecorder (webm/opus, ≈150 KB seminit) dan simpan di storan fail.</p>
+  </div>`;
+}
+
+/* ---------- GATE (muka depan) ---------- */
+let gate={kelas:KELAS_CFG[0]||'2 Amanah',nama:null,pin:''};
+function renderGate(){
+  const names=KELAS_SENARAI[gate.kelas]||[];
+  const ok=SHEETS ? (gate.nama&&gate.nama.trim().length>=2) : (gate.nama&&/^\d{4}$/.test(gate.pin));
+  $('#gate').innerHTML=`
+    <div class="hero"><div class="hero-in gut">
+      <div class="txt"><span class="wordmark">${UST.nama}</span><h1>Jejak Ilmu</h1><div class="sub">Kelas Pendidikan Islam Tingkatan 2. Belajar sikit setiap hari, konsisten lebih penting daripada sempurna.</div></div>
+      ${pose('point',220)}
+      <div class="hdr-acts">${themeBtn()}</div>
+    </div></div>
+    <div class="form gut">
+      <div class="step"><div class="eyebrow">1 · Kelas kamu</div><div class="chips">${(SHEETS?KELAS_CFG:Object.keys(KELAS_SENARAI)).map(k=>`<button data-act="g-kelas" data-v="${esc(k)}" aria-pressed="${gate.kelas===k}">${esc(k)}</button>`).join('')}</div></div>
+      ${SHEETS?`<div class="step"><div class="eyebrow">2 · Nama kamu</div><div class="field"><input class="wide" id="g-nama" type="text" autocomplete="off" maxlength="40" placeholder="Taip nama penuh" value="${esc(gate.nama||'')}" aria-label="Nama"></div>
+        <div class="row" style="margin-top:12px;gap:10px"><button class="btn" data-act="g-masuk" ${ok?'':'disabled'}>Masuk</button><span class="small muted">Fasa 1: tiada PIN. Kemajuan disimpan dalam telefon ini sahaja.</span></div></div>`:`
+      <div class="step"><div class="eyebrow">2 · Nama kamu</div><div class="names">${names.map(n=>`<button data-act="g-nama" data-v="${esc(n)}" aria-pressed="${gate.nama===n}">${esc(n)}</button>`).join('')}</div></div>`}
+      <div class="step" ${SHEETS?'hidden':''}><div class="eyebrow">3 · PIN 4 digit</div>
+        <div class="pin"><input id="g-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="PIN" value="${gate.pin}" placeholder="••••"><button class="btn" data-act="g-masuk" ${ok?'':'disabled'}>Masuk</button></div>
+        <p class="small muted" style="margin-top:8px">PIN diberi oleh Ustazah dan boleh ditukar selepas log masuk pertama. Jangan kongsi dengan kawan: jawapan kamu ialah cermin usaha kamu sendiri. <span class="pill" style="margin-left:4px">demo: mana-mana 4 digit</span></p>
+      </div>
+      ${SHEETS?'':'<div class="or">atau</div><button class="btn block line" data-act="toast" data-msg="Versi penuh: log masuk Google dengan akaun sekolah.">Log masuk dengan akaun Google</button>'}
+      <p class="small muted" style="margin-top:14px;text-align:center">Hanya nama dan kelas disimpan. Tiada nombor telefon, tiada alamat.</p>
+    </div>`;
+  const inp=$('#g-pin'); if(inp){ inp.addEventListener('input',e=>{ gate.pin=e.target.value.replace(/\D/g,'').slice(0,4); e.target.value=gate.pin; $('[data-act="g-masuk"]').disabled=!(gate.nama&&gate.pin.length===4); }); }
+  const nm=$('#g-nama'); if(nm){ nm.addEventListener('input',e=>{ gate.nama=e.target.value; $('[data-act="g-masuk"]').disabled=!(gate.nama.trim().length>=2); }); nm.addEventListener('keydown',e=>{ if(e.key==='Enter'&&gate.nama.trim().length>=2) $('[data-act="g-masuk"]').click(); }); }
+}
+function showGate(){ $('#gate').hidden=false; $('#tabbar').hidden=true; document.body.style.overflow='hidden'; renderGate(); }
+function hideGate(){ $('#gate').hidden=true; $('#tabbar').hidden=false; document.body.style.overflow=''; }
+
+/* ---------- QUIZ ENGINE ---------- */
+let quiz=null;
+function prepItem(id){
+  const it={id,...Q[id]};
+  if(it.type==='order'){ it.pool=shuffle(it.items); return it; }
+  if(it.type==='tajwid') it.opts=TAJWID_OPTS.slice();
+  if(it.opts&&it.type!=='tf'){ const idx=shuffle(it.opts.map((_,i)=>i)); it.opts=idx.map(i=>it.opts[i]); it.ans=idx.indexOf(it.ans); }
+  return it;
+}
+function startQuiz(setKey){
+  const set=SETS[setKey]; if(!set||!set.ids.length){ toast('Belum ada soalan untuk mod ini. Ustazah boleh tambah dalam Google Sheets.'); return; }
+  closeSheet();
+  const ids=shuffle(set.ids).slice(0,set.pick||set.ids.length);
+  quiz={key:setKey,set,items:ids.map(prepItem),i:0,answers:[],order:[],timer:null,tleft:0};
+  $('#layer').hidden=false; document.body.style.overflow='hidden';
+  renderQ();
+}
+function closeQuiz(){ if(quiz&&quiz.timer) clearInterval(quiz.timer); quiz=null; stopRec(); if(rec&&rec.real) rec.real.cancel(); rec=null; $('#layer').hidden=true; document.body.style.overflow=''; render(); }
+function qHead(){
+  const n=quiz.items.length;
+  return `<div class="qbar gut"><button class="icon" data-act="quiz-close" aria-label="Tutup">✕</button><div class="bar grow"><i style="width:${(quiz.i/n)*100}%"></i></div><span class="qcount num">${quiz.i+1}/${n}</span></div>`;
+}
+function optBtn(k,label,inner,answered,ans,pick){ let cls=''; if(answered){ if(k===ans) cls='correct'; else if(k===pick) cls='wrong'; } return `<button class="opt ${cls}" data-act="pick" data-k="${k}" ${answered?'disabled':''}><span class="k">${label}</span>${inner}</button>`; }
+function renderQ(){
+  const it=quiz.items[quiz.i]; const a=quiz.answers[quiz.i]; const answered=a!=null; const pick=answered?a.pick:null;
+  const spn=SP_NAMA[it.sp]||it.sp;
+  const typeLabel={mcq:'Pilih jawapan',tf:'Betul atau salah',order:'Susun urutan',tajwid:'Tajwid Tap',fill:'Sambung ayat',jawi:'Jawi Sprint'}[it.type];
+  let body='';
+  const stem=it.q?`<div class="qtext">${esc(it.q)}</div>${it.jawi&&state.skrip!=='rumi'?`<div class="qjawi jawi" style="text-align:left">${it.jawi}</div>`:''}`:'';
+  const meta=`<div class="qmeta">${it.kbat?'<span class="pill info" style="margin-right:6px">KBAT</span>':''}SP ${it.sp} · ${esc(spn)}${it.ms?' · m.s. '+it.ms:''}</div>`;
+  const L=k=>String.fromCharCode(65+k);
+  if(it.type==='mcq'||it.type==='tf'){
+    body=`${stem}${meta}<div class="opts">${it.opts.map((o,k)=>optBtn(k,L(k),`<span class="grow">${esc(o)}</span>`,answered,it.ans,pick)).join('')}</div>`;
+  } else if(it.type==='tajwid'){
+    body=`<div class="qtext">Apakah hukum tajwid pada huruf yang bertanda merah?</div>${meta}<div class="arabic-box"><p class="quran">${it.ar.replace(/<b>/g,'<span class="hl">').replace(/<\/b>/g,'</span>')}</p></div>
+      <div class="opts">${it.opts.map((o,k)=>optBtn(k,k+1,`<span class="grow">${esc(o)}</span>`,answered,it.ans,pick)).join('')}</div>`;
+  } else if(it.type==='fill'){
+    body=`${stem}${meta}<div class="arabic-box"><p class="quran">${it.ar.replace('____','<span class="hl">____</span>')}</p></div>
+      <div class="opts">${it.opts.map((o,k)=>optBtn(k,L(k),`<span class="quran">${o}</span>`,answered,it.ans,pick)).join('')}</div>`;
+  } else if(it.type==='jawi'){
+    const pct=quiz.set.timed?Math.round(quiz.tleft/quiz.set.timed*100):100;
+    body=`<div class="qtext">Baca perkataan Jawi ini.</div>${meta}${quiz.set.timed&&!answered?`<div class="timer"><i id="tbar" style="width:${pct}%"></i></div><p class="small muted num" style="margin-top:4px"><span id="tnum">${quiz.tleft}</span> saat</p>`:''}
+      <div class="bigword jawi">${it.w}</div>
+      <div class="opts">${it.opts.map((o,k)=>optBtn(k,L(k),`<span class="grow">${esc(o)}</span>`,answered,it.ans,pick)).join('')}</div>`;
+  } else if(it.type==='order'){
+    const placed=quiz.order; const pool=it.pool.filter(x=>!placed.includes(x));
+    body=`${stem}${meta}
+      <p class="small muted" style="margin-top:10px">Tekan langkah mengikut urutan. Tekan semula untuk keluarkan.</p>
+      <div class="slots">${placed.map((x,k)=>{ let cls=''; if(answered) cls=(it.items[k]===x)?'ok':'ko'; return `<button class="slot ${cls}" data-act="unplace" data-x="${esc(x)}" ${answered?'disabled':''}><span class="n">${k+1}</span><span class="grow">${esc(x)}</span></button>`; }).join('')||'<p class="small muted" style="padding:8px 0">Belum ada langkah dipilih.</p>'}</div>
+      ${!answered?`<div class="pool">${pool.map(x=>`<button class="chip" data-act="place" data-x="${esc(x)}">${esc(x)}</button>`).join('')}</div>`:''}
+      ${!answered?`<div style="margin-top:14px"><button class="btn block" data-act="check-order" ${placed.length===it.items.length?'':'disabled'}>Semak urutan</button></div>`:''}`;
+  }
+  let fb='';
+  if(answered){
+    const correctText = it.type==='order' ? `Urutan betul: ${it.items.map((x,k)=>(k+1)+'. '+x).join(' · ')}` : it.type==='fill' ? '' : `Jawapan: ${it.opts[it.ans]}`;
+    const say = a.ok ? PUJIAN[quiz.i%PUJIAN.length] : (a.timeout ? 'Masa tamat. Tak apa, tengok bacaannya.' : PUJUK[quiz.i%PUJUK.length]);
+    fb=`<div class="feedback ${a.ok?'ok':'ko'}">
+      <div class="fh"><img src="${a.ok?UST.pose.thumbs:UST.pose.think}" alt=""><div><b>${esc(say)} <span style="color:${a.ok?'var(--good)':'var(--muted)'}">${a.ok?'+10 XP':'+3 XP usaha'}</span></b><small>${UST.nama}</small></div></div>
+      ${!a.ok&&correctText?`<p class="small" style="font-weight:700;margin-bottom:4px">${esc(correctText)}</p>`:''}
+      <p class="small">${it.why?esc(it.why):(it.type==='jawi'?`Bacaan: <b>${esc(it.opts[it.ans])}</b>. Perkataan ini muncul dalam tajuk pelajaran buku teks.`:'')}</p>
+      ${it.ms?`<div class="ref">Rujuk Buku Teks PI Tingkatan 2, m.s. ${it.ms}</div>`:''}</div>
+      <div class="qfoot"><button class="btn block" data-act="next">${quiz.i+1<quiz.items.length?'Soalan seterusnya':'Lihat keputusan'}</button></div>`;
+  }
+  $('#layer').innerHTML=`<div class="inner">${qHead()}<div class="gut" style="padding-block:6px 16px;flex:1;display:flex;flex-direction:column"><div class="qtype">${typeLabel} · ${esc(quiz.set.t)}</div>${body}${fb}</div></div>`;
+  if(it.type==='jawi'&&quiz.set.timed&&!answered&&!quiz.timer){
+    quiz.tleft=quiz.set.timed;
+    quiz.timer=setInterval(()=>{ quiz.tleft--; const tb=$('#tbar'),tn=$('#tnum'); if(tb) tb.style.width=(quiz.tleft/quiz.set.timed*100)+'%'; if(tn) tn.textContent=quiz.tleft; if(quiz.tleft<=0){ clearInterval(quiz.timer); quiz.timer=null; answer(-1,true); } },1000);
+  }
+}
+function answer(pick,timeout=false){
+  const it=quiz.items[quiz.i]; if(quiz.answers[quiz.i]!=null) return;
+  if(quiz.timer){ clearInterval(quiz.timer); quiz.timer=null; }
+  let ok; if(it.type==='order') ok=quiz.order.every((x,k)=>x===it.items[k]); else ok=pick===it.ans;
+  quiz.answers[quiz.i]={pick,ok,timeout};
+  buzz(ok?30:[40,60,40]);
+  renderQ();
+}
+function nextQ(){ quiz.i++; quiz.order=[]; if(quiz.i>=quiz.items.length) return finishQuiz(); renderQ(); }
+function finishQuiz(){
+  const n=quiz.items.length, c=quiz.answers.filter(a=>a&&a.ok).length;
+  const xpBetul=c*10, xpUsaha=(n-c)*3; let gained=xpBetul+xpUsaha; if(c===n) gained+=20;
+  const dailyBonus = quiz.key==='harian' && !state.dailyDone ? (quiz.set.xp||0) : 0; gained+=dailyBonus;
+  const before={...state.sp};
+  quiz.items.forEach((it,k)=>{ const ok=quiz.answers[k].ok; const m=state.sp[it.sp]; state.sp[it.sp]= m==null ? (ok?70:30) : Math.round(m*0.7+(ok?100:0)*0.3); });
+  recomputePelajaran();
+  // usaha: bangkit = soalan yang salah pada percubaan lepas set yang sama, kini betul
+  const wrongNow=quiz.items.filter((it,k)=>!quiz.answers[k].ok).map(it=>it.id);
+  let bangkit=0; if(state.lastWrong&&state.lastWrong.set===quiz.key){ bangkit=quiz.items.filter((it,k)=>quiz.answers[k].ok&&state.lastWrong.ids.includes(it.id)).length; }
+  state.usaha.dicuba+=n; state.usaha.bangkit+=bangkit; if(state.lastSet===quiz.key) state.usaha.kuizUlang++;
+  state.lastWrong={set:quiz.key,ids:wrongNow}; state.lastSet=quiz.key;
+  state.xp+=gained; if(quiz.key==='harian') state.dailyDone=true;
+  if(quiz.key in state.best){ const prev=state.best[quiz.key]; const pv=prev?parseInt(prev):-1; if(c>pv) state.best[quiz.key]=`${c}/${n}`; }
+  save();
+  const touched=[...new Set(quiz.items.map(it=>it.sp))];
+  const deltas=touched.map(k=>{ const b=before[k], a=state.sp[k]; const d=b==null?a:a-b; return `<div class="delta"><span><code style="font-family:var(--body);font-weight:800;color:var(--accent)">${k}</code> ${esc(SP_NAMA[k]||'')}</span><b class="num ${d>=0?'up':'down'}">${b==null?'baharu ':''}${a}% <span class="small">(${d>=0?'+':''}${d})</span></b></div>`; }).join('');
+  const weak=touched.filter(k=>state.sp[k]<55);
+  const good=c>=n*0.7, perfect=c===n;
+  const say = perfect ? `Sempurna, ${state.nama}! Barakallahu fik. Esok kita naik satu tahap lagi.` : good ? `Bagus, ${state.nama}. Yang salah tu bukan kelemahan, itu peta untuk ulang kaji.` : `Tak apa, ${state.nama}. ${n} soalan kamu cuba, itu dah usaha. Baca nota sekejap, lepas tu cuba lagi; soalan akan berbeza.`;
+  $('#layer').innerHTML=`<div class="inner"><div class="gut" style="padding-block:18px;flex:1;display:flex;flex-direction:column">
+    <div class="eyebrow" style="text-align:center">${esc(quiz.set.t)} · selesai</div>
+    <div class="result-hero">
+      <div class="pose-disc"><img src="${perfect?UST.pose.clap:good?UST.pose.thumbs:UST.pose.think}" alt=""></div>
+      <div class="say"><p>${esc(say)}</p><span class="wordmark">${UST.nama}</span></div>
+    </div>
+    <div class="score" style="--p:${Math.round(c/n*100)}"><div><b class="num">${c}/${n}</b><span>betul</span></div></div>
+    <div class="row" style="justify-content:center;gap:8px;flex-wrap:wrap"><span class="pill gold">+${xpBetul} XP betul</span><span class="pill acc">+${xpUsaha} XP usaha</span>${perfect?'<span class="pill good">Sempurna +20</span>':''}${dailyBonus?'<span class="pill good">Cabaran harian +50</span>':''}${bangkit?`<span class="pill good">Bangkit ×${bangkit}</span>`:''}</div>
+    ${bangkit?`<p class="small" style="text-align:center;margin-top:10px;font-weight:700;color:var(--good)">${bangkit} soalan yang salah tadi, kini betul. Itulah belajar.</p>`:''}
+    <div class="card" style="margin-top:18px"><div class="eyebrow" style="margin-bottom:6px">Perubahan penguasaan</div>${deltas}
+      <p class="small muted" style="margin-top:8px">Model prototaip: penguasaan baharu = 0.7 × lama + 0.3 × (100 jika betul, 0 jika salah). Versi penuh boleh guna Bayesian Knowledge Tracing.</p></div>
+    ${weak.length?`<div class="card hi" style="margin-top:12px"><div class="eyebrow">Ulang kaji disyorkan</div><p style="margin-top:4px;font-weight:700">${weak.map(k=>esc(SP_NAMA[k]||k)).join(' · ')}</p><p class="small muted" style="margin-top:4px">Ustazah juga nampak ini dalam papan pemuka dan boleh hantar kuiz fokus.</p></div>`:''}
+    <div class="qfoot stack" style="gap:8px"><button class="btn block" data-act="quiz-close">Kembali</button><button class="btn block ghost" data-act="quiz" data-set="${quiz.key}">Cuba lagi (soalan dan susunan baharu)</button></div>
+  </div></div>`;
+  if(good) confetti();
+}
+function confetti(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cv=$('#conf'); cv.hidden=false; const ctx=cv.getContext('2d'); cv.width=innerWidth; cv.height=innerHeight;
+  const cols=['#7b58d6','#c6962d','#b39cf2','#e8bb5b','#d2608a'];
+  const ps=Array.from({length:70},()=>({x:innerWidth/2+(Math.random()-.5)*120,y:innerHeight*0.35,vx:(Math.random()-.5)*9,vy:-Math.random()*9-3,r:4+Math.random()*4,c:cols[Math.floor(Math.random()*cols.length)],a:Math.random()*6}));
+  let t=0; const step=()=>{ ctx.clearRect(0,0,cv.width,cv.height); ps.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=0.28; p.a+=0.2; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.a); ctx.fillStyle=p.c; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.6); ctx.restore(); }); if(++t<80) requestAnimationFrame(step); else { ctx.clearRect(0,0,cv.width,cv.height); cv.hidden=true; } }; requestAnimationFrame(step);
+}
+
+/* ---------- TASMIK RECORDER (demo) ---------- */
+function openTasmik(){
+  closeSheet();
+  rec={ctx:'tasmik',phase:'idle',t:0,timer:null,peeks:0,peeking:false,janji:false,cd:0};
+  $('#layer').hidden=false; document.body.style.overflow='hidden';
+  renderTasmik();
+}
+function renderTasmik(){
+  const r=rec;
+  const textBox=`<div class="arabic-box ${r.phase==='rec'&&!r.peeking?'blurred':''}"><p class="quran">فَلَمْ تَجِدُوا مَاءً فَتَيَمَّمُوا صَعِيدًا طَيِّبًا فَامْسَحُوا بِوُجُوهِكُمْ وَأَيْدِيكُم مِّنْهُ</p>
+    ${r.phase==='rec'&&!r.peeking?`<button class="peek-btn" data-act="rec-peek"><span>Intai teks 3 saat · dicatat (${r.peeks}×)</span></button>`:''}</div>
+    <p class="small muted" style="margin-top:6px">Surah al-Maidah 5:6 (potongan) · dalil tayamum · <button class="link" data-act="toast" data-msg="Demo: dalam versi penuh, audio contoh daripada QR code buku teks dimainkan di sini.">Dengar bacaan contoh</button></p>`;
+  let ctl='';
+  if(r.phase==='idle') ctl=`
+    <div class="amanah">${pose('point',92)}<div class="grow"><b>Amanah dalam hafazan</b>
+      <ul><li>Rakam <b>tanpa melihat teks</b>. Teks akan kabur sebaik sahaja rakaman bermula.</li><li>Kalau tersekat, tekan "Intai teks". Ia dibenarkan, tetapi <b>dicatat</b> dan Ustazah nampak bilangannya.</li><li>Hafazan ini untuk diri kamu, bukan untuk markah. Jujur pada diri sendiri lebih bernilai daripada rakaman yang sempurna.</li></ul></div></div>
+    <label class="janji"><input type="checkbox" id="janji" ${r.janji?'checked':''} data-act="rec-janji"><span>Saya akan merakam dengan jujur, tanpa melihat teks, dan ini suara saya sendiri.</span></label>
+    <div class="qfoot"><button class="btn gold block" data-act="rec-start" ${r.janji?'':'disabled'}>🎙 Mula rakam</button></div>`;
+  else if(r.phase==='cd') ctl=`<div class="rec-time" style="font-size:56px;margin-top:20px">${r.cd}</div><p class="small muted" style="text-align:center">Bersedia. Teks akan kabur selepas ini.</p>`;
+  else if(r.phase==='rec') ctl=`<div class="row" style="justify-content:center;gap:10px;margin-top:14px"><span class="rec-dot"></span><span class="rec-time num" id="rec-time" style="margin:0">${fmt(r.t)}</span></div><div class="wave" aria-hidden="true">${Array.from({length:24},(_,i)=>`<i style="animation-delay:${(i*0.09)%1}s"></i>`).join('')}</div><p class="small muted" style="text-align:center">Intai setakat ini: ${r.peeks}×</p><div class="qfoot"><button class="btn block" data-act="rec-stop">Berhenti dan semak</button></div>`;
+  else ctl=`<div class="card" style="margin-top:14px"><div class="row" style="gap:12px">${pose(r.peeks?'think':'thumbs',72)}<div class="grow"><b style="font-family:var(--display)">${r.peeks?`Siap. Kamu intai ${r.peeks} kali; itu dicatat, tak apa.`:'Siap, tanpa intai. Itu hafazan yang sebenar.'}</b><p class="small muted" style="margin-top:4px">Durasi ${fmt(r.t)} · ${r.peeks?`<span class="tag warn">intai ${r.peeks}×</span>`:'<span class="tag good">tanpa intai</span>'}</p></div></div>
+      ${r.url?`<audio controls src="${r.url}" style="width:100%;margin-top:12px"></audio>`:`<div class="player" style="margin-top:12px"><button class="pb" data-act="toast" data-msg="Mikrofon tidak tersedia pada peranti/pelayar ini, jadi rakaman disimulasikan.">▶</button><div class="bar thin"><i style="width:0%"></i></div><span class="t">${fmt(r.t)} · rakaman kamu</span></div>`}</div>
+    <div class="qfoot stack" style="gap:8px"><button class="btn gold block" data-act="tasmik-hantar">Hantar kepada Ustazah</button><button class="btn block ghost" data-act="rec-reset">Rakam semula</button></div>`;
+  $('#layer').innerHTML=`<div class="inner"><div class="qbar gut"><button class="icon" data-act="quiz-close" aria-label="Tutup">✕</button><div class="grow"><div class="qtype">Rakam Tasmik · hafazan</div></div><span class="pill gold">+30 XP</span></div>
+    <div class="gut" style="padding-block:6px 16px;flex:1;display:flex;flex-direction:column"><div class="qtext">Bacakan ayat ini daripada hafazan.</div>${textBox}${ctl}
+    <p class="note-demo" style="margin-top:14px">${SHEETS?'Fasa 1: rakaman dibuat dan dimainkan di telefon kamu sahaja; penghantaran kepada Ustazah dibuka dalam Fasa 2.':'Prototaip: mikrofon tidak dirakam. Versi penuh guna MediaRecorder; rakaman disimpan di storan fail dan hanya Ustazah boleh dengar.'}</p></div></div>`;
+}
+async function realRecorder(){
+  try{ const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+    const mime=['audio/webm;codecs=opus','audio/webm','audio/mp4'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||'';
+    const mr=new MediaRecorder(stream,mime?{mimeType:mime,audioBitsPerSecond:32000}:undefined); const chunks=[]; mr.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); }; mr.start(1000);
+    return { stop:()=>new Promise(res=>{ mr.onstop=()=>{ stream.getTracks().forEach(t=>t.stop()); res(new Blob(chunks,{type:mr.mimeType||mime||'audio/webm'})); }; mr.stop(); }), cancel:()=>{ try{mr.stop();}catch(e){} stream.getTracks().forEach(t=>t.stop()); } };
+  }catch(e){ return null; }
+}
+function recStart(){
+  if(rec.ctx==='tasmik'){ rec.phase='cd'; rec.cd=3; renderTasmik(); rec.timer=setInterval(async()=>{ rec.cd--; if(rec.cd<=0){ clearInterval(rec.timer); rec.real=await realRecorder(); rec.phase='rec'; rec.t=0; renderTasmik(); rec.timer=setInterval(()=>{ rec.t++; const el=$('#rec-time'); if(el) el.textContent=fmt(rec.t); },1000); } else renderTasmik(); },1000); }
+  else { rec.phase='rec'; rec.t=0; openSheet(renderPesananSheet()); rec.timer=setInterval(()=>{ rec.t++; const el=$('#rec-time'); if(el) el.textContent=fmt(rec.t); if(rec.t>=60) recStop(); },1000); }
+}
+async function recStop(){ stopRec(); rec.timer=null; rec.phase='done'; rec.peeking=false; if(rec.real){ try{ const blob=await rec.real.stop(); rec.blob=blob; rec.url=URL.createObjectURL(blob); }catch(e){} rec.real=null; } if(rec.ctx==='tasmik') renderTasmik(); else openSheet(renderPesananSheet()); }
+
+/* ---------- RENDER & EVENTS ---------- */
+const VIEWS={utama:vUtama,peta:vPeta,cabaran:vCabaran,laporan:vLaporan,guru:vGuru};
+const TABS=[['utama','Utama'],['peta','Peta'],['cabaran','Cabaran'],['laporan','Laporan'],['guru','Guru']];
+function render(){
+  $('#screen').innerHTML=`<div class="view view-${state.view}">${VIEWS[state.view]()}</div><img class="deco-figure" src="${UST.pose.point}" alt="" loading="lazy">`;
+  $('#tabbar').innerHTML=`<div class="brand">${ust('s')}<span class="name">Jejak Ilmu</span><span class="wordmark">${UST.nama}</span></div>`+TABS.map(([k,l])=>`<button class="tab" data-act="nav" data-v="${k}" aria-current="${state.view===k?'page':'false'}">${ICONS[k]}<span>${l}</span>${k==='guru'?'<i class="demo" aria-hidden="true"></i>':''}</button>`).join('');
+  try{ history.replaceState(null,'','#'+state.view); }catch(e){}
+}
+let playT=null;
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]'); if(!el) return;
+  const act=el.dataset.act, v=el.dataset.v;
+  if(act==='nav'){ state.view=v; save(); render(); window.scrollTo({top:0}); }
+  else if(act==='theme'){ state.theme={auto:'light',light:'dark',dark:'auto'}[state.theme]; applyTheme(); save(); toast('Tema: '+THEME_LABEL[state.theme]); if(!$('#gate').hidden) renderGate(); else render(); }
+  else if(act==='theme-set'){ state.theme=v; applyTheme(); save(); render(); sheetSettings(); }
+  else if(act==='skrip'){ state.skrip=v; save(); render(); if(!$('#sheet').hidden) sheetSettings(); }
+  else if(act==='lesson'){ sheetLesson(+el.dataset.n); }
+  else if(act==='nota'){ sheetNota16(); }
+  else if(act==='settings'){ sheetSettings(); }
+  else if(act==='tugasan'){ sheetTugasan(); }
+  else if(act==='liga'){ ligaTab='suria'; sheetLiga(); }
+  else if(act==='liga-tab'){ ligaTab=v; sheetLiga(); }
+  else if(act==='pesanan'){ sheetPesanan(); }
+  else if(act==='pesanan-hantar'){ stopRec(); const suara=rec&&rec.phase==='done'?` + suara ${fmt(rec.t)}`:''; rec=null; closeSheet(); toast(`Pesanan teks${suara} dihantar kepada 30 murid (demo).`); }
+  else if(act==='close-sheet'){ if(rec&&rec.ctx==='pesanan'){ stopRec(); rec=null; } closeSheet(); }
+  else if(act==='quiz'){ startQuiz(el.dataset.set); }
+  else if(act==='quiz-close'){ closeQuiz(); }
+  else if(act==='pick'){ answer(+el.dataset.k); }
+  else if(act==='place'){ quiz.order.push(el.dataset.x); renderQ(); }
+  else if(act==='unplace'){ quiz.order=quiz.order.filter(x=>x!==el.dataset.x); renderQ(); }
+  else if(act==='check-order'){ answer(null); }
+  else if(act==='next'){ nextQ(); }
+  else if(act==='tasmik'){ openTasmik(); }
+  else if(act==='rec-janji'){ rec.janji=el.checked; const b=$('[data-act="rec-start"]'); if(b) b.disabled=!rec.janji; }
+  else if(act==='rec-start'){ recStart(); }
+  else if(act==='rec-stop'){ recStop(); }
+  else if(act==='rec-peek'){ rec.peeks++; rec.peeking=true; renderTasmik(); rec.peekT=setTimeout(()=>{ if(rec&&rec.phase==='rec'){ rec.peeking=false; renderTasmik(); } },3000); }
+  else if(act==='rec-reset'){ stopRec(); const ctx=rec.ctx; rec={ctx,phase:'idle',t:0,timer:null,peeks:0,peeking:false,janji:ctx==='tasmik',cd:0}; if(ctx==='tasmik') renderTasmik(); else openSheet(renderPesananSheet()); }
+  else if(act==='tasmik-hantar'){ state.tasmik.unshift({nama:state.nama,ayat:'Al-Maidah 5:6',dur:fmt(rec.t),peeks:rec.peeks}); state.usaha.hafazan++; state.xp+=30; save(); if(rec.url) URL.revokeObjectURL(rec.url); rec=null; $('#layer').hidden=true; document.body.style.overflow=''; render(); toast(SHEETS?'Direkod sebagai usaha (+30 XP). Penghantaran audio kepada Ustazah dibuka dalam Fasa 2.':'Tasmik dihantar kepada Ustazah. +30 XP usaha.'); }
+  else if(act==='play-pesan'){ const bar=$('#pp'); if(!bar) return; if(playT){ clearInterval(playT); playT=null; el.textContent='▶'; return; } let p=0; el.textContent='❚❚'; toast('Demo: tiada audio. Versi penuh memainkan suara Ustazah.'); playT=setInterval(()=>{ p+=100/32; const b=$('#pp'); if(b) b.style.width=Math.min(100,p)+'%'; if(p>=100){ clearInterval(playT); playT=null; const pb=$('[data-act="play-pesan"]'); if(pb) pb.textContent='▶'; } },250); }
+  else if(act==='share'){ const txt=`Kad Laporan ${state.nama} (${state.kelas}): Level ${lvl()}, ${state.xp} XP, streak ${state.streak} hari, ${state.usaha.dicuba} soalan dicuba bulan ini.`; const done=()=>toast('Ringkasan disalin. Versi penuh: pautan kad laporan untuk ibu bapa.'); try{ navigator.clipboard.writeText(txt).then(done,done); }catch(err){ done(); } }
+  else if(act==='toast'){ toast(el.dataset.msg); }
+  else if(act==='g-kelas'){ gate.kelas=v; if(!SHEETS) gate.nama=null; renderGate(); }
+  else if(act==='g-nama'){ gate.nama=v; renderGate(); const pin=$('#g-pin'); if(pin) pin.focus(); }
+  else if(act==='g-masuk'){ const nama=(gate.nama||'').trim(); const same=state.user&&state.user.nama===nama&&state.user.kelas===gate.kelas; state.user={nama,kelas:gate.kelas}; state.nama=nama; state.kelas=gate.kelas; if(SHEETS&&!same) freshProgress(); save(); hideGate(); render(); toast(`Selamat datang, ${nama}. Hanya nama dan kelas kamu disimpan.`); }
+  else if(act==='logout'){ state.user=null; save(); closeSheet(); gate={kelas:state.kelas,nama:null,pin:''}; showGate(); }
+  else if(act==='reset'){ try{ localStorage.removeItem(LS); }catch(err){} state=JSON.parse(JSON.stringify(DEFAULT_STATE)); PELAJARAN.find(p=>p.n===16).m=60; applyTheme(); closeSheet(); gate={kelas:KELAS_CFG[0]||'2 Amanah',nama:null,pin:''}; showGate(); toast('Data demo diset semula.'); }
+});
+document.addEventListener('submit',e=>{ if(e.target.id==='ftugasan'){ e.preventDefault(); closeSheet(); toast('Tugasan dihantar kepada 30 murid (demo). Notifikasi + peringatan 1 hari sebelum tarikh akhir.'); } });
+document.addEventListener('change',e=>{ if(e.target.id==='janji'&&rec){ rec.janji=e.target.checked; const b=$('[data-act="rec-start"]'); if(b) b.disabled=!rec.janji; } });
+$('#sheet').addEventListener('click',e=>{ if(e.target.id==='sheet'){ if(rec&&rec.ctx==='pesanan'){ stopRec(); rec=null; } closeSheet(); } });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(!$('#layer').hidden) closeQuiz(); else closeSheet(); } });
+
+async function boot(saved){
+  load();
+  if(saved&&saved.xp!=null) state={...state,...saved};
+  applyTheme();
+  if(SHEETS){ const r=await loadBank(); if(r&&r.error) toast('Bank soalan dari Google Sheets tidak dapat dimuat; menggunakan soalan contoh.'); else if(r&&r.cached) toast('Luar talian: menggunakan bank soalan yang disimpan.'); if(!(saved&&saved.xp!=null)&&state.user&&state.xp===1340){ /* demo state leaked into sheets mode */ freshProgress(); } }
+  const h=(location.hash||'').slice(1); if(VIEWS[h]) state.view=h;
+  recomputePelajaran();
+  render();
+  if(!state.user){ gate={kelas:KELAS_CFG[0]||'2 Amanah',nama:null,pin:''}; showGate(); }
+}
+try{ if(window.claude&&window.claude.hot&&typeof window.claude.hot.snapshot==='function') window.claude.hot.snapshot(()=>state); }catch(e){}
+(window.claude&&window.claude.hot&&typeof window.claude.hot.ready==='function') ? window.claude.hot.ready(boot) : boot((window.claude&&window.claude.hot&&window.claude.hot.data)||{});
+</script>
+</body>
+</html>
