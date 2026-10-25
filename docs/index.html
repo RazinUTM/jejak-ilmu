@@ -619,6 +619,7 @@ async function fetchCSV(url){ const res=await fetch(url,{cache:'no-store'}); if(
 const BIDANG_BY_NAME={'al-quran':'quran','hadis':'hadis','akidah':'akidah','fiqah':'fiqah','sirah dan tamadun islam':'sirah','sirah':'sirah','akhlak islamiah':'akhlak','akhlak':'akhlak'};
 const LETTER={A:0,B:1,C:2,D:3,E:4};
 function buildBank(soalanRows, spRows, pelRows){
+  buildBank.lastRows={so:soalanRows,sp:spRows,pl:pelRows};
   if(pelRows&&pelRows.length){ PELAJARAN=pelRows.map(r=>({n:+r.n,b:BIDANG_BY_NAME[(r.bidang||'').toLowerCase()]||'quran',rumi:r.rumi,jawi:r.jawi||'',ms:r.ms||'',m:null,st:(r.status||'kunci').toLowerCase()})).filter(p=>p.n>=1&&p.n<=28).sort((a,b)=>a.n-b.n); }
   if(spRows&&spRows.length){ SPS={}; SP_NAMA={}; for(const r of spRows){ if(!r.kod) continue; const n=+r.pelajaran||0; (SPS[n]||=(SPS[n]=[])).push({k:r.kod,n:r.nama,jawi:r.nama_jawi||''}); SP_NAMA[r.kod]=r.nama; } SP16=SPS[16]||[]; }
   const Qn={}; const bad=[];
@@ -634,10 +635,11 @@ function buildBank(soalanRows, spRows, pelRows){
     Qn[r.id]=it;
   }
   if(Object.keys(Qn).length){ Q=Qn; }
-  const ids=Object.keys(Q); const by=f=>ids.filter(id=>f(Q[id]));
+  const open=id=>{ const pel=Q[id].pel||0; return pel===0||!isLocked(pel); };
+  const ids=Object.keys(Q).filter(open); const by=f=>ids.filter(id=>f(Q[id]));
   const S={};
   S.harian={t:'Cabaran Harian',ids:ids,pick:HARIAN_MIX.mudah+HARIAN_MIX.sederhana+HARIAN_MIX.kbat,xp:50,mix:true};
-  for(const p of PELAJARAN){ const l=by(q=>q.pel===p.n); if(l.length) S['kuiz'+p.n]={t:'Kuiz Pelajaran '+p.n,ids:l,pick:Math.min(8,l.length)}; }
+  for(const p of PELAJARAN){ if(isLocked(p.n)) continue; const l=by(q=>q.pel===p.n); if(l.length) S['kuiz'+p.n]={t:'Kuiz Pelajaran '+p.n,ids:l,pick:Math.min(8,l.length)}; }
   const tj=by(q=>q.type==='tajwid'); if(tj.length) S.tajwid={t:'Tajwid Tap',ids:tj,pick:Math.min(6,tj.length)};
   const od=by(q=>q.type==='order'); if(od.length) S.susun={t:'Susun Langkah',ids:od,pick:Math.min(4,od.length)};
   const jw=by(q=>q.type==='jawi'); if(jw.length) S.jawi={t:'Jawi Sprint',ids:jw,pick:Math.min(6,jw.length),timed:10};
@@ -673,6 +675,8 @@ function hafazanHariIni(){
   if(id){ const q=Q[id]; return {ayat:q.ar.replace('____',q.opts[q.ans]),rujukan:`Pelajaran ${cur.n}${q.ms?' · m.s. '+q.ms:''}`}; }
   return null;
 }
+function isLocked(n){ if(!SHEETS) return false; if(state.user&&state.user.guru) return false; const p=pelOf(n); return !!(p&&p.st==='kunci'); }
+function rebuildSets(){ if(SHEETS&&typeof buildBank.lastRows!=='undefined') buildBank(buildBank.lastRows.so,buildBank.lastRows.sp,buildBank.lastRows.pl); }
 function currentLesson(){ let p=state.lastLesson&&pelOf(state.lastLesson); if(!p) p=PELAJARAN.find(x=>x.st==='sedang'); if(!p) p=PELAJARAN.find(x=>x.st!=='kunci'); return p||PELAJARAN[0]; }
 const todayKey=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 function logAktiviti(xp){ if(!state.aktiviti) state.aktiviti={}; const k=todayKey(); const had=!!state.aktiviti[k]; state.aktiviti[k]=(state.aktiviti[k]||0)+xp; if(!had){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); state.streak=state.aktiviti[yk]?(state.streak||0)+1:1; state.usaha.hariAktif=Object.keys(state.aktiviti).filter(d=>d.slice(0,7)===k.slice(0,7)).length; } }
@@ -852,7 +856,7 @@ function vPeta(){
     return `<section class="bidang">
       <div class="bh"><span class="swatch" style="background:${b.hue}"></span><h2 class="grow">${esc(b.rumi)} <span class="jawi">${b.jawi}</span></h2><span class="pill">${done}/${ls.length} ${SHEETS?'dikuasai':'siap'}</span></div>
       ${ls.map(p=>{
-        const locked=p.st==='kunci';
+        const locked=SHEETS?isLocked(p.n):p.st==='kunci';
         const ring=locked?`<div class="ring lock"><b>🔒</b></div>`:`<div class="ring" style="--p:${p.m||0};--c:${b.hue}"><b>${p.n}</b></div>`;
         const stat=SHEETS?(locked?`<span class="pill">Dibuka oleh Ustazah ikut RPT</span>`:p.m!=null?`<span class="pill ${p.m>=70?'good':'acc'}">${p.m}%${p.st==='sedang'?' · sedang':''}</span>`:p.st==='sedang'?`<span class="pill acc">Sedang diajar</span>`:`<span class="pill">Belum mula</span>`):(p.st==='siap'?`<span class="pill good">${p.m}%</span>`:p.st==='sedang'?`<span class="pill acc">${p.m}% · sedang</span>`:p.st==='buka'?`<span class="pill">Belum mula</span>`:`<span class="pill">Dibuka oleh Ustazah ikut RPT</span>`);
         return `<button class="lesson ${p.st==='sedang'?'active':''} ${locked?'locked':''}" data-act="lesson" data-n="${p.n}">${ring}<div class="grow">${title(p)}<div class="m">Pelajaran ${p.n} · m.s. ${p.ms}</div></div>${stat}</button>`;
@@ -1100,7 +1104,7 @@ function closeSheet(){ $('#sheet').hidden=true; document.body.style.overflow='';
 
 function sheetLesson(n){
   const p=pelOf(n), b=bidOf(p.b);
-  const locked=p.st==='kunci';
+  const locked=SHEETS?isLocked(n):p.st==='kunci';
   let sp='';
   const spl=SPS[n]||(n===16?SP16:[]);
   if(spl.length){
@@ -1108,15 +1112,15 @@ function sheetLesson(n){
   } else {
     sp=`<p class="note-demo" style="margin-top:14px">Standard Pembelajaran untuk pelajaran ini belum dimasukkan dalam helaian SP. Soalan boleh ditambah dalam helaian Soalan bila-bila masa.</p>`;
   }
-  const kz=SETS['kuiz'+n]; const nQ=kz?kz.ids.length:0;
+  const kz=locked?null:SETS['kuiz'+n]; const nQ=kz?kz.ids.length:0;
   const hasOrder=kz&&kz.ids.some(id=>Q[id].type==='order'), hasFill=kz&&kz.ids.some(id=>Q[id].type==='fill'), hasTajwid=kz&&kz.ids.some(id=>Q[id].type==='tajwid');
-  const acts = `${n===16?'<button class="btn" data-act="nota" data-n="16">Nota Ustazah</button>':''}${kz?`<button class="btn gold" data-act="quiz" data-set="kuiz${n}">Kuiz (${kz.pick&&kz.pick<nQ?kz.pick+' daripada '+nQ:nQ} soalan)</button>`:'<button class="btn ghost" disabled>Kuiz: belum ada soalan</button>'}${hasOrder?'<button class="btn ghost" data-act="quiz" data-set="susun">Susun langkah</button>':''}${hasFill?'<button class="btn ghost" data-act="quiz" data-set="hafazan">Sambung ayat</button>':''}${hasTajwid?'<button class="btn ghost" data-act="quiz" data-set="tajwid">Tajwid Tap</button>':''}${n===16?'<button class="btn ghost" data-act="tasmik">Rakam tasmik</button>':''}`;
+  const acts = locked ? `<p class="note-demo">Pelajaran ini akan dibuka oleh Ustazah mengikut Rancangan Pengajaran Tahunan. Buat masa ini kuiz dan cabaran untuknya belum tersedia.</p>` : `${n===16?'<button class="btn" data-act="nota" data-n="16">Nota Ustazah</button>':''}${kz?`<button class="btn gold" data-act="quiz" data-set="kuiz${n}">Kuiz (${kz.pick&&kz.pick<nQ?kz.pick+' daripada '+nQ:nQ} soalan)</button>`:'<button class="btn ghost" disabled>Kuiz: belum ada soalan</button>'}${hasOrder?'<button class="btn ghost" data-act="quiz" data-set="susun">Susun langkah</button>':''}${hasFill?'<button class="btn ghost" data-act="quiz" data-set="hafazan">Sambung ayat</button>':''}${hasTajwid?'<button class="btn ghost" data-act="quiz" data-set="tajwid">Tajwid Tap</button>':''}${n===16?'<button class="btn ghost" data-act="tasmik">Rakam tasmik</button>':''}`;
   openSheet(`<div class="gut">
     <div class="row"><span style="width:12px;height:12px;border-radius:4px;transform:rotate(45deg);background:${b.hue};display:inline-block"></span><span class="eyebrow">${esc(b.rumi)} · Pelajaran ${p.n} · m.s. ${p.ms}</span><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div>
     <h2 style="margin-top:8px">${esc(p.rumi)}</h2>
     <p class="jawi" style="font-size:22px;text-align:left">${p.jawi}</p>
     ${locked?'<p class="pill" style="margin-top:8px">🔒 Dibuka oleh Ustazah mengikut RPT</p>':''}
-    ${sp}
+    ${locked?'':sp}
     <div class="row wrap" style="margin-top:16px;gap:8px">${acts}</div>
   </div>`);
 }
@@ -1254,7 +1258,7 @@ async function gateLogin(){
   const m=ROSTER.murid.find(x=>x.n===gate.nama&&x.k===gate.kelas);
   let ok=false; try{ ok=!!m&&(await pinHash(gate.pin,m.n,m.k))===m.h; }catch(e){ ok=false; }
   if(!ok){ buzz([40,60,40]); const er=$('#g-err'); if(er) er.hidden=false; if(btn){ btn.disabled=false; btn.textContent='Masuk'; } gate.pin=''; const inp=$('#g-pin'); if(inp){ inp.value=''; inp.focus(); } return; }
-  const same=state.user&&state.user.nama===m.n&&state.user.kelas===m.k; state.user={nama:m.n,kelas:m.k,guru:!!m.g}; state.nama=m.n; state.kelas=m.k; if(!same) freshProgress(); save(); hideGate(); render(); toast(m.g?`Selamat datang, ${m.n}. Mod guru aktif.`:`Selamat datang, ${m.n}. Hanya nama dan kelas kamu disimpan.`);
+  const same=state.user&&state.user.nama===m.n&&state.user.kelas===m.k; state.user={nama:m.n,kelas:m.k,guru:!!m.g}; state.nama=m.n; state.kelas=m.k; if(!same) freshProgress(); rebuildSets(); save(); hideGate(); render(); toast(m.g?`Selamat datang, ${m.n}. Mod guru aktif.`:`Selamat datang, ${m.n}. Hanya nama dan kelas kamu disimpan.`);
 }
 function hideGate(){ $('#gate').hidden=true; $('#tabbar').hidden=false; document.body.style.overflow=''; }
 
@@ -1278,6 +1282,7 @@ function pickMix(ids){
   return shuffle(out);
 }
 function startQuiz(setKey,retry=false){
+  { const m=/^kuiz(\d+)$/.exec(setKey); if(m&&isLocked(+m[1])){ toast('Pelajaran ini belum dibuka oleh Ustazah.'); return; } }
   const set=SETS[setKey]; if(!set||!set.ids.length){ toast('Belum ada soalan untuk mod ini. Ustazah boleh tambah dalam Google Sheets.'); return; }
   closeSheet();
   let ids;
