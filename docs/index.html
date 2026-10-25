@@ -677,6 +677,25 @@ function hafazanHariIni(){
 }
 function isLocked(n){ if(!SHEETS) return false; if(state.user&&state.user.guru) return false; const p=pelOf(n); return !!(p&&p.st==='kunci'); }
 function rebuildSets(){ if(SHEETS&&typeof buildBank.lastRows!=='undefined') buildBank(buildBank.lastRows.so,buildBank.lastRows.sp,buildBank.lastRows.pl); }
+function autoUlasan(){
+  const u=state.usaha||{}; const nm=state.nama.split(' ')[0];
+  const spv=Object.entries(state.sp).filter(([k,v])=>v!=null);
+  if(!spv.length) return `${nm}, kamu belum mencuba sebarang kuiz. Mula dengan Cabaran Harian hari ini; lima soalan sahaja, salah pun dapat XP usaha.`;
+  const nama=k=>SP_NAMA[k]||k;
+  const weak=spv.filter(([k,v])=>v<55).sort((a,b)=>a[1]-b[1]);
+  const strong=spv.filter(([k,v])=>v>=80).sort((a,b)=>b[1]-a[1]);
+  const avg=Math.round(spv.reduce((a,[k,v])=>a+v,0)/spv.length);
+  const pelOfSp=k=>Object.keys(SPS).find(n=>(SPS[n]||[]).some(x=>x.k===k));
+  const parts=[];
+  if(strong.length) parts.push(`${nm}, kamu sudah kukuh dalam ${nama(strong[0][0]).toLowerCase()} (${strong[0][1]}%).`);
+  else parts.push(`${nm}, kamu sudah mencuba ${u.dicuba||spv.length} soalan dan purata penguasaan kamu ${avg}%.`);
+  if(weak.length){ const pn=pelOfSp(weak[0][0]); parts.push(`Yang paling perlu diulang: ${nama(weak[0][0]).toLowerCase()} (${weak[0][1]}%)${pn?`; cuba Kuiz Pelajaran ${pn} sekali lagi, soalannya akan berbeza`:''}.`); }
+  else if(avg>=70) parts.push('Tiada tajuk yang lemah setakat ini; cuba Cabaran Harian untuk kekalkan.');
+  if((state.streak||0)>=3) parts.push(`Streak ${state.streak} hari itu tabiat yang betul; teruskan walaupun lima minit.`);
+  else if(u.bangkit>0) parts.push(`${u.bangkit} soalan yang salah dahulu kini betul; itulah belajar.`);
+  else if((u.hafazan||0)>0) parts.push(`Tasmik ${u.hafazan} kali; bagus, jaga istiqamah.`);
+  return parts.slice(0,3).join(' ');
+}
 function currentLesson(){ let p=state.lastLesson&&pelOf(state.lastLesson); if(!p) p=PELAJARAN.find(x=>x.st==='sedang'); if(!p) p=PELAJARAN.find(x=>x.st!=='kunci'); return p||PELAJARAN[0]; }
 const todayKey=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 function logAktiviti(xp){ if(!state.aktiviti) state.aktiviti={}; const k=todayKey(); const had=!!state.aktiviti[k]; state.aktiviti[k]=(state.aktiviti[k]||0)+xp; if(!had){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); state.streak=state.aktiviti[yk]?(state.streak||0)+1:1; state.usaha.hariAktif=Object.keys(state.aktiviti).filter(d=>d.slice(0,7)===k.slice(0,7)).length; } }
@@ -934,6 +953,7 @@ function vLaporan(){
     {t:'Ahli Tajwid',s:'90% Tajwid Tap',ic:'نْ',on:bestOf('tajwid')>=0.9},
     {t:'Faqih Muda',s:'Boss Fiqah 80%',ic:'ف',on:false},
   ];
+  const auto=SHEETS?autoUlasan():null;
   const ulasan=SHEETS?(ULASAN.find(r=>(r.nama||'').trim().toLowerCase()===state.nama.toLowerCase()&&(!r.kelas||r.kelas.trim()===state.kelas))||ULASAN.find(r=>!(r.nama||'').trim()&&(r.kelas||'').trim()===state.kelas)||null):{teks:`${state.nama}, tajwid kamu dah stabil. Minggu ni fokus pada perkara yang membatalkan tayamum, dan jangan lupa hantar rakaman tasmik al-Maidah ayat 6 sebelum Khamis ya.`};
   const cur=currentLesson(); const curSP=SPS[cur.n]||[];
   return `
@@ -961,6 +981,8 @@ function vLaporan(){
 
     ${ulasan?`<div class="card">
       <div class="ulasan">${ust('m')}<div class="grow"><div class="eyebrow">Ulasan Ustazah${ulasan.tarikh?' · '+esc(ulasan.tarikh):' · minggu ini'}</div><p class="q" style="margin-top:4px">${esc(ulasan.teks)}</p><span class="wordmark sig">${UST.nama}</span></div></div>
+    </div>`:auto?`<div class="card">
+      <div class="ulasan">${pose('think',64)}<div class="grow"><div class="eyebrow">Ulasan automatik · daripada aktiviti kamu</div><p class="q" style="margin-top:4px">${esc(auto)}</p><p class="small muted" style="margin-top:6px">Dijana oleh aplikasi, bukan ditulis Ustazah. Ulasan Ustazah sendiri akan menggantikannya bila ada.</p></div></div>
     </div>`:''}
 
     <div class="card">
@@ -993,6 +1015,26 @@ function vLaporan(){
   </div>`;
 }
 
+function kandunganCard(){
+  const ids=Object.keys(Q); const perPel={}; for(const id of ids){ const n=Q[id].pel||0; perPel[n]=(perPel[n]||0)+1; }
+  const open=PELAJARAN.filter(p=>p.st!=='kunci'), locked=PELAJARAN.filter(p=>p.st==='kunci');
+  const noQ=PELAJARAN.filter(p=>!perPel[p.n]).map(p=>p.n);
+  const spAll=Object.values(SPS).flat(); const spUsed=new Set(ids.map(id=>Q[id].sp)); const spNoQ=spAll.filter(x=>!spUsed.has(x.k)).length;
+  const kbat=ids.filter(id=>Q[id].kbat).length, sed=ids.filter(id=>Q[id].aras==='sederhana').length;
+  const jenis={}; for(const id of ids){ jenis[Q[id].type]=(jenis[Q[id].type]||0)+1; }
+  const sedang=PELAJARAN.find(p=>p.st==='sedang');
+  return `<div class="card" style="margin-top:16px">
+    <div class="row" style="justify-content:space-between"><div class="eyebrow">Status kandungan · dari Google Sheets (sebenar)</div><span class="pill good">hidup</span></div>
+    <div class="tiles4" style="grid-template-columns:repeat(4,1fr)">
+      <div><b class="num">${ids.length}</b><span>soalan aktif</span></div>
+      <div><b class="num">${kbat}</b><span>KBAT</span></div>
+      <div><b class="num">${open.length}<span style="font-size:13px;font-weight:600">/28</span></b><span>pelajaran dibuka</span></div>
+      <div><b class="num">${ROSTER?ROSTER.murid.filter(m=>!m.g).length:0}</b><span>akaun murid</span></div>
+    </div>
+    <p class="small" style="margin-top:10px">${sedang?`Pelajaran semasa (status <code>sedang</code>): <b>${sedang.n} · ${esc(sedang.rumi)}</b>. `:'Tiada pelajaran berstatus <code>sedang</code>; kad "Pelajaran semasa" murid akan jatuh ke pelajaran pertama yang dibuka. '}Berkunci: ${locked.map(p=>p.n).join(', ')||'tiada'}.</p>
+    <p class="small muted" style="margin-top:6px">Jenis: ${Object.entries(jenis).map(([k,v])=>k+' '+v).join(' · ')}. Aras sederhana: ${sed} (${sed?'':'tambah lajur <code>aras</code> untuk campuran 6/3/1 Cabaran Harian'}). ${noQ.length?`Pelajaran tanpa soalan: ${noQ.join(', ')}. `:''}${spNoQ?`${spNoQ} kod SP belum ada soalan.`:''}</p>
+  </div>`;
+}
 function vGuru(){
   const spk=['4.10.1','4.10.2','4.10.3','4.10.4','4.10.5','4.10.6','4.10.7','4.10.8'];
   const avg=spk.map((k,i)=>{ const v=KELAS.map(r=>r[1][i]).filter(x=>x!=null); return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):null; });
@@ -1021,8 +1063,9 @@ function vGuru(){
     <img class="poster" src="${UST.pose.point}" alt="" loading="lazy">
   </div></header>
   <div class="gut body">
-    ${SHEETS?'<div class="banner">Fasa 1: papan guru ini menunjukkan DATA CONTOH. Data murid sebenar akan dipaparkan selepas Fasa 2 (Supabase).</div>':''}
     <div class="g-cerapan">
+      ${SHEETS?kandunganCard():''}
+      ${SHEETS?'<div class="banner">Bahagian di bawah ini masih DATA CONTOH. Data murid sebenar (penguasaan, tasmik, perhatian) dipaparkan selepas Fasa 2 (Supabase), kerana dalam Fasa 1 kemajuan hanya ada dalam telefon murid.</div>':''}
       <div class="card hi" style="margin-top:16px">
         <div class="eyebrow">Cerapan automatik</div>
         <h3 style="font-size:16px;margin-top:4px">${esc(SP_NAMA[spk[weakest.i]])} (${spk[weakest.i]}) paling lemah: purata ${weakest.v}%</h3>
