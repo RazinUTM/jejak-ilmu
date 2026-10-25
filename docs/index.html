@@ -651,8 +651,9 @@ function buildBank(soalanRows, spRows, pelRows){
 async function loadBank(){
   if(!SHEETS) return null;
   try{
-    const [so,sp,pl,ps,ul]=await Promise.all([fetchCSV(CFG.bankCsvUrl), CFG.spCsvUrl?fetchCSV(CFG.spCsvUrl):null, CFG.pelajaranCsvUrl?fetchCSV(CFG.pelajaranCsvUrl):null, CFG.pesananCsvUrl?fetchCSV(CFG.pesananCsvUrl).catch(()=>null):null, CFG.ulasanCsvUrl?fetchCSV(CFG.ulasanCsvUrl).catch(()=>null):null]);
+    const [so,sp,pl,ps,ul,hf]=await Promise.all([fetchCSV(CFG.bankCsvUrl), CFG.spCsvUrl?fetchCSV(CFG.spCsvUrl):null, CFG.pelajaranCsvUrl?fetchCSV(CFG.pelajaranCsvUrl):null, CFG.pesananCsvUrl?fetchCSV(CFG.pesananCsvUrl).catch(()=>null):null, CFG.ulasanCsvUrl?fetchCSV(CFG.ulasanCsvUrl).catch(()=>null):null, CFG.hafazanCsvUrl?fetchCSV(CFG.hafazanCsvUrl).catch(()=>null):null]);
     if(ul&&ul.length) ULASAN=ul;
+    if(hf&&hf.length) HAFAZAN=hf;
     const r=buildBank(so,sp,pl);
     { const today=todayKey(); const ok=(ps||[]).filter(x=>x.teks&&(!x.tarikh||x.tarikh.trim()<=today)).sort((a,b)=>(b.tarikh||'').localeCompare(a.tarikh||'')); PESANAN=[ok.length?ok[0].teks:'Selamat datang ke Jejak Ilmu. Mula dengan Cabaran Harian hari ini, lima minit sahaja.']; }
     try{ localStorage.setItem('jejak-bank-cache',JSON.stringify({so,sp,pl,ps,t:Date.now()})); }catch(e){}
@@ -664,10 +665,19 @@ async function loadBank(){
 }
 function recomputePelajaran(){ for(const p of PELAJARAN){ const v=(SPS[p.n]||[]).map(x=>state.sp[x.k]).filter(x=>x!=null); p.m=v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):(p.m&&!SHEETS?p.m:null); }
   if(SHEETS){ for(const b of BIDANG){ const v=PELAJARAN.filter(p=>p.b===b.id&&p.m!=null).map(p=>p.m); state.bidangM[b.id]=v.length?Math.round(v.reduce((a,c)=>a+c,0)/v.length):0; } } }
+function hafazanHariIni(){
+  if(!SHEETS) return {ayat:'فَلَمْ تَجِدُوا مَاءً فَتَيَمَّمُوا صَعِيدًا طَيِّبًا',rujukan:'Surah al-Maidah 5:6 (potongan) · dalil tayamum'};
+  const today=todayKey(); const rows=HAFAZAN.filter(r=>(r.ayat||r.ayat_arab)&&(!r.tarikh||r.tarikh.trim()<=today)).sort((a,b)=>(b.tarikh||'').localeCompare(a.tarikh||''));
+  if(rows.length){ const r=rows[0]; return {ayat:r.ayat||r.ayat_arab,rujukan:r.rujukan||'',maksud:r.maksud||''}; }
+  const cur=currentLesson(); const kz=SETS['kuiz'+cur.n]; const id=kz&&kz.ids.find(i=>Q[i].type==='fill'&&isArabic(Q[i].ar));
+  if(id){ const q=Q[id]; return {ayat:q.ar.replace('____',q.opts[q.ans]),rujukan:`Pelajaran ${cur.n}${q.ms?' · m.s. '+q.ms:''}`}; }
+  return null;
+}
 function currentLesson(){ let p=state.lastLesson&&pelOf(state.lastLesson); if(!p) p=PELAJARAN.find(x=>x.st==='sedang'); if(!p) p=PELAJARAN.find(x=>x.st!=='kunci'); return p||PELAJARAN[0]; }
 const todayKey=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 function logAktiviti(xp){ if(!state.aktiviti) state.aktiviti={}; const k=todayKey(); const had=!!state.aktiviti[k]; state.aktiviti[k]=(state.aktiviti[k]||0)+xp; if(!had){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); state.streak=state.aktiviti[yk]?(state.streak||0)+1:1; state.usaha.hariAktif=Object.keys(state.aktiviti).filter(d=>d.slice(0,7)===k.slice(0,7)).length; } }
-let ULASAN=[];
+let ULASAN=[]; let HAFAZAN=[];
+const isArabic=t=>/[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/.test(String(t||''));
 function freshProgress(){ Object.assign(state,{progressVersion:CFG.progressVersion==null?state.progressVersion:CFG.progressVersion,xp:0,streak:1,dailyDone:false,lastSet:null,lastWrong:null,lastLesson:null,aktiviti:{},usaha:{hariAktif:1,dicuba:0,bangkit:0,hafazan:0,kuizUlang:0},tasmik:[],sp:{},best:{},bidangM:{quran:0,hadis:0,akidah:0,fiqah:0,sirah:0,akhlak:0}}); recomputePelajaran(); }
 
 /* ---------- STATE ---------- */
@@ -797,14 +807,15 @@ function vUtama(){
       <div class="bar" style="margin-top:12px"><i style="width:${p16.m||0}%"></i></div>
     </button>
 
-    <div class="section" style="padding-top:4px">
-      <div class="head"><h2>Hafazan hari ini</h2><button class="link" data-act="quiz" data-set="hafazan">Sambung ayat</button></div>
+    ${(()=>{ const h=hafazanHariIni(); if(!h) return ''; return `<div class="section" style="padding-top:4px">
+      <div class="head"><h2>Hafazan hari ini</h2>${SETS.hafazan?'<button class="link" data-act="quiz" data-set="hafazan">Sambung ayat</button>':''}</div>
       <div class="card">
-        <p class="quran">فَلَمْ تَجِدُوا مَاءً فَتَيَمَّمُوا صَعِيدًا طَيِّبًا</p>
-        <p class="small muted" style="margin-top:8px">Surah al-Maidah 5:6 (potongan) · dalil tayamum${SHEETS?'':' · ulangan ke-3 (jarak 4 hari)'}</p>
-        <div class="row" style="margin-top:12px;gap:8px"><button class="btn sm gold" data-act="tasmik">Rakam tasmik</button><span class="small muted">Hantar bacaan kamu kepada Ustazah</span></div>
+        <p class="quran">${h.ayat}</p>
+        ${h.maksud?`<p class="small" style="margin-top:8px">${esc(h.maksud)}</p>`:''}
+        <p class="small muted" style="margin-top:8px">${esc(h.rujukan||'')}${SHEETS?'':' · ulangan ke-3 (jarak 4 hari)'}</p>
+        <div class="row" style="margin-top:12px;gap:8px"><button class="btn sm gold" data-act="tasmik">Rakam tasmik</button><span class="small muted">${SHEETS?'Rakam dan dengar bacaan kamu sendiri':'Hantar bacaan kamu kepada Ustazah'}</span></div>
       </div>
-    </div>
+    </div>`; })()}
 
     ${SHEETS?'':`<div class="card gold">
       <div class="row">
@@ -1297,12 +1308,13 @@ function renderQ(){
     body=`<div class="qtext">Apakah hukum tajwid pada huruf yang bertanda merah?</div>${meta}<div class="arabic-box"><p class="quran">${it.ar.replace(/<b>/g,'<span class="hl">').replace(/<\/b>/g,'</span>')}</p></div>
       <div class="opts">${it.opts.map((o,k)=>optBtn(k,k+1,`<span class="grow">${esc(o)}</span>`,answered,it.ans,pick)).join('')}</div>`;
   } else if(it.type==='fill'){
-    body=`${stem}${meta}<div class="arabic-box"><p class="quran">${it.ar.replace('____','<span class="hl">____</span>')}</p></div>
-      <div class="opts">${it.opts.map((o,k)=>optBtn(k,L(k),`<span class="quran">${o}</span>`,answered,it.ans,pick)).join('')}</div>`;
+    const arBox=isArabic(it.ar)?`<div class="arabic-box"><p class="quran">${it.ar.replace('____','<span class="hl">____</span>')}</p></div>`:(it.ar&&it.ar.trim()?`<div class="arabic-box"><p style="font-size:17px;font-weight:700;line-height:1.5">${esc(it.ar).replace('____','<span class="hl">____</span>')}</p></div>`:'');
+    body=`${stem}${meta}${arBox}
+      <div class="opts">${it.opts.map((o,k)=>optBtn(k,L(k),isArabic(o)?`<span class="quran">${o}</span>`:`<span class="grow">${esc(o)}</span>`,answered,it.ans,pick)).join('')}</div>`;
   } else if(it.type==='jawi'){
     const pct=quiz.set.timed?Math.round(quiz.tleft/quiz.set.timed*100):100;
     body=`<div class="qtext">Baca perkataan Jawi ini.</div>${meta}${quiz.set.timed&&!answered?`<div class="timer"><i id="tbar" style="width:${pct}%"></i></div><p class="small muted num" style="margin-top:4px"><span id="tnum">${quiz.tleft}</span> saat</p>`:''}
-      <div class="bigword jawi">${it.w}</div>
+      <div class="bigword ${isArabic(it.w)?'jawi':''}" ${isArabic(it.w)?'':'style="font-size:1.6rem;font-weight:800"'}>${isArabic(it.w)?it.w:esc(it.w)}</div>
       <div class="opts">${it.opts.map((o,k)=>optBtn(k,L(k),`<span class="grow">${esc(o)}</span>`,answered,it.ans,pick)).join('')}</div>`;
   } else if(it.type==='order'){
     const placed=quiz.order; const pool=it.pool.filter(x=>!placed.includes(x));
@@ -1314,7 +1326,7 @@ function renderQ(){
   }
   let fb='';
   if(answered){
-    const correctText = it.type==='order' ? `Urutan betul: ${it.items.map((x,k)=>(k+1)+'. '+x).join(' · ')}` : it.type==='fill' ? '' : `Jawapan: ${it.opts[it.ans]}`;
+    const correctText = it.type==='order' ? `Urutan betul: ${it.items.map((x,k)=>(k+1)+'. '+x).join(' · ')}` : (it.type==='fill'&&isArabic(it.opts[it.ans])) ? '' : `Jawapan: ${it.opts[it.ans]}`;
     const say = a.ok ? PUJIAN[quiz.i%PUJIAN.length] : (a.timeout ? 'Masa tamat. Tak apa, tengok bacaannya.' : PUJUK[quiz.i%PUJUK.length]);
     fb=`<div class="feedback ${a.ok?'ok':'ko'}">
       <div class="fh"><img src="${a.ok?UST.pose.thumbs:UST.pose.think}" alt=""><div><b>${esc(say)} <span style="color:${a.ok?'var(--good)':'var(--muted)'}">${a.ok?'+10 XP':'+3 XP usaha'}</span></b><small>${UST.nama}</small></div></div>
@@ -1391,9 +1403,10 @@ function openTasmik(){
 }
 function renderTasmik(){
   const r=rec;
-  const textBox=`<div class="arabic-box ${r.phase==='rec'&&!r.peeking?'blurred':''}"><p class="quran">فَلَمْ تَجِدُوا مَاءً فَتَيَمَّمُوا صَعِيدًا طَيِّبًا فَامْسَحُوا بِوُجُوهِكُمْ وَأَيْدِيكُم مِّنْهُ</p>
+  const hz=hafazanHariIni()||{ayat:'فَلَمْ تَجِدُوا مَاءً فَتَيَمَّمُوا صَعِيدًا طَيِّبًا',rujukan:'Surah al-Maidah 5:6'};
+  const textBox=`<div class="arabic-box ${r.phase==='rec'&&!r.peeking?'blurred':''}"><p class="quran">${SHEETS?hz.ayat:'فَلَمْ تَجِدُوا مَاءً فَتَيَمَّمُوا صَعِيدًا طَيِّبًا فَامْسَحُوا بِوُجُوهِكُمْ وَأَيْدِيكُم مِّنْهُ'}</p>
     ${r.phase==='rec'&&!r.peeking?`<button class="peek-btn" data-act="rec-peek"><span>Intai teks 3 saat · dicatat (${r.peeks}×)</span></button>`:''}</div>
-    <p class="small muted" style="margin-top:6px">Surah al-Maidah 5:6 (potongan) · dalil tayamum · <button class="link" data-act="toast" data-msg="Demo: dalam versi penuh, audio contoh daripada QR code buku teks dimainkan di sini.">Dengar bacaan contoh</button></p>`;
+    <p class="small muted" style="margin-top:6px">${SHEETS?esc(hz.rujukan||''):'Surah al-Maidah 5:6 (potongan) · dalil tayamum'} · <button class="link" data-act="toast" data-msg="Demo: dalam versi penuh, audio contoh daripada QR code buku teks dimainkan di sini.">Dengar bacaan contoh</button></p>`;
   let ctl='';
   if(r.phase==='idle') ctl=`
     <div class="amanah">${pose('point',92)}<div class="grow"><b>Amanah dalam hafazan</b>
@@ -1464,7 +1477,7 @@ document.addEventListener('click',e=>{
   else if(act==='rec-stop'){ recStop(); }
   else if(act==='rec-peek'){ rec.peeks++; rec.peeking=true; renderTasmik(); rec.peekT=setTimeout(()=>{ if(rec&&rec.phase==='rec'){ rec.peeking=false; renderTasmik(); } },3000); }
   else if(act==='rec-reset'){ stopRec(); const ctx=rec.ctx; rec={ctx,phase:'idle',t:0,timer:null,peeks:0,peeking:false,janji:ctx==='tasmik',cd:0}; if(ctx==='tasmik') renderTasmik(); else openSheet(renderPesananSheet()); }
-  else if(act==='tasmik-hantar'){ state.tasmik.unshift({nama:state.nama,ayat:'Al-Maidah 5:6',dur:fmt(rec.t),peeks:rec.peeks}); state.usaha.hafazan++; state.xp+=30; logAktiviti(30); save(); if(rec.url) URL.revokeObjectURL(rec.url); rec=null; $('#layer').hidden=true; document.body.style.overflow=''; render(); toast(SHEETS?'Direkod sebagai usaha (+30 XP). Penghantaran audio kepada Ustazah dibuka dalam Fasa 2.':'Tasmik dihantar kepada Ustazah. +30 XP usaha.'); }
+  else if(act==='tasmik-hantar'){ state.tasmik.unshift({nama:state.nama,ayat:(hafazanHariIni()||{}).rujukan||'Hafazan',dur:fmt(rec.t),peeks:rec.peeks}); state.usaha.hafazan++; state.xp+=30; logAktiviti(30); save(); if(rec.url) URL.revokeObjectURL(rec.url); rec=null; $('#layer').hidden=true; document.body.style.overflow=''; render(); toast(SHEETS?'Direkod sebagai usaha (+30 XP). Penghantaran audio kepada Ustazah dibuka dalam Fasa 2.':'Tasmik dihantar kepada Ustazah. +30 XP usaha.'); }
   else if(act==='play-pesan'){ const bar=$('#pp'); if(!bar) return; if(playT){ clearInterval(playT); playT=null; el.textContent='▶'; return; } let p=0; el.textContent='❚❚'; toast('Demo: tiada audio. Versi penuh memainkan suara Ustazah.'); playT=setInterval(()=>{ p+=100/32; const b=$('#pp'); if(b) b.style.width=Math.min(100,p)+'%'; if(p>=100){ clearInterval(playT); playT=null; const pb=$('[data-act="play-pesan"]'); if(pb) pb.textContent='▶'; } },250); }
   else if(act==='share'){ const txt=`Kad Laporan ${state.nama} (${state.kelas}): Level ${lvl()}, ${state.xp} XP, streak ${state.streak} hari, ${state.usaha.dicuba} soalan dicuba bulan ini.`; const done=()=>toast('Ringkasan disalin. Versi penuh: pautan kad laporan untuk ibu bapa.'); try{ navigator.clipboard.writeText(txt).then(done,done); }catch(err){ done(); } }
   else if(act==='toast'){ toast(el.dataset.msg); }
