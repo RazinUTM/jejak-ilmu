@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#6d4cc4">
+<title>Panduan Murid · Jejak Ilmu</title>
+<link rel="icon" href="img/icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Great+Vibes&display=swap">
+<style>
+/* One readable column; prints cleanly; projected in class at laptop width. */
+:root{
+  --bg:#f6f2fb; --surface:#ffffff; --surface-2:#ede7f6; --fg:#241b33; --muted:#6c607d; --line:#ded5ec;
+  --accent:#6d4cc4; --accent-soft:#e9e1f8; --band-a:#7b58d6; --band-b:#43307f;
+  --gold:#c6962d; --gold-soft:#f7ebd0; --gold-text:#6b4a08; --good:#1e9b68; --bad:#d2523c;
+  --display:"Bricolage Grotesque","Plus Jakarta Sans",system-ui,sans-serif;
+  --body:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --script:"Great Vibes","Brush Script MT",cursive;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#130f1e; --surface:#1c1730; --surface-2:#262040; --fg:#eee8f8; --muted:#a99ebf; --line:#352c50;
+    --accent:#b39cf2; --accent-soft:#2d2452; --band-a:#5a42ad; --band-b:#2a1d5e;
+    --gold:#e8bb5b; --gold-soft:#3a2f16; --gold-text:#f3d58e; --good:#3fc48a; --bad:#f07a66; color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+img{max-width:100%}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);line-height:1.15;margin:0;text-wrap:balance}
+h2{font-size:22px;margin:30px 0 12px;display:flex;align-items:center;gap:10px}
+h2 .tag{font-family:var(--body);font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:999px}
+.tag.wajib{background:var(--accent);color:#fff}
+.tag.pilihan{background:var(--gold-soft);color:var(--gold-text)}
+p{margin:0 0 8px}
+.hero{background:linear-gradient(140deg,var(--band-a),var(--band-b));color:#fff;overflow:hidden}
+.hero .wrap{display:flex;align-items:flex-end;gap:12px;padding-top:22px}
+.hero .t{flex:1;padding-bottom:24px;min-width:0}
+.hero .script{font-family:var(--script);font-size:38px;color:#e8bb5b;line-height:1}
+.hero h1{font-size:30px;margin-top:6px}
+.hero p{opacity:.9;margin-top:6px;font-size:15px}
+.hero img{height:190px;width:auto;flex:none;margin-right:-8px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:560px){ .grid2{grid-template-columns:1fr} .hero img{height:150px} .hero h1{font-size:25px} }
+.qr{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.qr img{width:150px;height:150px;border-radius:12px;border:1px solid var(--line);background:#fff;padding:6px}
+.url{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;font-size:15px;word-break:break-all;color:var(--accent)}
+.steps{display:flex;flex-direction:column;gap:10px;counter-reset:s}
+.step{display:flex;gap:14px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px}
+.step .n{flex:none;width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-family:var(--display);font-weight:800}
+.step.opt .n{background:var(--gold);color:#2a1d05}
+.step h3{font-size:17px}
+.step .time{font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-top:2px}
+.step ul{margin:6px 0 0;padding-left:20px}
+.step li{margin-bottom:3px}
+.ui{font-weight:800;color:var(--accent)}
+.xp{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media (max-width:560px){ .xp{grid-template-columns:repeat(2,1fr)} }
+.xp div{background:var(--surface-2);border-radius:14px;padding:10px 12px}
+.xp b{display:block;font-family:var(--display);font-size:22px}
+.xp span{font-size:12.5px;color:var(--muted);font-weight:600}
+.amanah{display:flex;gap:14px;align-items:flex-start;background:var(--gold-soft);color:var(--gold-text);border-radius:18px;padding:16px}
+.amanah img{height:110px;width:auto;flex:none;margin:-10px 0 -16px}
+.amanah ul{margin:6px 0 0;padding-left:18px}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;vertical-align:top;padding:9px 10px;border-bottom:1px solid var(--line)}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.tbl{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:18px}
+.cta{display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 20px;border-radius:999px;background:var(--accent);color:#fff;font-weight:800;text-decoration:none;margin-top:10px}
+.muted{color:var(--muted)} .small{font-size:13.5px}
+footer{padding-block:28px 40px;color:var(--muted);font-size:13px}
+@media print{ .hero{-webkit-print-color-adjust:exact;print-color-adjust:exact} .step,.card,.amanah{break-inside:avoid} .cta{display:none} }
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+  <div class="t">
+    <div class="script">Ustazah Nafisah</div>
+    <h1>Panduan Murid · Jejak Ilmu</h1>
+    <p>Pendidikan Islam Tingkatan 2. Hari pertama: siapkan 4 misi wajib, kemudian pilih misi pilihan yang kamu suka.</p>
+  </div>
+  <img src="img/pose-point.webp" alt="">
+</div></header>
+
+<main class="wrap">
+
+<h2>Langkah 0 · Buka aplikasi</h2>
+<div class="card">
+  <div class="qr">
+    <img src="img/qr-app.png" alt="Kod QR ke aplikasi Jejak Ilmu">
+    <div style="flex:1;min-width:220px">
+      <p>Imbas kod QR dengan kamera telefon, atau taip:</p>
+      <p class="url">razinutm.github.io/jejak-ilmu</p>
+      <p class="small muted">Jangan guna tab <b>Incognito / Private</b>: kemajuan kamu akan hilang bila tab ditutup.</p>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:12px">
+    <div><b>Android (Chrome)</b><br><span class="small">Menu ⋮ → <span class="ui">Add to Home screen</span> / <span class="ui">Tambah ke skrin utama</span>. Ikon Ustazah Nafisah akan muncul seperti app.</span></div>
+    <div><b>iPhone (Safari)</b><br><span class="small">Butang Kongsi ⬆ → <span class="ui">Add to Home Screen</span>. Guna Safari, bukan pelayar lain, supaya mikrofon berfungsi.</span></div>
+  </div>
+</div>
+
+<h2>Langkah 1 · Log masuk</h2>
+<div class="steps">
+  <div class="step"><div class="n">1</div><div><h3>Pilih kelas kamu</h3><p class="small">Contoh: <span class="ui">2 Amanah</span>.</p></div></div>
+  <div class="step"><div class="n">2</div><div><h3>Tekan nama kamu sendiri</h3><p class="small">Semua nama kelas sudah ada. Pastikan nama itu <b>nama kamu</b>.</p></div></div>
+  <div class="step"><div class="n">3</div><div><h3>Masukkan PIN daripada Ustazah → Masuk</h3><p class="small">PIN salah? Cuba sekali lagi dengan perlahan. Masih salah, angkat tangan dan tanya Ustazah. Jangan beritahu PIN kamu kepada kawan.</p></div></div>
+</div>
+
+<h2><span class="tag wajib">Wajib</span> 4 misi hari ini <span class="muted small" style="font-weight:600">± 45 minit</span></h2>
+<p>Di skrin <span class="ui">Utama</span> ada kad <b>Misi hari ini</b>. Setiap misi akan ditanda ✓ secara automatik bila siap. Buat ikut urutan.</p>
+<div class="steps">
+  <div class="step"><div class="n">1</div><div>
+    <h3>Cabaran Harian</h3><div class="time">± 5 minit · 5 soalan · +50 XP bonus</div>
+    <ul><li>Tekan <span class="ui">Mula</span> pada misi 1 (atau kad Cabaran Harian).</li>
+    <li>Baca <b>penjelasan</b> selepas setiap jawapan, betul atau salah. Di situlah kamu belajar.</li></ul></div></div>
+  <div class="step"><div class="n">2</div><div>
+    <h3>Kuiz pelajaran semasa: capai 70%</h3><div class="time">± 15–20 minit · 8 soalan</div>
+    <ul><li>Tekan <span class="ui">Mula</span> pada misi 2. Nombor pelajaran ditetapkan oleh Ustazah.</li>
+    <li>Belum 70%? Tekan <span class="ui">Cuba lagi</span>: soalannya sama, susunan jawapan berbeza. Fikir semula, jangan hafal huruf A/B/C.</li>
+    <li>Buku teks boleh dibuka. Muka surat rujukan ada di bawah setiap soalan.</li></ul></div></div>
+  <div class="step"><div class="n">3</div><div>
+    <h3>Rakam tasmik (hafazan)</h3><div class="time">± 10 minit · +30 XP</div>
+    <ul><li>Baca ayat dalam kad <b>Hafazan hari ini</b> sebanyak 3 kali dahulu.</li>
+    <li>Tekan <span class="ui">Rakam</span>, tanda janji, kemudian baca tanpa melihat (teks akan kabur). Benarkan mikrofon bila diminta.</li>
+    <li>Tersekat? Butang <span class="ui">Intai teks</span> dibenarkan, tetapi dicatat. Jujur lebih bernilai daripada sempurna.</li>
+    <li>Jika Ustazah minta, tekan <span class="ui">Kongsi rakaman</span> dan hantar ke WhatsApp Ustazah. Kemudian tekan <span class="ui">Selesai</span>.</li></ul></div></div>
+  <div class="step"><div class="n">4</div><div>
+    <h3>Buka Kad Laporan</h3><div class="time">± 5 minit</div>
+    <ul><li>Tekan tab <span class="ui">Laporan</span>. Baca <b>Ulasan</b>, lihat SP mana yang masih lemah.</li>
+    <li>Kembali ke <span class="ui">Utama</span>. Kad Misi kini berwarna emas: <b>screenshot kad itu</b> (nama, kelas dan masa kelihatan) dan hantar kepada Ustazah.</li></ul></div></div>
+</div>
+
+<h2><span class="tag pilihan">Pilihan</span> Sudah siap? Pilih mana-mana</h2>
+<p>Misi pilihan muncul dalam kad Misi selepas 4 misi wajib siap, dan sentiasa ada di tab <span class="ui">Cabaran</span>.</p>
+<div class="steps">
+  <div class="step opt"><div class="n">A</div><div><h3>Tajwid Tap</h3><p class="small">Kenal pasti hukum nun sakinah dan tanwin pada huruf bertanda merah. Capai 90% untuk lencana <b>Ahli Tajwid</b>.</p></div></div>
+  <div class="step opt"><div class="n">B</div><div><h3>Jawi Sprint</h3><p class="small">Baca perkataan Jawi dalam 10 saat setiap satu. Bagus untuk yang selalu tersangkut membaca buku teks.</p></div></div>
+  <div class="step opt"><div class="n">C</div><div><h3>Susun Langkah</h3><p class="small">Susun langkah ibadah atau peristiwa sejarah mengikut urutan yang betul.</p></div></div>
+  <div class="step opt"><div class="n">D</div><div><h3>Sambung Ayat</h3><p class="small">Lengkapkan ayat atau istilah yang tertinggal.</p></div></div>
+  <div class="step opt"><div class="n">E</div><div><h3>Dilema Akhlak (KBAT)</h3><p class="small">Soalan situasi. Tiada jalan pintas: fikir apa yang patut dibuat, kemudian baca justifikasi.</p></div></div>
+  <div class="step opt"><div class="n">F</div><div><h3>Ulang kaji pelajaran lepas</h3><p class="small">Tab <span class="ui">Peta</span> → pilih pelajaran yang sudah dibuka → Kuiz. Pelajaran berkunci 🔒 akan dibuka oleh Ustazah kemudian.</p></div></div>
+</div>
+<div class="card" style="margin-top:12px"><b>Cabar diri</b>
+  <ul style="margin:6px 0 0;padding-left:20px"><li>Dapatkan 100% dalam satu kuiz pelajaran.</li><li>Kumpul 300 XP hari ini.</li><li>Ulang kuiz sehingga soalan yang salah tadi menjadi betul: kad Laporan mengira <b>"bangkit"</b>.</li><li>Sudah selesai semua? Bantu kawan sebelah yang masih tersangkut log masuk atau mikrofon.</li></ul>
+</div>
+
+<h2>Bagaimana XP dikira</h2>
+<div class="xp">
+  <div><b>+10</b><span>jawapan betul</span></div>
+  <div><b>+3</b><span>jawapan salah (usaha)</span></div>
+  <div><b>+20</b><span>kuiz sempurna</span></div>
+  <div><b>+50</b><span>Cabaran Harian (sekali sehari)</span></div>
+  <div><b>+30</b><span>tasmik</span></div>
+</div>
+<p class="small muted" style="margin-top:8px">Salah pun dapat XP. Jangan takut mencuba. Markah peperiksaan sebenar tetap bertulis di dalam kelas; XP di sini ialah cermin usaha kamu.</p>
+
+<h2>Amanah</h2>
+<div class="amanah">
+  <img src="img/pose-think.webp" alt="">
+  <div><b>Ustazah percaya kamu.</b>
+    <ul><li>Log masuk dengan nama kamu sendiri sahaja. Jangan main untuk kawan.</li>
+    <li>Jangan kongsi PIN.</li>
+    <li>Rakam tasmik tanpa melihat teks, dengan suara kamu sendiri.</li>
+    <li>Jawab sendiri. Tanya kawan tentang <i>sebab</i> jawapan, bukan huruf jawapan.</li></ul></div>
+</div>
+
+<h2>Kalau ada masalah</h2>
+<div class="tbl"><table>
+  <tr><th style="width:38%">Masalah</th><th>Cuba ini</th></tr>
+  <tr><td>PIN salah</td><td>Taip perlahan. Pastikan kelas dan nama betul. Masih gagal: tanya Ustazah.</td></tr>
+  <tr><td>Nama tiada dalam senarai</td><td>Semak kelas yang dipilih. Murid baharu: beritahu Ustazah, guna telefon kawan dahulu (lihat "Kongsi telefon").</td></tr>
+  <tr><td>Skrin kosong / soalan tak muncul</td><td>Tarik ke bawah untuk muat semula. Semak internet. Tunggu 5 saat selepas buka.</td></tr>
+  <tr><td>Mikrofon tak berfungsi</td><td>Benarkan mikrofon bila diminta. iPhone: guna Safari. Tetapan telefon → Privasi → Mikrofon → benarkan pelayar.</td></tr>
+  <tr><td>Kongsi telefon dengan kawan</td><td>Boleh. Tetapan ⚙ → <span class="ui">Log keluar / tukar murid</span> sebelum kawan log masuk. Kemajuan setiap murid disimpan berasingan dalam telefon itu.</td></tr>
+  <tr><td>XP hilang</td><td>Kemajuan disimpan dalam pelayar telefon kamu. Ia hilang jika guna Incognito, padam data pelayar, atau tukar telefon. Guna telefon yang sama setiap kali.</td></tr>
+  <tr><td>Tulisan Arab nampak kotak</td><td>Pastikan internet hidup kali pertama buka (font dimuat turun).</td></tr>
+</table></div>
+
+<p style="margin-top:20px"><a class="cta" href="./">Buka Jejak Ilmu</a></p>
+</main>
+<footer class="wrap">Jejak Ilmu · Kelas Pendidikan Islam Tingkatan 2 · Ustazah Nafisah. Hanya nama dan kelas murid disimpan.</footer>
+</body>
+</html>
