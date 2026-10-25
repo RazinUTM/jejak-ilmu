@@ -11,6 +11,7 @@
 <link rel="icon" href="img/icon-192.png">
 <title>Jejak Ilmu · Ustazah Nafisah</title>
 <script src="js/config.js"></script>
+<script src="js/roster.js"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Naskh+Arabic:wght@400;600;700&family=Amiri+Quran&family=Great+Vibes&display=swap">
 <style>
 /* Layout: phone-first single column; at ≥900px a left navigation rail, student views stay a narrow column, the teacher dashboard widens to a two-column grid. Brand: Ustazah Nafisah's lavender + gold, transparent avatar poses used by context. */
@@ -516,7 +517,11 @@ let SP16 = [
 ];
 let SP_NAMA = Object.fromEntries(SP16.map(s=>[s.k,s.n]));
 let SPS={16:SP16};
-const CFG=window.JEJAK_CONFIG||{}; const SHEETS=!!CFG.bankCsvUrl; const KELAS_CFG=CFG.kelas||['2 Amanah','2 Bestari','2 Cekal'];
+const CFG=window.JEJAK_CONFIG||{}; const SHEETS=!!CFG.bankCsvUrl;
+const ROSTER=(window.JEJAK_ROSTER&&Array.isArray(window.JEJAK_ROSTER.murid)&&window.JEJAK_ROSTER.murid.length)?window.JEJAK_ROSTER:null;
+const KELAS_CFG=ROSTER?[...new Set(ROSTER.murid.filter(m=>!m.g).map(m=>m.k))].sort((x,y)=>(/lain/i.test(x)-/lain/i.test(y))||x.localeCompare(y)):(CFG.kelas||['2 Amanah','2 Bestari','2 Cekal']);
+const HARIAN_MIX=Object.assign({mudah:6,sederhana:3,kbat:1},CFG.harian||{});
+async function pinHash(pin,nama,kelas){ const enc=new TextEncoder(); const key=await crypto.subtle.importKey('raw',enc.encode(String(pin)),'PBKDF2',false,['deriveBits']); const bits=await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:enc.encode(`${ROSTER.salt}|${nama}|${kelas}`),iterations:ROSTER.iter||60000},key,256); return [...new Uint8Array(bits)].map(b=>b.toString(16).padStart(2,'0')).join(''); }
 SP_NAMA['1.13.1']='Hukum nun sakinah dan tanwin'; SP_NAMA['5.5.2']='Faktor yang mendorong Hijrah'; SP_NAMA['JAWI']='Kemahiran membaca Jawi'; SP_NAMA['AKHLAK']='Akhlak: adab berjiran (contoh guru)';
 const TAJWID_OPTS = ['Izhar Halqi','Idgham Maal Ghunnah','Idgham Bila Ghunnah','Iqlab',"Ikhfa' Haqiqi"];
 
@@ -620,7 +625,7 @@ function buildBank(soalanRows, spRows, pelRows){
   for(const r of soalanRows){
     if(!r.id || /^n/i.test(r.aktif||'Y')) continue;
     const jenis=(r.jenis||'').toLowerCase(); const pil=['A','B','C','D','E'].map(L=>r['pilihan_'+L]).filter(Boolean); const urut=[1,2,3,4,5,6].map(k=>r['urutan_'+k]).filter(Boolean);
-    const it={type:jenis,sp:r.sp_kod,pel:+r.pelajaran||0,ms:r.ms?+r.ms:null,q:r.soalan||'',jawi:r.soalan_jawi||'',why:r.penjelasan||'',kbat:/^y/i.test(r.kbat||'')};
+    const kb=/^y/i.test(r.kbat||'')||/kbat|sukar|tinggi/i.test(r.aras||''); const it={type:jenis,sp:r.sp_kod,pel:+r.pelajaran||0,ms:r.ms?+r.ms:null,q:r.soalan||'',jawi:r.soalan_jawi||'',why:r.penjelasan||'',kbat:kb,aras:kb?'kbat':(/sederhana/i.test(r.aras||'')?'sederhana':'mudah')};
     if(jenis==='order'){ if(urut.length<3){bad.push(r.id);continue;} it.items=urut; }
     else { const a=LETTER[(r.jawapan||'').toUpperCase()]; if(a==null){bad.push(r.id);continue;} it.ans=a;
       if(jenis==='tajwid'){ it.ar=(r.arab_jawi||'').replace('[','<b>').replace(']','</b>'); }
@@ -631,7 +636,7 @@ function buildBank(soalanRows, spRows, pelRows){
   if(Object.keys(Qn).length){ Q=Qn; }
   const ids=Object.keys(Q); const by=f=>ids.filter(id=>f(Q[id]));
   const S={};
-  S.harian={t:'Cabaran Harian',ids:ids,pick:5,xp:50};
+  S.harian={t:'Cabaran Harian',ids:ids,pick:HARIAN_MIX.mudah+HARIAN_MIX.sederhana+HARIAN_MIX.kbat,xp:50,mix:true};
   for(const p of PELAJARAN){ const l=by(q=>q.pel===p.n); if(l.length) S['kuiz'+p.n]={t:'Kuiz Pelajaran '+p.n,ids:l,pick:Math.min(8,l.length)}; }
   const tj=by(q=>q.type==='tajwid'); if(tj.length) S.tajwid={t:'Tajwid Tap',ids:tj,pick:Math.min(6,tj.length)};
   const od=by(q=>q.type==='order'); if(od.length) S.susun={t:'Susun Langkah',ids:od,pick:Math.min(4,od.length)};
@@ -658,7 +663,7 @@ async function loadBank(){
 }
 function recomputePelajaran(){ for(const p of PELAJARAN){ const v=(SPS[p.n]||[]).map(x=>state.sp[x.k]).filter(x=>x!=null); p.m=v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):(p.m&&!SHEETS?p.m:null); if(SHEETS&&p.st==='siap'&&v.length===0) p.st='buka'; }
   if(SHEETS){ for(const b of BIDANG){ const v=PELAJARAN.filter(p=>p.b===b.id&&p.m!=null).map(p=>p.m); state.bidangM[b.id]=v.length?Math.round(v.reduce((a,c)=>a+c,0)/v.length):0; } } }
-function freshProgress(){ Object.assign(state,{xp:0,streak:1,dailyDone:false,lastSet:null,lastWrong:null,usaha:{hariAktif:1,dicuba:0,bangkit:0,hafazan:0,kuizUlang:0},tasmik:[],sp:{},best:{},bidangM:{quran:0,hadis:0,akidah:0,fiqah:0,sirah:0,akhlak:0}}); recomputePelajaran(); }
+function freshProgress(){ Object.assign(state,{progressVersion:CFG.progressVersion==null?state.progressVersion:CFG.progressVersion,xp:0,streak:1,dailyDone:false,lastSet:null,lastWrong:null,usaha:{hariAktif:1,dicuba:0,bangkit:0,hafazan:0,kuizUlang:0},tasmik:[],sp:{},best:{},bidangM:{quran:0,hadis:0,akidah:0,fiqah:0,sirah:0,akhlak:0}}); recomputePelajaran(); }
 
 /* ---------- STATE ---------- */
 const DEFAULT_STATE = {
@@ -761,8 +766,8 @@ function vUtama(){
 
     <div class="card ${state.dailyDone?'':'hi'}">
       <div class="eyebrow">Cabaran Harian</div>
-      <h2 style="font-size:19px;margin-top:4px">${state.dailyDone?'Selesai untuk hari ini':'5 soalan · 3 minit · +50 XP'}</h2>
-      <p class="small muted" style="margin-top:4px">5 soalan dipilih rawak daripada 12, susunan dikocok setiap kali. Salah pun dapat +3 XP usaha.</p>
+      <h2 style="font-size:19px;margin-top:4px">${state.dailyDone?'Selesai untuk hari ini':`${SETS.harian?(SETS.harian.pick||5):5} soalan · ${SHEETS?'5':'3'} minit · +50 XP`}</h2>
+      <p class="small muted" style="margin-top:4px">${SHEETS?`${HARIAN_MIX.mudah+HARIAN_MIX.sederhana+HARIAN_MIX.kbat} soalan dipilih rawak daripada ${SETS.harian?SETS.harian.ids.length:0}: ${HARIAN_MIX.mudah} mudah, ${HARIAN_MIX.sederhana} sederhana, ${HARIAN_MIX.kbat} KBAT. Salah pun dapat +3 XP usaha.`:'5 soalan dipilih rawak daripada 12, susunan dikocok setiap kali. Salah pun dapat +3 XP usaha.'}</p>
       <div class="row" style="margin-top:12px;gap:8px">
         <button class="btn ${state.dailyDone?'ghost':''}" data-act="quiz" data-set="harian">${state.dailyDone?'Ulang (soalan baharu)':'Mula sekarang'}</button>
         <span class="pill gold">🔥 Streak ${state.streak}</span>
@@ -1131,7 +1136,7 @@ function sheetSettings(){
     <div class="field" style="margin-top:14px"><label>Paparan tulisan</label>
       <div class="toggle" role="group"><button data-act="skrip" data-v="rumi" aria-pressed="${state.skrip==='rumi'}">Rumi</button><button data-act="skrip" data-v="jawi" aria-pressed="${state.skrip==='jawi'}">Jawi</button><button data-act="skrip" data-v="dua" aria-pressed="${state.skrip==='dua'}">Kedua-dua</button></div>
       <p class="small muted">Buku teks ditulis sepenuhnya dalam Jawi. Mod "Kedua-dua" membantu murid yang masih lemah membaca Jawi.</p></div>
-    <div class="field" style="margin-top:14px"><label>Akaun</label><div class="row wrap" style="gap:8px"><span class="pill acc">${esc(state.nama)} · ${esc(state.kelas)}</span><button class="btn sm ghost" data-act="logout">Log keluar / tukar murid</button></div></div>
+    <div class="field" style="margin-top:14px"><label>Akaun</label><div class="row wrap" style="gap:8px"><span class="pill acc">${esc(state.nama)} · ${esc(state.kelas)}${state.user&&state.user.guru?' · guru':''}</span><button class="btn sm ghost" data-act="logout">Log keluar / tukar murid</button></div></div>
     <div class="field" style="margin-top:14px"><label>Data demo</label><button class="btn ghost" data-act="reset">Set semula kemajuan demo</button></div>
     <p class="note-demo" style="margin-top:16px">Prototaip klik-boleh. Kemajuan disimpan dalam pelayar ini sahaja. Versi penuh menyimpan di pelayan supaya Ustazah nampak kad laporan setiap murid.</p>
   </div>`);
@@ -1189,8 +1194,8 @@ function renderPesananSheet(){
 /* ---------- GATE (muka depan) ---------- */
 let gate={kelas:KELAS_CFG[0]||'2 Amanah',nama:null,pin:''};
 function renderGate(){
-  const names=KELAS_SENARAI[gate.kelas]||[];
-  const ok=SHEETS ? (gate.nama&&gate.nama.trim().length>=2) : (gate.nama&&/^\d{4}$/.test(gate.pin));
+  const names=ROSTER?ROSTER.murid.filter(m=>m.k===gate.kelas&&!m.g).map(m=>m.n).sort((a,b)=>a.localeCompare(b)):(KELAS_SENARAI[gate.kelas]||[]);
+  const ok=ROSTER ? (gate.nama&&/^\d{4,8}$/.test(gate.pin)) : SHEETS ? (gate.nama&&gate.nama.trim().length>=2) : (gate.nama&&/^\d{4}$/.test(gate.pin));
   $('#gate').innerHTML=`
     <div class="hero"><div class="hero-in gut">
       <div class="txt"><span class="wordmark">${UST.nama}</span><h1>Jejak Ilmu</h1><div class="sub">Kelas Pendidikan Islam Tingkatan 2. Belajar sikit setiap hari, konsisten lebih penting daripada sempurna.</div></div>
@@ -1199,20 +1204,29 @@ function renderGate(){
     </div></div>
     <div class="form gut">
       <div class="step"><div class="eyebrow">1 · Kelas kamu</div><div class="chips">${(SHEETS?KELAS_CFG:Object.keys(KELAS_SENARAI)).map(k=>`<button data-act="g-kelas" data-v="${esc(k)}" aria-pressed="${gate.kelas===k}">${esc(k)}</button>`).join('')}</div></div>
-      ${SHEETS?`<div class="step"><div class="eyebrow">2 · Nama kamu</div><div class="field"><input class="wide" id="g-nama" type="text" autocomplete="off" maxlength="40" placeholder="Taip nama penuh" value="${esc(gate.nama||'')}" aria-label="Nama"></div>
+      ${SHEETS&&!ROSTER?`<div class="step"><div class="eyebrow">2 · Nama kamu</div><div class="field"><input class="wide" id="g-nama" type="text" autocomplete="off" maxlength="40" placeholder="Taip nama penuh" value="${esc(gate.nama||'')}" aria-label="Nama"></div>
         <div class="row" style="margin-top:12px;gap:10px"><button class="btn" data-act="g-masuk" ${ok?'':'disabled'}>Masuk</button><span class="small muted">Fasa 1: tiada PIN. Kemajuan disimpan dalam telefon ini sahaja.</span></div></div>`:`
-      <div class="step"><div class="eyebrow">2 · Nama kamu</div><div class="names">${names.map(n=>`<button data-act="g-nama" data-v="${esc(n)}" aria-pressed="${gate.nama===n}">${esc(n)}</button>`).join('')}</div></div>`}
-      <div class="step" ${SHEETS?'hidden':''}><div class="eyebrow">3 · PIN 4 digit</div>
-        <div class="pin"><input id="g-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="PIN" value="${gate.pin}" placeholder="••••"><button class="btn" data-act="g-masuk" ${ok?'':'disabled'}>Masuk</button></div>
-        <p class="small muted" style="margin-top:8px">PIN diberi oleh Ustazah dan boleh ditukar selepas log masuk pertama. Jangan kongsi dengan kawan: jawapan kamu ialah cermin usaha kamu sendiri. <span class="pill" style="margin-left:4px">demo: mana-mana 4 digit</span></p>
+      <div class="step"><div class="eyebrow">2 · Nama kamu</div>${gate.kelas==='Guru'?`<p class="small muted">Akaun guru: <b>${esc(gate.nama||'')}</b></p>`:`<div class="names">${names.map(n=>`<button data-act="g-nama" data-v="${esc(n)}" aria-pressed="${gate.nama===n}">${esc(n)}</button>`).join('')}</div>`}</div>`}
+      <div class="step" ${SHEETS&&!ROSTER?'hidden':''}><div class="eyebrow">3 · PIN</div>
+        <div class="pin"><input id="g-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="${ROSTER?8:4}" autocomplete="off" aria-label="PIN" value="${gate.pin}" placeholder="••••"><button class="btn" data-act="${ROSTER?'g-login':'g-masuk'}" ${ok?'':'disabled'}>Masuk</button></div>
+        <p class="small muted" style="margin-top:8px">${ROSTER?'PIN diberi oleh Ustazah. Jangan kongsi dengan kawan: jawapan kamu ialah cermin usaha kamu sendiri.':'PIN diberi oleh Ustazah dan boleh ditukar selepas log masuk pertama. <span class="pill" style="margin-left:4px">demo: mana-mana 4 digit</span>'}</p>
+        <p id="g-err" class="small" style="color:var(--bad);font-weight:700;margin-top:6px" hidden>PIN tidak sepadan. Cuba lagi, atau minta Ustazah semak.</p>
       </div>
+      ${ROSTER?`<div class="step"><button class="link" data-act="g-guru">Saya guru</button></div>`:''}
       ${SHEETS?'':'<div class="or">atau</div><button class="btn block line" data-act="toast" data-msg="Versi penuh: log masuk Google dengan akaun sekolah.">Log masuk dengan akaun Google</button>'}
       <p class="small muted" style="margin-top:14px;text-align:center">Hanya nama dan kelas disimpan. Tiada nombor telefon, tiada alamat.</p>
     </div>`;
-  const inp=$('#g-pin'); if(inp){ inp.addEventListener('input',e=>{ gate.pin=e.target.value.replace(/\D/g,'').slice(0,4); e.target.value=gate.pin; $('[data-act="g-masuk"]').disabled=!(gate.nama&&gate.pin.length===4); }); }
+  const inp=$('#g-pin'); if(inp){ inp.addEventListener('input',e=>{ gate.pin=e.target.value.replace(/\D/g,'').slice(0,ROSTER?8:4); e.target.value=gate.pin; const b=$('[data-act="g-masuk"],[data-act="g-login"]'); if(b) b.disabled=!(gate.nama&&gate.pin.length>=4); }); inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ const b=$('[data-act="g-masuk"],[data-act="g-login"]'); if(b&&!b.disabled) b.click(); } }); }
   const nm=$('#g-nama'); if(nm){ nm.addEventListener('input',e=>{ gate.nama=e.target.value; $('[data-act="g-masuk"]').disabled=!(gate.nama.trim().length>=2); }); nm.addEventListener('keydown',e=>{ if(e.key==='Enter'&&gate.nama.trim().length>=2) $('[data-act="g-masuk"]').click(); }); }
 }
 function showGate(){ $('#gate').hidden=false; $('#tabbar').hidden=true; document.body.style.overflow='hidden'; renderGate(); }
+async function gateLogin(){
+  const btn=$('[data-act="g-login"]'); if(btn){ btn.disabled=true; btn.textContent='Menyemak…'; }
+  const m=ROSTER.murid.find(x=>x.n===gate.nama&&x.k===gate.kelas);
+  let ok=false; try{ ok=!!m&&(await pinHash(gate.pin,m.n,m.k))===m.h; }catch(e){ ok=false; }
+  if(!ok){ buzz([40,60,40]); const er=$('#g-err'); if(er) er.hidden=false; if(btn){ btn.disabled=false; btn.textContent='Masuk'; } gate.pin=''; const inp=$('#g-pin'); if(inp){ inp.value=''; inp.focus(); } return; }
+  const same=state.user&&state.user.nama===m.n&&state.user.kelas===m.k; state.user={nama:m.n,kelas:m.k,guru:!!m.g}; state.nama=m.n; state.kelas=m.k; if(!same) freshProgress(); save(); hideGate(); render(); toast(m.g?`Selamat datang, ${m.n}. Mod guru aktif.`:`Selamat datang, ${m.n}. Hanya nama dan kelas kamu disimpan.`);
+}
 function hideGate(){ $('#gate').hidden=true; $('#tabbar').hidden=false; document.body.style.overflow=''; }
 
 /* ---------- QUIZ ENGINE ---------- */
@@ -1224,10 +1238,23 @@ function prepItem(id){
   if(it.opts&&it.type!=='tf'){ const idx=shuffle(it.opts.map((_,i)=>i)); it.opts=idx.map(i=>it.opts[i]); it.ans=idx.indexOf(it.ans); }
   return it;
 }
-function startQuiz(setKey){
+let lastRun=null; // {key, ids} — untuk "Cuba lagi": soalan sama, pilihan jawapan dikocok semula
+function pickMix(ids){
+  const pool={mudah:[],sederhana:[],kbat:[]}; for(const id of ids){ const a=Q[id].aras||(Q[id].kbat?'kbat':'mudah'); (pool[a]||pool.mudah).push(id); }
+  for(const k in pool) pool[k]=shuffle(pool[k]);
+  const out=[]; const want={...HARIAN_MIX}; const order=['kbat','sederhana','mudah'];
+  for(const k of order){ while(want[k]>0&&pool[k].length){ out.push(pool[k].pop()); want[k]--; } }
+  let short=order.reduce((n,k)=>n+want[k],0);
+  for(const k of ['sederhana','mudah','kbat']){ while(short>0&&pool[k].length){ out.push(pool[k].pop()); short--; } }
+  return shuffle(out);
+}
+function startQuiz(setKey,retry=false){
   const set=SETS[setKey]; if(!set||!set.ids.length){ toast('Belum ada soalan untuk mod ini. Ustazah boleh tambah dalam Google Sheets.'); return; }
   closeSheet();
-  const ids=shuffle(set.ids).slice(0,set.pick||set.ids.length);
+  let ids;
+  if(retry&&lastRun&&lastRun.key===setKey) ids=lastRun.ids.slice();
+  else if(set.mix) ids=pickMix(set.ids);
+  else ids=shuffle(set.ids).slice(0,set.pick||set.ids.length);
   quiz={key:setKey,set,items:ids.map(prepItem),i:0,answers:[],order:[],timer:null,tleft:0};
   $('#layer').hidden=false; document.body.style.overflow='hidden';
   renderQ();
@@ -1304,7 +1331,7 @@ function finishQuiz(){
   const wrongNow=quiz.items.filter((it,k)=>!quiz.answers[k].ok).map(it=>it.id);
   let bangkit=0; if(state.lastWrong&&state.lastWrong.set===quiz.key){ bangkit=quiz.items.filter((it,k)=>quiz.answers[k].ok&&state.lastWrong.ids.includes(it.id)).length; }
   state.usaha.dicuba+=n; state.usaha.bangkit+=bangkit; if(state.lastSet===quiz.key) state.usaha.kuizUlang++;
-  state.lastWrong={set:quiz.key,ids:wrongNow}; state.lastSet=quiz.key;
+  state.lastWrong={set:quiz.key,ids:wrongNow}; state.lastSet=quiz.key; lastRun={key:quiz.key,ids:quiz.items.map(it=>it.id)};
   state.xp+=gained; if(quiz.key==='harian') state.dailyDone=true;
   if(quiz.key in state.best){ const prev=state.best[quiz.key]; const pv=prev?parseInt(prev):-1; if(c>pv) state.best[quiz.key]=`${c}/${n}`; }
   save();
@@ -1325,7 +1352,7 @@ function finishQuiz(){
     <div class="card" style="margin-top:18px"><div class="eyebrow" style="margin-bottom:6px">Perubahan penguasaan</div>${deltas}
       <p class="small muted" style="margin-top:8px">Model prototaip: penguasaan baharu = 0.7 × lama + 0.3 × (100 jika betul, 0 jika salah). Versi penuh boleh guna Bayesian Knowledge Tracing.</p></div>
     ${weak.length?`<div class="card hi" style="margin-top:12px"><div class="eyebrow">Ulang kaji disyorkan</div><p style="margin-top:4px;font-weight:700">${weak.map(k=>esc(SP_NAMA[k]||k)).join(' · ')}</p><p class="small muted" style="margin-top:4px">Ustazah juga nampak ini dalam papan pemuka dan boleh hantar kuiz fokus.</p></div>`:''}
-    <div class="qfoot stack" style="gap:8px"><button class="btn block" data-act="quiz-close">Kembali</button><button class="btn block ghost" data-act="quiz" data-set="${quiz.key}">Cuba lagi (soalan dan susunan baharu)</button></div>
+    <div class="qfoot stack" style="gap:8px"><button class="btn block" data-act="quiz-close">Kembali</button><button class="btn block ghost" data-act="quiz" data-set="${quiz.key}" data-retry="1">Cuba lagi (soalan sama, susunan jawapan berbeza)</button></div>
   </div></div>`;
   if(good) confetti();
 }
@@ -1379,8 +1406,11 @@ async function recStop(){ stopRec(); rec.timer=null; rec.phase='done'; rec.peeki
 
 /* ---------- RENDER & EVENTS ---------- */
 const VIEWS={utama:vUtama,peta:vPeta,cabaran:vCabaran,laporan:vLaporan,guru:vGuru};
-const TABS=[['utama','Utama'],['peta','Peta'],['cabaran','Cabaran'],['laporan','Laporan'],['guru','Guru']];
+const TABS_ALL=[['utama','Utama'],['peta','Peta'],['cabaran','Cabaran'],['laporan','Laporan'],['guru','Guru']];
+const isGuru=()=>!ROSTER||!!(state.user&&state.user.guru);
 function render(){
+  const TABS=TABS_ALL.filter(([k])=>k!=='guru'||isGuru());
+  if(state.view==='guru'&&!isGuru()) state.view='utama';
   $('#screen').innerHTML=`<div class="view view-${state.view}">${VIEWS[state.view]()}</div><img class="deco-figure" src="${UST.pose.point}" alt="" loading="lazy">`;
   $('#tabbar').innerHTML=`<div class="brand">${ust('s')}<span class="name">Jejak Ilmu</span><span class="wordmark">${UST.nama}</span></div>`+TABS.map(([k,l])=>`<button class="tab" data-act="nav" data-v="${k}" aria-current="${state.view===k?'page':'false'}">${ICONS[k]}<span>${l}</span>${k==='guru'?'<i class="demo" aria-hidden="true"></i>':''}</button>`).join('');
   try{ history.replaceState(null,'','#'+state.view); }catch(e){}
@@ -1389,7 +1419,7 @@ let playT=null;
 document.addEventListener('click',e=>{
   const el=e.target.closest('[data-act]'); if(!el) return;
   const act=el.dataset.act, v=el.dataset.v;
-  if(act==='nav'){ state.view=v; save(); render(); window.scrollTo({top:0}); }
+  if(act==='nav'){ if(v==='guru'&&!isGuru()){ toast('Papan guru hanya untuk akaun guru.'); return; } state.view=v; save(); render(); window.scrollTo({top:0}); }
   else if(act==='theme'){ state.theme={auto:'light',light:'dark',dark:'auto'}[state.theme]; applyTheme(); save(); toast('Tema: '+THEME_LABEL[state.theme]); if(!$('#gate').hidden) renderGate(); else render(); }
   else if(act==='theme-set'){ state.theme=v; applyTheme(); save(); render(); sheetSettings(); }
   else if(act==='skrip'){ state.skrip=v; save(); render(); if(!$('#sheet').hidden) sheetSettings(); }
@@ -1402,9 +1432,10 @@ document.addEventListener('click',e=>{
   else if(act==='pesanan'){ sheetPesanan(); }
   else if(act==='pesanan-hantar'){ stopRec(); const suara=rec&&rec.phase==='done'?` + suara ${fmt(rec.t)}`:''; rec=null; closeSheet(); toast(`Pesanan teks${suara} dihantar kepada 30 murid (demo).`); }
   else if(act==='close-sheet'){ if(rec&&rec.ctx==='pesanan'){ stopRec(); rec=null; } closeSheet(); }
-  else if(act==='quiz'){ startQuiz(el.dataset.set); }
+  else if(act==='quiz'){ startQuiz(el.dataset.set, el.dataset.retry==='1'); }
   else if(act==='quiz-close'){ closeQuiz(); }
   else if(act==='pick'){ answer(+el.dataset.k); }
+  else if(act==='g-login'){ gateLogin(); }
   else if(act==='place'){ quiz.order.push(el.dataset.x); renderQ(); }
   else if(act==='unplace'){ quiz.order=quiz.order.filter(x=>x!==el.dataset.x); renderQ(); }
   else if(act==='check-order'){ answer(null); }
@@ -1419,7 +1450,8 @@ document.addEventListener('click',e=>{
   else if(act==='play-pesan'){ const bar=$('#pp'); if(!bar) return; if(playT){ clearInterval(playT); playT=null; el.textContent='▶'; return; } let p=0; el.textContent='❚❚'; toast('Demo: tiada audio. Versi penuh memainkan suara Ustazah.'); playT=setInterval(()=>{ p+=100/32; const b=$('#pp'); if(b) b.style.width=Math.min(100,p)+'%'; if(p>=100){ clearInterval(playT); playT=null; const pb=$('[data-act="play-pesan"]'); if(pb) pb.textContent='▶'; } },250); }
   else if(act==='share'){ const txt=`Kad Laporan ${state.nama} (${state.kelas}): Level ${lvl()}, ${state.xp} XP, streak ${state.streak} hari, ${state.usaha.dicuba} soalan dicuba bulan ini.`; const done=()=>toast('Ringkasan disalin. Versi penuh: pautan kad laporan untuk ibu bapa.'); try{ navigator.clipboard.writeText(txt).then(done,done); }catch(err){ done(); } }
   else if(act==='toast'){ toast(el.dataset.msg); }
-  else if(act==='g-kelas'){ gate.kelas=v; if(!SHEETS) gate.nama=null; renderGate(); }
+  else if(act==='g-kelas'){ gate.kelas=v; if(!SHEETS||ROSTER) gate.nama=null; renderGate(); }
+  else if(act==='g-guru'){ const g=ROSTER.murid.filter(x=>x.g); if(!g.length){ toast('Tiada akaun guru dalam senarai.'); return; } gate.kelas=g[0].k; gate.nama=g[0].n; renderGate(); const pin=$('#g-pin'); if(pin) pin.focus(); }
   else if(act==='g-nama'){ gate.nama=v; renderGate(); const pin=$('#g-pin'); if(pin) pin.focus(); }
   else if(act==='g-masuk'){ const nama=(gate.nama||'').trim(); const same=state.user&&state.user.nama===nama&&state.user.kelas===gate.kelas; state.user={nama,kelas:gate.kelas}; state.nama=nama; state.kelas=gate.kelas; if(SHEETS&&!same) freshProgress(); save(); hideGate(); render(); toast(`Selamat datang, ${nama}. Hanya nama dan kelas kamu disimpan.`); }
   else if(act==='logout'){ state.user=null; save(); closeSheet(); gate={kelas:state.kelas,nama:null,pin:''}; showGate(); }
@@ -1434,6 +1466,7 @@ async function boot(saved){
   load();
   if(saved&&saved.xp!=null) state={...state,...saved};
   applyTheme();
+  if(SHEETS&&CFG.progressVersion!=null&&state.progressVersion!==CFG.progressVersion){ if(state.user) freshProgress(); state.progressVersion=CFG.progressVersion; save(); }
   if(SHEETS){ const r=await loadBank(); if(r&&r.error) toast('Bank soalan dari Google Sheets tidak dapat dimuat; menggunakan soalan contoh.'); else if(r&&r.cached) toast('Luar talian: menggunakan bank soalan yang disimpan.'); if(!(saved&&saved.xp!=null)&&state.user&&state.xp===1340){ /* demo state leaked into sheets mode */ freshProgress(); } }
   const h=(location.hash||'').slice(1); if(VIEWS[h]) state.view=h;
   recomputePelajaran();

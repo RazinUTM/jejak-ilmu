@@ -39,7 +39,7 @@ function rowToSoalan(r, spSet) {
     soalan: r.soalan || null, soalan_jawi: r.soalan_jawi || null, arab_jawi: r.arab_jawi || null,
     pilihan: jenis === 'order' || jenis === 'tajwid' ? null : pil, jawapan, urutan: jenis === 'order' ? urutan : null,
     penjelasan: r.penjelasan || null, ms: r.ms ? Number(r.ms) : null,
-    kbat: /^y/i.test(r.kbat || ''), aktif: !/^n/i.test(r.aktif || 'Y'), updated_at: new Date().toISOString(),
+    kbat: /^y/i.test(r.kbat || '') || /kbat/i.test(r.aras || ''), aras: /kbat/i.test(r.aras || '') || /^y/i.test(r.kbat || '') ? 'kbat' : /sederhana/i.test(r.aras || '') ? 'sederhana' : 'mudah', aktif: !/^n/i.test(r.aktif || 'Y'), updated_at: new Date().toISOString(),
   } };
 }
 

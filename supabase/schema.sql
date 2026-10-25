@@ -36,6 +36,7 @@ create table if not exists soalan (
   penjelasan  text,
   ms          int,
   kbat        boolean not null default false,
+  aras        text check (aras in ('mudah','sederhana','kbat')),
   aktif       boolean not null default true,
   updated_at  timestamptz not null default now()
 );
