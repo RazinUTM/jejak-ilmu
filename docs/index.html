@@ -518,8 +518,8 @@ let SP16 = [
 let SP_NAMA = Object.fromEntries(SP16.map(s=>[s.k,s.n]));
 let SPS={16:SP16};
 const CFG=window.JEJAK_CONFIG||{}; const SHEETS=!!CFG.bankCsvUrl;
-const ROSTER=(window.JEJAK_ROSTER&&Array.isArray(window.JEJAK_ROSTER.murid)&&window.JEJAK_ROSTER.murid.length)?window.JEJAK_ROSTER:null;
-const KELAS_CFG=ROSTER?[...new Set(ROSTER.murid.filter(m=>!m.g).map(m=>m.k))].sort((x,y)=>(/lain/i.test(x)-/lain/i.test(y))||x.localeCompare(y)):(CFG.kelas||['2 Amanah','2 Bestari','2 Cekal']);
+let ROSTER=(window.JEJAK_ROSTER&&Array.isArray(window.JEJAK_ROSTER.murid)&&window.JEJAK_ROSTER.murid.length)?window.JEJAK_ROSTER:null;
+let KELAS_CFG=ROSTER?[...new Set(ROSTER.murid.filter(m=>!m.g).map(m=>m.k))].sort((x,y)=>(/lain/i.test(x)-/lain/i.test(y))||x.localeCompare(y)):(CFG.kelas||['2 Amanah','2 Bestari','2 Cekal']);
 const HARIAN_MIX=Object.assign({mudah:6,sederhana:3,kbat:1},CFG.harian||{});
 async function pinHash(pin,nama,kelas){ const enc=new TextEncoder(); const key=await crypto.subtle.importKey('raw',enc.encode(String(pin)),'PBKDF2',false,['deriveBits']); const bits=await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:enc.encode(`${ROSTER.salt}|${nama}|${kelas}`),iterations:ROSTER.iter||60000},key,256); return [...new Uint8Array(bits)].map(b=>b.toString(16).padStart(2,'0')).join(''); }
 SP_NAMA['1.13.1']='Hukum nun sakinah dan tanwin'; SP_NAMA['5.5.2']='Faktor yang mendorong Hijrah'; SP_NAMA['JAWI']='Kemahiran membaca Jawi'; SP_NAMA['AKHLAK']='Akhlak: adab berjiran (contoh guru)';
@@ -1105,6 +1105,47 @@ function vLaporan(){
 
 let gLiga={rows:null,t:0,err:false};
 async function refreshGuruLiga(){ if(!SB||!creds()||!state.user.guru) return; if(Date.now()-gLiga.t<60000&&gLiga.rows) return; try{ const r=await rpc('liga_semua',creds()); gLiga={rows:Array.isArray(r)?r:[],t:Date.now(),err:false}; }catch(e){ gLiga.err=true; gLiga.t=Date.now(); } const el=document.getElementById('gliga'); if(el) el.outerHTML=guruLigaCard(); }
+let urus={kelas:null,rows:null,edit:null,padam:false,err:''};
+async function urusLoad(){ try{ const r=await rpc('guru_senarai',creds()); urus.rows=Array.isArray(r)?r:[]; urus.err=''; }catch(e){ urus.err='Tidak dapat dimuat. Semak internet.'; } }
+async function sheetUrus(){
+  if(!urus.rows){ openSheet('<div class="gut"><p class="small muted">Memuat senarai…</p></div>'); await urusLoad(); }
+  const kls=[...new Set((urus.rows||[]).filter(r=>!r.guru).map(r=>r.kelas))].sort(kelasSort);
+  if(!urus.kelas||!kls.includes(urus.kelas)) urus.kelas=kls[0];
+  if(urus.edit){
+    const e=urus.edit, isNew=!e.id;
+    openSheet(`<div class="gut">
+      <div class="row"><h2>${isNew?'Tambah murid':'Ubah akaun'}</h2><button class="icon" data-act="urus-back" aria-label="Kembali" style="margin-left:auto">←</button></div>
+      <form id="furus" class="stack" style="margin-top:14px;gap:12px">
+        <div class="field"><label for="u-nama">Nama (seperti dipaparkan di muka depan)</label><input id="u-nama" class="wide" maxlength="60" value="${esc(e.nama||'')}" required></div>
+        <div class="field"><label for="u-kelas">Kelas</label><input id="u-kelas" class="wide" list="u-kelas-list" maxlength="30" value="${esc(e.kelas||urus.kelas||'')}" required><datalist id="u-kelas-list">${kls.map(k=>`<option value="${esc(k)}">`).join('')}</datalist></div>
+        <div class="field"><label for="u-pin">${isNew?'PIN (4 digit)':'PIN baharu (kosongkan jika tidak berubah)'}</label><input id="u-pin" class="wide" inputmode="numeric" pattern="[0-9]{4,8}" maxlength="8" ${isNew?'required':''}></div>
+        ${urus.err?`<p class="small" style="color:var(--bad);font-weight:700">${esc(urus.err)}</p>`:''}
+        <button class="btn block" type="submit">${isNew?'Tambah':'Simpan'}</button>
+        ${isNew?'':`<button class="btn block danger" type="button" data-act="urus-padam">${urus.padam?'Tekan sekali lagi untuk padam (XP murid ini turut dipadam)':'Padam akaun'}</button>`}
+      </form>
+      <p class="small muted" style="margin-top:10px">Tukar nama atau kelas tidak menghilangkan XP murid. Murid perlu log masuk semula selepas PIN ditukar.</p>
+    </div>`);
+    return;
+  }
+  const list=(urus.rows||[]).filter(r=>!r.guru&&r.kelas===urus.kelas);
+  openSheet(`<div class="gut">
+    <div class="row"><h2>Urus murid</h2><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div>
+    ${urus.err?`<p class="small" style="color:var(--bad);font-weight:700;margin-top:8px">${esc(urus.err)}</p>`:''}
+    <div class="chips" style="margin-top:12px">${kls.map(k=>`<button data-act="urus-kelas" data-v="${esc(k)}" aria-pressed="${urus.kelas===k}">${esc(k)}</button>`).join('')}</div>
+    <div style="margin-top:10px">${list.map(r=>`<div class="student"><div class="av">${esc(r.nama[0]||'?')}</div><div class="grow"><div class="nm">${esc(r.nama)}</div></div><button class="btn sm ghost" data-act="urus-ubah" data-id="${r.id}">Ubah</button></div>`).join('')||'<p class="small muted">Tiada murid.</p>'}</div>
+    <div class="row wrap" style="margin-top:14px;gap:8px"><button class="btn" data-act="urus-tambah">Tambah murid</button><button class="btn ghost" data-act="urus-pin-guru">Tukar PIN guru</button></div>
+    <p class="small muted" style="margin-top:10px">Perubahan terus berkuat kuasa di semua telefon (muka depan dimuat semula). Helaian Murid di Google Sheets tidak lagi digunakan untuk log masuk.</p>
+  </div>`);
+}
+async function urusSubmit(){
+  const e=urus.edit; const nama=$('#u-nama').value.trim(), kelas=$('#u-kelas').value.trim(), pin=$('#u-pin').value.trim();
+  if(pin&&!/^\d{4,8}$/.test(pin)){ urus.err='PIN mesti 4 hingga 8 digit.'; return sheetUrus(); }
+  const args={...creds(),p_tindakan:e.id?'ubah':'tambah',p_id:e.id||null,p_nama_baru:nama,p_kelas_baru:kelas,p_pin_baru:pin||null};
+  let r; try{ r=await rpc('guru_urus',args); }catch(err){ urus.err='Tidak dapat disimpan. Semak internet.'; return sheetUrus(); }
+  if(!r||!r.ok){ urus.err={nama_wujud:'Nama ini sudah ada dalam kelas itu.',tak_lengkap:'Lengkapkan nama, kelas dan PIN.',pin_format:'PIN mesti 4 hingga 8 digit.',bukan_guru:'Sesi guru tamat. Log keluar dan masuk semula.'}[r&&r.ralat]||'Tidak berjaya.'; return sheetUrus(); }
+  if(e.self&&pin){ state.user.pin=pin; save(); }
+  urus.edit=null; urus.err=''; urus.kelas=kelas||urus.kelas; await urusLoad(); try{ localStorage.removeItem('jejak-nama-cache'); }catch(x){} loadNama(); toast(e.id?'Disimpan.':'Murid ditambah.'); sheetUrus();
+}
 function guruLigaCard(){
   if(!SB) return '';
   if(!creds()) return `<div class="card" id="gliga" style="margin-top:16px"><div class="eyebrow">Liga semua kelas · hidup</div><p class="small muted" style="margin-top:6px">Log keluar dan log masuk semula sebagai guru untuk melihat liga sebenar.</p></div>`;
@@ -1113,7 +1154,7 @@ function guruLigaCard(){
   const by={}; for(const r of rows){ (by[r.kelas]||=(by[r.kelas]=[])).push(r); }
   const minggu=Date.now()-7*864e5;
   return `<div class="card" id="gliga" style="margin-top:16px">
-    <div class="row" style="justify-content:space-between"><div class="eyebrow">Liga semua kelas · hidup (XP minggu ini)</div><span class="pill good">sebenar</span></div>
+    <div class="row" style="justify-content:space-between"><div class="eyebrow">Liga semua kelas · hidup (XP minggu ini)</div><div class="row" style="gap:6px"><button class="btn sm ghost" data-act="urus">Urus murid</button><span class="pill good">sebenar</span></div></div>
     <div class="tiles4" style="grid-template-columns:repeat(${Math.min(Object.keys(by).length,6)},1fr)">${Object.entries(by).map(([k,l])=>`<div><b class="num">${l.reduce((a,r)=>a+(+r.xp_minggu),0)}</b><span>${esc(k)} · ${l.filter(r=>r.aktif_terakhir&&new Date(r.aktif_terakhir).getTime()>minggu).length}/${l.length} aktif</span></div>`).join('')}</div>
     ${Object.entries(by).map(([k,l])=>`<details style="margin-top:10px"><summary class="small" style="font-weight:800;cursor:pointer">${esc(k)}: 3 teratas ${l.slice(0,3).map(r=>esc(r.nama)+' ('+r.xp_minggu+')').join(', ')}</summary>
       <div class="tablewrap" style="margin-top:6px"><table class="ht" style="min-width:0"><thead><tr><th>#</th><th>Murid</th><th>Minggu</th><th>Jumlah</th><th>Aktif terakhir</th></tr></thead><tbody>${l.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.nama)}</td><td class="num">${r.xp_minggu}</td><td class="num">${r.xp_jumlah}</td><td class="${r.aktif_terakhir?'':'muted'}">${r.aktif_terakhir?new Date(r.aktif_terakhir).toLocaleString('ms-MY',{weekday:'short',hour:'2-digit',minute:'2-digit'}):'belum'}</td></tr>`).join('')}</tbody></table></div></details>`).join('')}
@@ -1408,7 +1449,7 @@ async function gateLogin(){
   const m=ROSTER.murid.find(x=>x.n===gate.nama&&x.k===gate.kelas);
   let ok=false, srv=null;
   if(SB&&m){ try{ srv=await rpc('semak_pin',{p_nama:m.n,p_kelas:m.k,p_pin:gate.pin}); ok=!!(srv&&srv.ok); }catch(e){ srv=null; } }
-  if(srv===null){ try{ ok=!!m&&(await pinHash(gate.pin,m.n,m.k))===m.h; }catch(e){ ok=false; } }
+  if(srv===null){ if(m&&m.h){ try{ ok=(await pinHash(gate.pin,m.n,m.k))===m.h; }catch(e){ ok=false; } } else { const er=$('#g-err'); if(er){ er.textContent='Tidak dapat menyemak PIN: semak sambungan internet dan cuba lagi.'; er.hidden=false; } if(btn){ btn.disabled=false; btn.textContent='Masuk'; } return; } }
   if(!ok){ buzz([40,60,40]); const er=$('#g-err'); if(er) er.hidden=false; if(btn){ btn.disabled=false; btn.textContent='Masuk'; } gate.pin=''; const inp=$('#g-pin'); if(inp){ inp.value=''; inp.focus(); } return; }
   const same=state.user&&state.user.nama===m.n&&state.user.kelas===m.k; if(!same) saveUserSnap(); state.user={nama:m.n,kelas:m.k,guru:!!(srv?srv.guru:m.g),pin:SB?gate.pin:undefined}; state.nama=m.n; state.kelas=m.k; if(!same){ freshProgress(); loadUserSnap(state.user); } rebuildSets();
   if(srv&&srv.ok&&!state.user.guru){ if(!srv.migrasi&&state.xp>0&&!state.migrasiDihantar){ state.outbox=(state.outbox||[]).filter(x=>x.sebab!=='migrasi'); state.outbox.unshift({xp:Math.min(state.xp,5000),sebab:'migrasi'}); state.migrasiDihantar=true; } if(srv.xp>state.xp) state.xp=srv.xp; setTimeout(()=>flushXP(),50); } save(); hideGate(); render(); toast(m.g?`Selamat datang, ${m.n}. Mod guru aktif.`:`Selamat datang, ${m.n}. Hanya nama dan kelas kamu disimpan.`);
@@ -1635,6 +1676,13 @@ document.addEventListener('click',e=>{
   else if(act==='quiz-close'){ closeQuiz(); }
   else if(act==='pick'){ answer(+el.dataset.k); }
   else if(act==='g-login'){ gateLogin(); }
+  else if(act==='urus'){ urus.rows=null; urus.edit=null; urus.err=''; sheetUrus(); }
+  else if(act==='urus-kelas'){ urus.kelas=v; sheetUrus(); }
+  else if(act==='urus-ubah'){ const r=(urus.rows||[]).find(x=>x.id==el.dataset.id); urus.edit=r?{id:r.id,nama:r.nama,kelas:r.kelas}:null; urus.padam=false; urus.err=''; sheetUrus(); }
+  else if(act==='urus-tambah'){ urus.edit={id:null,nama:'',kelas:urus.kelas}; urus.padam=false; urus.err=''; sheetUrus(); }
+  else if(act==='urus-pin-guru'){ const g=(urus.rows||[]).find(x=>x.guru&&x.nama===state.user.nama); if(g){ urus.edit={id:g.id,nama:g.nama,kelas:g.kelas,self:true}; urus.err=''; sheetUrus(); } }
+  else if(act==='urus-back'){ urus.edit=null; urus.err=''; sheetUrus(); }
+  else if(act==='urus-padam'){ if(!urus.padam){ urus.padam=true; sheetUrus(); return; } (async()=>{ let r; try{ r=await rpc('guru_urus',{...creds(),p_tindakan:'padam',p_id:urus.edit.id}); }catch(e){} if(r&&r.ok){ toast('Akaun dipadam.'); urus.edit=null; urus.padam=false; await urusLoad(); try{ localStorage.removeItem('jejak-nama-cache'); }catch(x){} loadNama(); } else { urus.err='Tidak dapat dipadam.'; } sheetUrus(); })(); }
   else if(act==='liga-mode'){ ligaMode=v; const el=document.getElementById('liga'); if(el) el.outerHTML=ligaCard(); }
   else if(act==='place'){ quiz.order.push(el.dataset.x); renderQ(); }
   else if(act==='unplace'){ quiz.order=quiz.order.filter(x=>x!==el.dataset.x); renderQ(); }
@@ -1659,16 +1707,32 @@ document.addEventListener('click',e=>{
   else if(act==='reset'&&SHEETS&&state.user){ let ok=true; try{ ok=window.confirm('Padam semua XP dan kemajuan kamu dalam telefon ini?'); }catch(e){} if(!ok) return; freshProgress(); save(); closeSheet(); render(); toast('Kemajuan kamu diset semula.'); }
   else if(act==='reset'){ try{ localStorage.removeItem(LS); }catch(err){} state=JSON.parse(JSON.stringify(DEFAULT_STATE)); PELAJARAN.find(p=>p.n===16).m=60; applyTheme(); closeSheet(); gate={kelas:KELAS_CFG[0]||'2 Amanah',nama:null,pin:''}; showGate(); toast('Data demo diset semula.'); }
 });
-document.addEventListener('submit',e=>{ if(e.target.id==='ftugasan'){ e.preventDefault(); closeSheet(); toast('Tugasan dihantar kepada 30 murid (demo). Notifikasi + peringatan 1 hari sebelum tarikh akhir.'); } });
+document.addEventListener('submit',e=>{ if(e.target.id==='furus'){ e.preventDefault(); urusSubmit(); return; } if(e.target.id==='ftugasan'){ e.preventDefault(); closeSheet(); toast('Tugasan dihantar kepada 30 murid (demo). Notifikasi + peringatan 1 hari sebelum tarikh akhir.'); } });
 document.addEventListener('change',e=>{ if(e.target.id==='janji'&&rec){ rec.janji=e.target.checked; const b=$('[data-act="rec-start"]'); if(b) b.disabled=!rec.janji; } });
 $('#sheet').addEventListener('click',e=>{ if(e.target.id==='sheet'){ if(rec&&rec.ctx==='pesanan'){ stopRec(); rec=null; } closeSheet(); } });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(!$('#layer').hidden) closeQuiz(); else closeSheet(); } });
 
+const kelasSort=(x,y)=>(/lain/i.test(x)-/lain/i.test(y))||x.localeCompare(y);
+function applyNama(list){
+  if(!Array.isArray(list)||!list.length) return false;
+  const guru=(ROSTER?ROSTER.murid.filter(m=>m.g):[]); if(!guru.length) guru.push({n:CFG.guruNama||'Ustazah Nafisah',k:'Guru',g:true});
+  const old=ROSTER?Object.fromEntries(ROSTER.murid.map(m=>[m.k+'|'+m.n,m.h])):{};
+  ROSTER={salt:ROSTER?ROSTER.salt:'',iter:ROSTER?ROSTER.iter:60000,murid:[...list.map(r=>({n:r.nama,k:r.kelas,g:false,h:old[r.kelas+'|'+r.nama]})),...guru]};
+  KELAS_CFG=[...new Set(ROSTER.murid.filter(m=>!m.g).map(m=>m.k))].sort(kelasSort);
+  if(gate&&gate.kelas&&!KELAS_CFG.includes(gate.kelas)&&gate.kelas!=='Guru') gate.kelas=KELAS_CFG[0];
+  return true;
+}
+async function loadNama(){
+  if(!SB) return;
+  try{ const c=JSON.parse(localStorage.getItem('jejak-nama-cache')||'null'); if(c) applyNama(c); }catch(e){}
+  try{ const list=await rpc('senarai_murid',{}); if(applyNama(list)){ try{ localStorage.setItem('jejak-nama-cache',JSON.stringify(list)); }catch(e){} if(!$('#gate').hidden) renderGate(); } }catch(e){}
+}
 async function boot(saved){
   load();
   if(saved&&saved.xp!=null) state={...state,...saved};
   applyTheme();
   if(SHEETS&&CFG.progressVersion!=null&&state.progressVersion!==CFG.progressVersion){ if(state.user) freshProgress(); state.progressVersion=CFG.progressVersion; save(); }
+  if(SB){ await Promise.race([loadNama(),new Promise(r=>setTimeout(r,4000))]); }
   if(SHEETS){ const r=await loadBank(); if(r&&r.error) toast('Bank soalan dari Google Sheets tidak dapat dimuat; menggunakan soalan contoh.'); else if(r&&r.cached) toast('Luar talian: menggunakan bank soalan yang disimpan.'); if(!(saved&&saved.xp!=null)&&state.user&&state.xp===1340){ /* demo state leaked into sheets mode */ freshProgress(); } }
   const h=(location.hash||'').slice(1); if(VIEWS[h]) state.view=h;
   recomputePelajaran();
