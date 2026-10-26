@@ -11,6 +11,7 @@ window.JEJAK_CONFIG = {
   pesananCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ-9Ei6Z4GFb365FHO3bSEi8SZWuBXbICeCuz7a85kt4zGCwIi9cI86q_iOBj-GBQ/pub?gid=1292877728&single=true&output=csv',     // helaian "Pesanan"   (lajur: tarikh, teks)
   hafazanCsvUrl: '',     // pilihan: helaian "Hafazan" (lajur: tarikh, ayat, rujukan, maksud) — baris terkini bertarikh <= hari ini dipaparkan
   ulasanCsvUrl: '',      // pilihan: helaian "Ulasan" (lajur: nama, kelas, teks, tarikh) — nama kosong = ulasan untuk seluruh kelas
+  ai: true,             // butang draf AI (Ulasan Ustazah + refleksi laporan). Perlu fungsi Supabase 'ulasan-ai'; tukar ke false untuk sembunyikan
   harian: { mudah: 3, sederhana: 1, kbat: 1 },   // komposisi Cabaran Harian = 5 soalan (ikut lajur aras / kbat); ubah nombor untuk tukar jumlah
   progressVersion: 2,    // NAIKKAN nombor ini (1 → 2) untuk set semula XP/kemajuan SEMUA murid pada muat semula seterusnya (log masuk kekal)
 };

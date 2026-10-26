@@ -385,6 +385,12 @@ table.ht td.c{font-weight:800;min-width:44px}
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .ayat-img{filter:invert(.93)} :root:not([data-theme="light"]) .blurred .ayat-img{filter:invert(.93) blur(9px)} }
 :root[data-theme="dark"] .ayat-img{filter:invert(.93)} :root[data-theme="dark"] .blurred .ayat-img{filter:invert(.93) blur(9px)}
 .hz-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.ul-row{border-top:1px solid var(--line);padding:12px 0}
+.ul-row textarea{width:100%;margin-top:8px;font:inherit;font-size:14px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);resize:vertical;min-height:76px}
+.ul-lama{margin-top:6px;color:var(--muted);font-style:italic}
+.lh-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.lh-stats>div{background:var(--accent-soft,rgba(120,90,220,.08));border-radius:12px;padding:10px 6px;text-align:center}
+.lh-stats b{display:block;font-size:18px}.lh-stats span{font-size:11px;color:var(--muted)}
 .hz-chips button{padding:5px 10px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-size:12px;font-weight:700}
 .hz-chips button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .peek-btn{position:absolute;inset:0;display:grid;place-items:center;border-radius:18px;background:color-mix(in srgb,var(--surface) 40%,transparent)}
@@ -674,16 +680,19 @@ async function loadBank(){
 function recomputePelajaran(){ for(const p of PELAJARAN){ const v=(SPS[p.n]||[]).map(x=>state.sp[x.k]).filter(x=>x!=null); p.m=v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):(p.m&&!SHEETS?p.m:null); }
   if(SHEETS){ for(const b of BIDANG){ const v=PELAJARAN.filter(p=>p.b===b.id&&p.m!=null).map(p=>p.m); state.bidangM[b.id]=v.length?Math.round(v.reduce((a,c)=>a+c,0)/v.length):0; } } }
 const HAFAZAN_BUKU=[
-  {id:'3-8',pel:1,img:'img/ayat/ali-imran-3-8.png',rujukan:'Surah Ali Imran 3:8',ms:'m.s. 2–3',label:'Ali Imran 8'},
-  {id:'3-18',pel:2,img:'img/ayat/ali-imran-3-18.png',rujukan:'Surah Ali Imran 3:18',ms:'m.s. 5–6',label:'Ali Imran 18'},
-  {id:'3-26-27',pel:3,img:'img/ayat/ali-imran-3-26-27.png',rujukan:'Surah Ali Imran 3:26–27',ms:'m.s. 9–12',label:'Ali Imran 26–27'},
+  {id:'3-8',pel:1,img:'img/ayat/ali-imran-3-8.png',rujukan:'Surah Ali Imran 3:8',ms:'m.s. 2–3',label:'8'},
+  {id:'3-18',pel:2,img:'img/ayat/ali-imran-3-18.png',rujukan:'Surah Ali Imran 3:18',ms:'m.s. 5–6',label:'18'},
+  {id:'3-26',pel:3,img:'img/ayat/ali-imran-3-26.png',rujukan:'Surah Ali Imran 3:26',ms:'m.s. 9–12',label:'26'},
+  {id:'3-27',pel:3,img:'img/ayat/ali-imran-3-27.png',rujukan:'Surah Ali Imran 3:27',ms:'m.s. 9–12',label:'27'},
 ];
-function hafazanBuku(){ const pick=HAFAZAN_BUKU.find(h=>h.id===state.hafazanPilih); if(pick) return pick; const cur=currentLesson(); const n=cur?cur.n:3; const c=HAFAZAN_BUKU.filter(h=>h.pel<=n); return c.length?c[c.length-1]:HAFAZAN_BUKU[0]; }
+// Lalai: ayat pertama (setakat pelajaran semasa) yang belum pernah dihantar tasmik; jika semua sudah, ayat terakhir.
+function hafazanBuku(){ const pick=HAFAZAN_BUKU.find(h=>h.id===state.hafazanPilih); if(pick) return pick; const cur=currentLesson(); const n=cur?cur.n:3; const c=HAFAZAN_BUKU.filter(h=>h.pel<=n); if(!c.length) return HAFAZAN_BUKU[0]; const done=state.tasmikAyat||{}; return c.find(h=>!done[h.id])||c[c.length-1]; }
+function catatAyatTasmik(){ const h=hafazanHariIni(); if(h&&h.id){ state.tasmikAyat=state.tasmikAyat||{}; state.tasmikAyat[h.id]=(state.tasmikAyat[h.id]||0)+1; if(state.hafazanPilih===h.id) state.hafazanPilih=null; } }
 const ayatHTML=h=>h.img?`<img class="ayat-img" src="${h.img}" alt="${esc(h.rujukan)}">`:`<p class="quran">${h.ayat}</p>`;
-const hzChips=h=>h.buku?`<div class="hz-chips" role="group" aria-label="Pilih ayat hafazan">${HAFAZAN_BUKU.map(x=>`<button data-act="hz-pilih" data-v="${x.id}" aria-pressed="${x.id===h.id}">${esc(x.label)}</button>`).join('')}</div>`:'';
+const hzChips=h=>h.buku?`<div class="hz-chips" role="group" aria-label="Pilih ayat hafazan"><span class="small muted" style="align-self:center;font-weight:700;margin-right:2px">Surah Ali Imran · ayat</span>${HAFAZAN_BUKU.map(x=>`<button data-act="hz-pilih" data-v="${x.id}" aria-pressed="${x.id===h.id}">${(state.tasmikAyat||{})[x.id]?'✓ ':''}${esc(x.label)}</button>`).join('')}</div>`:'';
 function hafazanHariIni(){
   if(!SHEETS) return {ayat:'فَلَمْ تَجِدُوا مَاءً فَتَيَمَّمُوا صَعِيدًا طَيِّبًا',rujukan:'Surah al-Maidah 5:6 (potongan) · dalil tayamum'};
-  // 1) Sheet "Hafazan" (jika diterbitkan) mengatasi; 2) jika tidak, ayat hafazan buku teks (Ali Imran 8, 18, 26–27).
+  // 1) Sheet "Hafazan" (jika diterbitkan) mengatasi; 2) jika tidak, ayat hafazan buku teks (Ali Imran 8, 18, 26, 27).
   const today=todayKey(); const rows=HAFAZAN.filter(r=>(r.ayat||r.ayat_arab)&&(!r.tarikh||r.tarikh.trim()<=today)).sort((a,b)=>(b.tarikh||'').localeCompare(a.tarikh||''));
   if(rows.length){ const r=rows[0]; return {ayat:r.ayat||r.ayat_arab,rujukan:r.rujukan||'',maksud:r.maksud||''}; }
   const b=hafazanBuku(); return {...b,buku:true,rujukan:`${b.rujukan} · Pelajaran ${b.pel} · ${b.ms}`};
@@ -747,7 +756,7 @@ const todayKey=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.get
 function logAktiviti(xp){ if(!state.aktiviti) state.aktiviti={}; const k=todayKey(); const had=!!state.aktiviti[k]; state.aktiviti[k]=(state.aktiviti[k]||0)+xp; if(!had){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); state.streak=state.aktiviti[yk]?(state.streak||0)+1:1; state.usaha.hariAktif=Object.keys(state.aktiviti).filter(d=>d.slice(0,7)===k.slice(0,7)).length; } }
 let ULASAN=[]; let HAFAZAN=[];
 const isArabic=t=>/[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/.test(String(t||''));
-function freshProgress(){ Object.assign(state,{progressVersion:CFG.progressVersion==null?state.progressVersion:CFG.progressVersion,xp:0,streak:1,dailyDone:false,lastSet:null,lastWrong:null,lastLesson:null,aktiviti:{},outbox:[],jbox:[],migrasiDihantar:false,usaha:{hariAktif:1,dicuba:0,bangkit:0,hafazan:0,kuizUlang:0},tasmik:[],sp:{},best:{},bidangM:{quran:0,hadis:0,akidah:0,fiqah:0,sirah:0,akhlak:0}}); recomputePelajaran(); }
+function freshProgress(){ Object.assign(state,{progressVersion:CFG.progressVersion==null?state.progressVersion:CFG.progressVersion,xp:0,streak:1,dailyDone:false,lastSet:null,lastWrong:null,lastLesson:null,aktiviti:{},outbox:[],jbox:[],migrasiDihantar:false,usaha:{hariAktif:1,dicuba:0,bangkit:0,hafazan:0,kuizUlang:0},tasmik:[],tasmikAyat:{},ulasanGuru:null,drafUlasan:{},sp:{},best:{},bidangM:{quran:0,hadis:0,akidah:0,fiqah:0,sirah:0,akhlak:0}}); recomputePelajaran(); }
 
 /* ---------- STATE ---------- */
 const DEFAULT_STATE = {
@@ -761,11 +770,11 @@ const DEFAULT_STATE = {
 };
 let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
 const LS=SHEETS?'jejak-ilmu-v1':'jejak-ilmu-demo-v3';
-const PROG_KEYS=['hafazanPilih','jbox','migrasiDihantar','outbox','progressVersion','xp','streak','dailyDone','dailyDate','lastSet','lastWrong','lastLesson','aktiviti','usaha','tasmik','sp','best','bidangM','hari'];
+const PROG_KEYS=['hafazanPilih','tasmikAyat','ulasanGuru','drafUlasan','jbox','migrasiDihantar','outbox','progressVersion','xp','streak','dailyDone','dailyDate','lastSet','lastWrong','lastLesson','aktiviti','usaha','tasmik','sp','best','bidangM','hari'];
 const userKey=u=>LS+':u:'+u.kelas+'|'+u.nama;
 function saveUserSnap(){ if(!SHEETS||!state.user) return; try{ const o={}; for(const k of PROG_KEYS) o[k]=state[k]; localStorage.setItem(userKey(state.user),JSON.stringify(o)); }catch(e){} }
 function loadUserSnap(u){ try{ const raw=localStorage.getItem(userKey(u)); if(!raw) return false; const o=JSON.parse(raw); if(CFG.progressVersion!=null&&o.progressVersion!==CFG.progressVersion) return false; Object.assign(state,o); recomputePelajaran(); return true; }catch(e){ return false; } }
-function save(){ try{ localStorage.setItem(LS, JSON.stringify(state)); }catch(e){} saveUserSnap(); }
+function save(){ try{ localStorage.setItem(LS, JSON.stringify(state)); }catch(e){} saveUserSnap(); if(typeof syncJadual==='function') syncJadual(); }
 function load(){ try{ const s=localStorage.getItem(LS); if(s){ const o=JSON.parse(s); state={...state,...o,usaha:{...state.usaha,...(o.usaha||{})}}; } }catch(e){} }
 
 /* ---------- HELPERS ---------- */
@@ -816,6 +825,45 @@ async function rpc(fn,args){
   try{ const r=await fetch(`${SB.url}/rest/v1/rpc/${fn}`,{method:'POST',headers:h,body:JSON.stringify(args),signal:ctl.signal}); if(!r.ok) throw new Error('HTTP '+r.status); return await r.json(); } finally{ clearTimeout(t); }
 }
 const creds=()=>state.user&&state.user.pin?{p_nama:state.user.nama,p_kelas:state.user.kelas,p_pin:state.user.pin}:null;
+// ---------- Kad Laporan ikut murid: salinan kemajuan di Supabase, digabung di setiap telefon ----------
+const SYNC_KEYS=['progressVersion','xp','streak','dailyDate','lastLesson','aktiviti','usaha','tasmik','tasmikAyat','sp','best','bidangM','hari'];
+let syncT=null, syncLast='', syncTarikAt=0;
+const bolehSync=()=>!!(SB&&SHEETS&&creds()&&!state.user.guru);
+function syncJadual(){ if(!bolehSync()) return; clearTimeout(syncT); syncT=setTimeout(()=>syncTolak(),10000); }
+async function syncTolak(keepalive){
+  clearTimeout(syncT); syncT=null; if(!bolehSync()) return;
+  const d={}; for(const k of SYNC_KEYS) d[k]=state[k]; d.tasmik=(d.tasmik||[]).slice(0,30);
+  const body=JSON.stringify(d); if(body===syncLast) return;
+  if(keepalive){ try{ const h={'apikey':SB.key,'Content-Type':'application/json'}; if(/^eyJ/.test(SB.key)) h['Authorization']='Bearer '+SB.key; fetch(`${SB.url}/rest/v1/rpc/simpan_kemajuan`,{method:'POST',headers:h,body:JSON.stringify({...creds(),p_data:d}),keepalive:true}); syncLast=body; }catch(e){} return; }
+  try{ const r=await rpc('simpan_kemajuan',{...creds(),p_data:d}); if(r&&r.ok) syncLast=body; }catch(e){}
+}
+function kiraStreak(){ const ak=state.aktiviti||{}; const k=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); const d=new Date(); if(!ak[k(d)]) d.setDate(d.getDate()-1); let n=0; while(ak[k(d)]){ n++; d.setDate(d.getDate()-1); } return Math.max(n,1); }
+function gabungKemajuan(r){
+  let d=r.data||{}; if(CFG.progressVersion!=null&&d.progressVersion!=null&&d.progressVersion!==CFG.progressVersion) d={};
+  const mx=(a,b)=>Math.max(+a||0,+b||0);
+  const ak={...(state.aktiviti||{})}; for(const [k,v] of Object.entries(d.aktiviti||{})) ak[k]=mx(ak[k],v); state.aktiviti=ak;
+  const u={...(state.usaha||{})}; for(const [k,v] of Object.entries(d.usaha||{})) if(typeof v==='number') u[k]=mx(u[k],v);
+  u.dicuba=mx(u.dicuba,r.jawapan); u.hafazan=mx(u.hafazan,r.tasmik); state.usaha=u;
+  const ratio=b=>{ if(!b) return -1; const [c,n]=String(b).split('/').map(Number); return n?c/n:-1; };
+  state.best={...(state.best||{})}; for(const [k,v] of Object.entries(d.best||{})) if(ratio(v)>ratio(state.best[k])) state.best[k]=v;
+  state.tasmikAyat={...(state.tasmikAyat||{})}; for(const [k,v] of Object.entries(d.tasmikAyat||{})) state.tasmikAyat[k]=mx(state.tasmikAyat[k],v);
+  const key=t=>[t.ayat,t.dur,t.peeks,t.at||''].join('|'); state.tasmik=state.tasmik||[]; const seen=new Set(state.tasmik.map(key)); for(const t of (d.tasmik||[])) if(!seen.has(key(t))){ state.tasmik.push(t); seen.add(key(t)); } state.tasmik=state.tasmik.slice(0,30);
+  state.sp={...(d.sp||{}),...(state.sp||{})}; for(const [k,o] of Object.entries(r.sp||{})) if(o&&o.m!=null) state.sp[k]=o.m;
+  const t=todayKey(); const H=hari(); const dh=d.hari; if(dh&&dh.d===t){ H.harian=H.harian||!!dh.harian; H.laporan=H.laporan||!!dh.laporan; H.tasmik=mx(H.tasmik,dh.tasmik); for(const [k,v] of Object.entries(dh.kuiz||{})) H.kuiz[k]=mx(H.kuiz[k],v); Object.assign(H.pilihan,dh.pilihan||{}); }
+  if(d.dailyDate&&(!state.dailyDate||d.dailyDate>state.dailyDate)) state.dailyDate=d.dailyDate;
+  if(!state.lastLesson&&d.lastLesson) state.lastLesson=d.lastLesson;
+  state.xp=Math.max(state.xp||0,+d.xp||0,+r.xp||0);
+  state.streak=kiraStreak(); state.usaha.hariAktif=Object.keys(ak).filter(k=>k.slice(0,7)===t.slice(0,7)).length||state.usaha.hariAktif;
+  state.migrasiDihantar=true; // XP sebelum liga sudah dikira pada telefon asal; jangan hantar semula
+  state.ulasanGuru=r.ulasan||null;
+  recomputePelajaran();
+}
+async function tarikKemajuan(force){
+  if(!bolehSync()) return; if(!force&&Date.now()-syncTarikAt<120000) return; syncTarikAt=Date.now();
+  let r=null; try{ r=await rpc('ambil_kemajuan',creds()); }catch(e){ return; } if(!r||!r.ok) return;
+  gabungKemajuan(r); save(); if($('#layer').hidden&&$('#gate').hidden&&$('#sheet').hidden) render();
+}
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden'&&syncT) syncTolak(true); });
 let flushing=false;
 async function flushXP(){
   if(!SB||flushing||!creds()) return; state.outbox=state.outbox||[]; if(!state.outbox.length) return;
@@ -1072,11 +1120,12 @@ function vLaporan(){
     {t:'Faqih Muda',s:'Boss Fiqah 80%',ic:'ف',on:false},
   ];
   const auto=SHEETS?autoUlasan():null;
-  const ulasan=SHEETS?(ULASAN.find(r=>(r.nama||'').trim().toLowerCase()===state.nama.toLowerCase()&&(!r.kelas||r.kelas.trim()===state.kelas))||ULASAN.find(r=>!(r.nama||'').trim()&&(r.kelas||'').trim()===state.kelas)||null):{teks:`${state.nama}, tajwid kamu dah stabil. Minggu ni fokus pada perkara yang membatalkan tayamum, dan jangan lupa hantar rakaman tasmik al-Maidah ayat 6 sebelum Khamis ya.`};
+  const tarikhUl=t=>new Date(t).toLocaleDateString('ms-MY',{day:'numeric',month:'short',year:'numeric'});
+  const ulasan=SHEETS?((state.ulasanGuru&&state.ulasanGuru.teks)?{teks:state.ulasanGuru.teks,tarikh:'disahkan '+tarikhUl(state.ulasanGuru.disahkan_at)}:ULASAN.find(r=>(r.nama||'').trim().toLowerCase()===state.nama.toLowerCase()&&(!r.kelas||r.kelas.trim()===state.kelas))||ULASAN.find(r=>!(r.nama||'').trim()&&(r.kelas||'').trim()===state.kelas)||null):{teks:`${state.nama}, tajwid kamu dah stabil. Minggu ni fokus pada perkara yang membatalkan tayamum, dan jangan lupa hantar rakaman tasmik al-Maidah ayat 6 sebelum Khamis ya.`};
   const cur=currentLesson(); const curSP=SPS[cur.n]||[];
   return `
   <header class="band"><div class="inner gut">
-    <div class="row"><div class="grow"><div class="eyebrow">Kad Laporan</div><h1>${esc(state.nama)} · ${esc(state.kelas)}</h1><div class="sub">Dikemas kini secara automatik selepas setiap kuiz</div></div>
+    <div class="row"><div class="grow"><div class="eyebrow">Kad Laporan</div><h1>${esc(state.nama)} · ${esc(state.kelas)}</h1><div class="sub">${bolehSync()?'Disimpan dalam akaun kamu: sama di mana-mana telefon':'Dikemas kini secara automatik selepas setiap kuiz'}</div></div>
     <div class="hdr-acts">${themeBtn()}<button class="btn sm gold" data-act="share">Kongsi</button></div></div>
   </div></header>
   <div class="gut stack body" style="padding-top:16px">
@@ -1306,6 +1355,197 @@ async function pvHantar(){
   if(r&&r.ok){ if(pv.url) URL.revokeObjectURL(pv.url); pv={phase:'idle',t:0,blob:null,url:null,real:null,timer:null,err:'',kelas}; closeSheet(); toast(`Pesanan dihantar kepada ${kelas||'semua kelas'}.`); gP.t=0; refreshGP(); return; }
   pv.err=r&&r.ralat==='saiz'?'Rakaman terlalu panjang.':'Tidak berjaya dihantar. Semak internet.'; sheetPesananLive();
 }
+// ---------- Ulasan Ustazah per murid (draf AI atau tulis sendiri; murid hanya nampak yang disahkan) ----------
+const AI_ON=()=>!!(SB&&CFG.ai);
+const namaPanggilan=n=>{ const w=String(n||'').split(/\s+(?:bin|binti|bt\.?|b\.)\s+/i)[0].trim().split(/\s+/); const pre=/^(muhammad|muhamad|mohd|mohamad|mohammad|muhd|nur|nurul|siti|ahmad|nor|noor|nik|wan|che|abdul|ab)$/i; const x=(pre.test(w[0])&&w[1])?w[1]:w[0]; return x?x.charAt(0).toUpperCase()+x.slice(1).toLowerCase():''; };
+async function aiPanggil(body){
+  const h={'apikey':SB.key,'Content-Type':'application/json'}; if(/^eyJ/.test(SB.key)) h['Authorization']='Bearer '+SB.key;
+  const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),90000);
+  let r, j=null; try{ r=await fetch(`${SB.url}/functions/v1/ulasan-ai`,{method:'POST',headers:h,body:JSON.stringify({...creds(),...body}),signal:ctl.signal}); try{ j=await r.json(); }catch(e){} } catch(e){ throw new Error('rangkaian'); } finally{ clearTimeout(t); }
+  if(!r.ok||!j||!j.ok) throw new Error((j&&(j.ralat||j.message||j.msg))||('HTTP '+r.status)); return j;
+}
+function aiRalat(m){ m=String(m||'');
+  if(/rangkaian|HTTP 404|not.?found/i.test(m)) return 'Fungsi AI belum dipasang di Supabase atau tiada internet. Ikut panduan "Langkah AI".';
+  if(/HTTP 401|jwt|unauthor/i.test(m)) return 'Fungsi AI menolak panggilan: matikan "Verify JWT with legacy secret" pada fungsi ulasan-ai.';
+  if(/tiada_kunci_api/.test(m)) return 'ANTHROPIC_API_KEY belum dimasukkan dalam Supabase → Edge Functions → Secrets.';
+  if(/bukan_guru/.test(m)) return 'PIN guru tidak sah. Log keluar dan masuk semula.';
+  if(/claude_401|authentication/i.test(m)) return 'Kunci Claude API tidak sah. Semak ANTHROPIC_API_KEY.';
+  if(/credit|billing|claude_402|claude_400/i.test(m)) return 'Akaun Claude API: semak baki kredit (Plans & Billing) di console.anthropic.com.';
+  if(/claude_429|claude_529|overloaded/i.test(m)) return 'Perkhidmatan AI sibuk. Cuba sebentar lagi.';
+  return 'AI tidak berjaya: '+m.slice(0,120); }
+function spInfo(rows){ const o={}; for(const k of rows){ const n=Object.keys(SPS).find(p=>(SPS[p]||[]).some(x=>x.k===k)); o[k]={n:SP_NAMA[k]||'',p:n?+n:null}; } return o; }
+let UL={kelas:null,rows:null,err:false,busy:false,msg:''};
+function gUlasanCard(){
+  return `<div class="card" id="gulasan" style="margin-top:12px">
+    <div class="row" style="gap:12px;align-items:flex-start">${pose('think',64)}<div class="grow"><div class="eyebrow">Ulasan kad laporan · ${esc(GD.kelas||'')}</div><p class="small muted" style="margin-top:4px">${AI_ON()?'Jana draf dengan AI atau tulis sendiri. ':''}Murid hanya nampak ulasan selepas Ustazah tekan Sahkan; ia muncul di Kad Laporan mereka.</p></div></div>
+    <button class="btn sm" data-act="ul-buka" style="margin-top:10px">Urus ulasan murid</button>
+  </div>`;
+}
+async function bukaUlasan(){ UL={kelas:GD.kelas,rows:null,err:false,busy:false,msg:''}; sheetUlasan(); try{ const r=await rpc('guru_ulasan_senarai',{...creds(),p_kelas_tapis:UL.kelas}); UL.rows=Array.isArray(r)?r:[]; }catch(e){ UL.err=true; } sheetUlasan(); }
+function sheetUlasan(){
+  const sc=$('#sheet .panel'); const top=sc&&!$('#sheet').hidden?sc.scrollTop:0;
+  const D=state.drafUlasan=state.drafUlasan||{}; const rows=UL.rows;
+  const tarikh=t=>new Date(t).toLocaleDateString('ms-MY',{day:'numeric',month:'short'});
+  const belum=rows?rows.filter(r=>!D[r.akaun_id]&&(!r.ulasan_at||Date.now()-new Date(r.ulasan_at)>6*864e5)):[];
+  const draf=rows?rows.filter(r=>D[r.akaun_id]&&D[r.akaun_id].teks.trim()):[];
+  const body=!rows?`<p class="small muted" style="margin-top:12px">${UL.err?'Tidak dapat dimuat. Semak internet.':'Memuat…'}</p>`:rows.map(r=>{ const d=D[r.akaun_id]; const pct=r.jawapan?Math.round(r.betul/r.jawapan*100):null;
+    return `<div class="ul-row">
+      <div class="row" style="justify-content:space-between;gap:8px"><b>${esc(r.nama)}</b><span class="pill ${r.ulasan_at?'good':''}">${r.ulasan_at?'disahkan '+tarikh(r.ulasan_at):'belum ada'}</span></div>
+      <div class="why">14 hari: ${r.hari_aktif} hari aktif · ${r.jawapan} soalan${pct!=null?` (${pct}% betul)`:''} · tasmik ${r.tasmik}${(r.sp_lemah||[]).length?` · perlu ulang ${r.sp_lemah.map(x=>esc(x.k)+' '+x.m+'%').join(', ')}`:''}</div>
+      ${r.ulasan?`<p class="small ul-lama">Semasa: “${esc(r.ulasan)}”</p>`:''}
+      <textarea class="ul-teks" data-id="${r.akaun_id}" rows="3" maxlength="800" placeholder="${AI_ON()?'Tulis ulasan, atau tekan Draf AI':'Tulis ulasan untuk murid ini'}">${esc(d?d.teks:'')}</textarea>
+      <div class="row" style="gap:6px;margin-top:6px;align-items:center">${AI_ON()?`<button class="btn sm ghost" data-act="ul-ai" data-id="${r.akaun_id}" ${UL.busy?'disabled':''}>Draf AI</button>`:''}<button class="btn sm" data-act="ul-sahkan" data-id="${r.akaun_id}" ${UL.busy?'disabled':''}>Sahkan</button>${d&&d.ai?'<span class="small muted">draf AI: baca dan sunting dahulu</span>':''}</div>
+    </div>`; }).join('');
+  openSheet(`<div class="gut">
+    <div class="row"><h2>Ulasan murid · ${esc(UL.kelas||'')}</h2><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div>
+    <p class="small muted" style="margin-top:6px">Ulasan yang disahkan dipaparkan di Kad Laporan murid (di mana-mana telefon). ${AI_ON()?'Draf AI dibina daripada data aktiviti tanpa nama murid; Ustazah semak sebelum sahkan.':''}</p>
+    ${rows&&rows.length?`<div class="row wrap" style="gap:8px;margin-top:10px">${AI_ON()?`<button class="btn sm gold" data-act="ul-ai-semua" ${UL.busy||!belum.length?'disabled':''}>Draf AI untuk ${belum.length} murid</button>`:''}<button class="btn sm" data-act="ul-sahkan-semua" ${UL.busy||!draf.length?'disabled':''}>Sahkan semua draf (${draf.length})</button></div>`:''}
+    ${UL.msg?`<p class="small" style="margin-top:8px;font-weight:700">${esc(UL.msg)}</p>`:''}
+    <div style="margin-top:6px">${body}</div>
+  </div>`);
+  const sc2=$('#sheet .panel'); if(sc2&&top) sc2.scrollTop=top;
+  document.querySelectorAll('#sheet .ul-teks').forEach(t=>t.addEventListener('input',()=>{ const id=t.dataset.id; const prev=D[id]; if(t.value.trim()) D[id]={teks:t.value,ai:!!(prev&&prev.ai)}; else delete D[id]; clearTimeout(sheetUlasan.t); sheetUlasan.t=setTimeout(save,600); }));
+}
+async function ulDrafAI(ids){
+  if(!ids.length) return; UL.busy=true; UL.msg=`Menjana draf AI untuk ${ids.length} murid…`; sheetUlasan();
+  const codes=new Set(); for(const r of UL.rows) if(ids.includes(r.akaun_id)) for(const x of [...(r.sp_kuat||[]),...(r.sp_lemah||[])]) codes.add(x.k);
+  let ok=0, err='';
+  for(let i=0;i<ids.length;i+=10){
+    try{ const j=await aiPanggil({mod:'ulasan',kelas:UL.kelas,ids:ids.slice(i,i+10),sp_info:spInfo([...codes])});
+      for(const d of (j.draf||[])){ const r=UL.rows.find(x=>x.akaun_id==d.id); if(!r) continue; state.drafUlasan[d.id]={teks:d.ulasan.replace(/\{nama\}/g,namaPanggilan(r.nama)),ai:true}; ok++; } }
+    catch(e){ err=e.message; break; }
+    UL.msg=`${ok}/${ids.length} draf siap…`; sheetUlasan();
+  }
+  save(); UL.busy=false; UL.msg=err?aiRalat(err):`${ok} draf AI siap. Baca dan sunting setiap draf sebelum Sahkan.`; sheetUlasan();
+}
+async function ulSahkan(ids,senyap){
+  let ok=0; for(const id of ids){ const d=state.drafUlasan[id]; const teks=(d&&d.teks||'').trim(); if(!teks) continue; let r=null; try{ r=await rpc('guru_ulasan_sahkan',{...creds(),p_akaun_id:+id,p_teks:teks,p_sumber:d.ai?'ai':'guru'}); }catch(e){} if(r&&r.ok){ ok++; delete state.drafUlasan[id]; const row=UL.rows.find(x=>x.akaun_id==id); if(row){ row.ulasan=teks; row.ulasan_sumber=d.ai?'ai':'guru'; row.ulasan_at=new Date().toISOString(); } } }
+  save(); UL.msg=ok?`${ok} ulasan disahkan. Murid nampak di Kad Laporan.`:'Tiada ulasan disimpan (teks kosong atau tiada internet).'; sheetUlasan(); if(!senyap) toast(UL.msg);
+}
+// ---------- Laporan Harian PdP (PDF) ----------
+let LH={dari:null,hingga:null,d:null,err:false,refleksi:'',busy:false,msg:''};
+const tkey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+function gLaporanCard(){ const t=todayKey();
+  return `<div class="card" id="glh" style="margin-top:12px">
+    <div class="row" style="gap:12px;align-items:flex-start">${pose('clap',64)}<div class="grow"><div class="eyebrow">Laporan harian PdP · PDF</div><p class="small muted" style="margin-top:4px">Bukti bertarikh masa bagi ${esc(GD.kelas||'')}: penyertaan, pencapaian SP, tasmik, murid perlu perhatian dan refleksi.</p></div></div>
+    <div class="row" style="gap:8px;margin-top:10px"><div class="field grow"><label for="lh-dari">Dari</label><input type="date" id="lh-dari" value="${LH.dari||t}" max="${t}"></div><div class="field grow"><label for="lh-hingga">Hingga</label><input type="date" id="lh-hingga" value="${LH.hingga||t}" max="${t}"></div></div>
+    <button class="btn sm" data-act="lh-buka" style="margin-top:10px">Sediakan laporan</button>
+  </div>`; }
+const SET_NAMA=k=>{ if(!k) return ''; if(k==='harian') return 'Cabaran Harian'; const m=/^kuiz(\d+)$/.exec(k); if(m) return 'Kuiz P'+m[1]; const p=PILIHAN.find(x=>x[0]===k); return p?p[1]:k; };
+function lhRingkasan(d){
+  const M=d.murid||[]; const aktif=M.filter(m=>m.jawapan>0||(m.tasmik||[]).length); const jaw=M.reduce((a,m)=>a+m.jawapan,0), bet=M.reduce((a,m)=>a+m.betul,0);
+  const tas=M.reduce((a,m)=>a+(m.tasmik||[]).length,0); const rendah=M.filter(m=>m.jawapan>=5&&m.betul/m.jawapan<0.5);
+  const sp=(d.sp||[]).map(s=>({...s,p:Math.round(s.betul/Math.max(1,s.cubaan)*100)}));
+  const meds=aktif.map(m=>m.masa_median_ms).filter(x=>x>0).sort((a,b)=>a-b); const med=meds.length?meds[Math.floor(meds.length/2)]:null;
+  return {M,aktif,jaw,bet,tas,rendah,sp,med,tidak:M.filter(m=>!(m.jawapan>0||(m.tasmik||[]).length))};
+}
+function lhRefleksiAuto(d){
+  const R=lhRingkasan(d); const n=R.M.length; if(!n) return '';
+  const pc=x=>Math.round(x/Math.max(1,n)*100);
+  const kuat=R.sp.filter(s=>s.cubaan>=5&&s.p>=70).sort((a,b)=>b.p-a.p)[0], lemah=R.sp.filter(s=>s.cubaan>=5&&s.p<60).sort((a,b)=>a.p-b.p)[0];
+  const nm=s=>`SP ${s.sp_kod}${SP_NAMA[s.sp_kod]?' ('+SP_NAMA[s.sp_kod]+')':''}`;
+  const out=[`Seramai ${R.aktif.length} daripada ${n} murid (${pc(R.aktif.length)}%) melibatkan diri dalam aktiviti PdP melalui aplikasi Jejak Ilmu dengan ${R.jaw} soalan dijawab${R.jaw?`, ketepatan purata ${Math.round(R.bet/R.jaw*100)}%`:''}.`];
+  if(kuat) out.push(`${nm(kuat)} dikuasai dengan baik (${kuat.p}% jawapan betul).`);
+  if(lemah) out.push(`${nm(lemah)} memerlukan pengukuhan (${lemah.p}% jawapan betul) dan akan diulang pada sesi berikutnya.`);
+  if(R.tas) out.push(`${R.tas} rakaman tasmik hafazan diterima untuk disemak.`);
+  if(R.tidak.length) out.push(`${R.tidak.length} murid tidak aktif akan dihubungi dan dibimbing${R.rendah.length?`, manakala ${R.rendah.length} murid dengan ketepatan rendah akan diberi latihan pemulihan`:''}.`);
+  else if(R.rendah.length) out.push(`${R.rendah.length} murid dengan ketepatan rendah akan diberi latihan pemulihan.`);
+  return out.join(' ');
+}
+async function bukaLaporanHarian(){
+  const t=todayKey(); let dari=(($('#lh-dari')||{}).value||t), hingga=(($('#lh-hingga')||{}).value||dari); if(hingga<dari){ const x=dari; dari=hingga; hingga=x; }
+  LH={dari,hingga,d:null,err:false,refleksi:'',busy:false,msg:'',kelas:GD.kelas}; sheetLaporanHarian();
+  try{ const r=await rpc('guru_laporan_harian',{...creds(),p_kelas_tapis:LH.kelas,p_dari:dari,p_hingga:hingga}); if(r&&r.ok){ LH.d=r; LH.refleksi=lhRefleksiAuto(r); } else LH.err=r&&r.ralat==='julat'?'Julat maksimum 62 hari.':'Tidak dapat dimuat.'; }catch(e){ LH.err='Tidak dapat dimuat. Semak internet.'; }
+  sheetLaporanHarian();
+}
+function lhTarikhLabel(){ const f=x=>new Date(x+'T00:00:00').toLocaleDateString('ms-MY',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); return LH.dari===LH.hingga?f(LH.dari):`${f(LH.dari)} hingga ${f(LH.hingga)}`; }
+function sheetLaporanHarian(){
+  const d=LH.d; const R=d?lhRingkasan(d):null;
+  openSheet(`<div class="gut">
+    <div class="row"><h2>Laporan harian PdP</h2><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div>
+    <p class="small muted" style="margin-top:4px">${esc(LH.kelas||'')} · ${esc(lhTarikhLabel())}</p>
+    ${!d?`<p class="small muted" style="margin-top:12px">${LH.err?esc(LH.err):'Memuat…'}</p>`:`
+    <div class="lh-stats"><div><b class="num">${R.aktif.length}/${R.M.length}</b><span>murid aktif</span></div><div><b class="num">${R.jaw}</b><span>soalan${R.jaw?' · '+Math.round(R.bet/R.jaw*100)+'%':''}</span></div><div><b class="num">${R.tas}</b><span>tasmik</span></div><div><b class="num">${R.tidak.length}</b><span>tidak aktif</span></div></div>
+    <div class="field" style="margin-top:12px"><label for="lh-ref">Refleksi (disunting dan disahkan oleh Ustazah)</label><textarea id="lh-ref" rows="6" maxlength="1500">${esc(LH.refleksi)}</textarea></div>
+    <div class="row wrap" style="gap:8px;margin-top:8px">${AI_ON()?`<button class="btn sm ghost" data-act="lh-ai" ${LH.busy?'disabled':''}>Draf refleksi AI</button>`:''}<button class="btn sm ghost" data-act="lh-auto" ${LH.busy?'disabled':''}>Guna draf automatik</button></div>
+    ${LH.msg?`<p class="small" style="margin-top:8px;font-weight:700">${esc(LH.msg)}</p>`:''}
+    <button class="btn gold block" data-act="lh-pdf" style="margin-top:14px" ${LH.busy?'disabled':''}>Muat turun PDF</button>
+    <p class="small muted" style="margin-top:8px">PDF mengandungi jadual bukti setiap murid (masa mula–akhir, soalan, ketepatan, XP, tasmik) daripada log pelayan. Rakaman audio tasmik kekal dalam Peti Tasmik.</p>`}
+  </div>`);
+  const ta=$('#lh-ref'); if(ta) ta.addEventListener('input',()=>{ LH.refleksi=ta.value; });
+}
+async function lhAI(){
+  LH.busy=true; LH.msg='Menjana draf refleksi AI…'; sheetLaporanHarian();
+  const cur=currentLesson(); const codes=(LH.d.sp||[]).map(s=>s.sp_kod);
+  try{ const j=await aiPanggil({mod:'refleksi',kelas:LH.kelas,dari:LH.dari,hingga:LH.hingga,pelajaran:cur?`Pelajaran ${cur.n}: ${cur.rumi||''}`:'',sp_info:spInfo(codes)}); LH.refleksi=j.refleksi||LH.refleksi; LH.msg='Draf AI dimasukkan. Baca dan sunting sebelum muat turun.'; }
+  catch(e){ LH.msg=aiRalat(e.message); }
+  LH.busy=false; sheetLaporanHarian();
+}
+function muatSkrip(src){ return new Promise((res,rej)=>{ const ada=document.querySelector(`script[data-src="${src}"]`); if(ada){ if(ada.dataset.ok) return res(); ada.addEventListener('load',()=>res()); ada.addEventListener('error',()=>rej(new Error('skrip'))); return; } const s=document.createElement('script'); s.src=src; s.dataset.src=src; s.onload=()=>{ s.dataset.ok='1'; res(); }; s.onerror=()=>rej(new Error('skrip')); document.head.appendChild(s); }); }
+async function lhPDF(){
+  const btn=$('[data-act="lh-pdf"]'); if(btn){ btn.disabled=true; btn.textContent='Menyediakan PDF…'; }
+  try{ await muatSkrip('js/vendor/jspdf.umd.min.js'); await muatSkrip('js/vendor/jspdf.plugin.autotable.min.js'); }
+  catch(e){ toast('Tidak dapat memuat penjana PDF. Semak internet.'); if(btn){ btn.disabled=false; btn.textContent='Muat turun PDF'; } return; }
+  const doc=binaPDF(LH.d,LH.refleksi.trim());
+  const nama=`Laporan-PdP-${String(LH.kelas).replace(/\s+/g,'-')}-${LH.dari}${LH.hingga!==LH.dari?'_'+LH.hingga:''}.pdf`;
+  doc.save(nama); if(btn){ btn.disabled=false; btn.textContent='Muat turun PDF'; } toast('PDF dimuat turun: '+nama);
+}
+function binaPDF(d,refleksi){
+  const { jsPDF }=window.jspdf; const doc=new jsPDF({unit:'mm',format:'a4'}); const AT=(o)=>window.autoTable?window.autoTable(doc,o):doc.autoTable(o);
+  const W=210, L=14, Rm=14, CW=W-L-Rm; const R=lhRingkasan(d); const ungu=[91,61,201], kelabu=[110,110,120];
+  const zon={timeZone:'Asia/Kuala_Lumpur'}; const jam=t=>new Date(t).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',...zon}); const hariJam=t=>new Date(t).toLocaleString('en-GB',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',...zon}).replace(',','');
+  const satuHari=LH.dari===LH.hingga; const masa=t=>satuHari?jam(t):hariJam(t);
+  const asc=s=>String(s==null?'':s).replace(/[≥]/g,'>=').replace(/[≤]/g,'<=').replace(/[→]/g,'->').replace(/[^\x00-\xFF\u2013\u2014\u2018\u2019\u201C\u201D\u2022]/g,'');
+  // Header
+  doc.setFillColor(...ungu); doc.rect(0,0,W,24,'F'); doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.text('LAPORAN HARIAN PdP',L,11);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.text('Pendidikan Islam Tingkatan 2 (KSSM) · Jejak Ilmu',L,17);
+  doc.setFontSize(9); doc.text(asc(UST.nama),W-Rm,11,{align:'right'}); doc.text('Dijana: '+new Date().toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',...zon}),W-Rm,17,{align:'right'});
+  doc.setTextColor(30,30,40);
+  const cur=currentLesson(); const spCur=(SPS[cur&&cur.n]||[]).map(x=>x.k).join(', ');
+  AT({startY:30,theme:'plain',styles:{fontSize:9.5,cellPadding:1.2},columnStyles:{0:{fontStyle:'bold',cellWidth:34}},margin:{left:L,right:Rm},
+    body:[['Kelas',asc(d.kelas)],['Tarikh',asc(lhTarikhLabel())],['Pelajaran semasa',asc(cur?`Pelajaran ${cur.n}: ${cur.rumi||''}${cur.ms?' (m.s. '+cur.ms+')':''}`:'-')],['Standard Pembelajaran',asc(spCur||'-')],['Kaedah','PdPr / aktiviti dalam aplikasi Jejak Ilmu (kuiz formatif, Cabaran Harian, tasmik hafazan)']]});
+  // Summary boxes
+  let y=doc.lastAutoTable.finalY+4; const bw=(CW-9)/4;
+  const kotak=[[`${R.aktif.length}/${R.M.length}`,'murid aktif'],[String(R.jaw),'soalan dijawab'],[R.jaw?Math.round(R.bet/R.jaw*100)+'%':'-','ketepatan purata'],[String(R.tas),'tasmik diterima']];
+  kotak.forEach(([v,t],i)=>{ const x=L+i*(bw+3); doc.setDrawColor(220,214,245); doc.setFillColor(246,243,255); doc.roundedRect(x,y,bw,17,2,2,'FD'); doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(...ungu); doc.text(v,x+bw/2,y+8,{align:'center'}); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...kelabu); doc.text(t,x+bw/2,y+13.5,{align:'center'}); });
+  doc.setTextColor(30,30,40); y+=23;
+  const tajuk=(t)=>{ if(y>265){ doc.addPage(); y=18; } doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...ungu); doc.text(t,L,y); doc.setTextColor(30,30,40); y+=2; };
+  // SP table with bars
+  tajuk('1. Pencapaian mengikut Standard Pembelajaran');
+  const spRows=R.sp.map(s=>[s.sp_kod,asc(SP_NAMA[s.sp_kod]||''),String(s.murid),String(s.cubaan),s.p+'%','']);
+  AT({startY:y,head:[['SP','Huraian','Murid','Cubaan','% betul','']],body:spRows.length?spRows:[['-','Tiada jawapan direkod dalam tempoh ini','','','','']],theme:'grid',margin:{left:L,right:Rm},
+    styles:{fontSize:8.5,cellPadding:1.6,lineColor:[225,225,232]},headStyles:{fillColor:ungu,textColor:255,fontStyle:'bold'},
+    columnStyles:{0:{cellWidth:18},2:{cellWidth:14,halign:'right'},3:{cellWidth:15,halign:'right'},4:{cellWidth:16,halign:'right'},5:{cellWidth:30}},
+    didDrawCell:(h)=>{ if(h.section==='body'&&h.column.index===5&&R.sp[h.row.index]){ const p=R.sp[h.row.index].p; const c=h.cell; const bw2=c.width-4; doc.setFillColor(235,235,242); doc.rect(c.x+2,c.y+c.height/2-1.5,bw2,3,'F'); doc.setFillColor(...(p>=70?[46,160,90]:p>=55?[225,160,40]:[210,70,70])); doc.rect(c.x+2,c.y+c.height/2-1.5,bw2*p/100,3,'F'); } }});
+  y=doc.lastAutoTable.finalY+7;
+  // Student evidence table
+  tajuk('2. Bukti aktiviti murid (log bertarikh masa)');
+  const ev=R.M.map((m,i)=>{ const akt=m.jawapan>0||(m.tasmik||[]).length; const t=(m.tasmik||[]).map(x=>`${asc(String(x.rujukan||'').replace(/^Surah /,'').split(' · ')[0])}${x.gred?' ['+asc(x.gred)+']':''}${x.intai?' intai '+x.intai:''} (${masa(x.at)})`).join('; ');
+    return [String(i+1),asc(m.nama),akt&&m.mula?`${masa(m.mula)}–${masa(m.akhir)}`:'-',asc((m.set_kod||[]).map(SET_NAMA).join(', '))||'-',String(m.jawapan),m.jawapan?Math.round(m.betul/m.jawapan*100)+'%':'-',String(m.xp||0),t||'-']; });
+  AT({startY:y,head:[['Bil','Nama murid','Masa','Aktiviti','Soalan','Betul','XP','Tasmik']],body:ev,theme:'striped',margin:{left:L,right:Rm},
+    styles:{fontSize:7.8,cellPadding:1.4,overflow:'linebreak'},headStyles:{fillColor:ungu,textColor:255},alternateRowStyles:{fillColor:[248,247,252]},
+    columnStyles:{0:{cellWidth:8,halign:'right'},1:{cellWidth:40},2:{cellWidth:satuHari?20:30},4:{cellWidth:13,halign:'right'},5:{cellWidth:12,halign:'right'},6:{cellWidth:10,halign:'right'}},
+    didParseCell:(h)=>{ if(h.section==='body'){ const m=R.M[h.row.index]; if(m&&!(m.jawapan>0||(m.tasmik||[]).length)) h.cell.styles.textColor=[150,150,160]; } }});
+  y=doc.lastAutoTable.finalY+7;
+  // Attention list
+  tajuk('3. Murid perlu perhatian');
+  const att=[...R.tidak.map(m=>[asc(m.nama),'Tidak aktif dalam tempoh ini','Hubungi / bimbing']),...R.rendah.map(m=>[asc(m.nama),`Ketepatan ${Math.round(m.betul/m.jawapan*100)}% (${m.jawapan} soalan)`,'Latihan pengukuhan'])];
+  AT({startY:y,head:[['Nama','Pemerhatian','Tindakan susulan']],body:att.length?att:[['-','Tiada','-']],theme:'grid',margin:{left:L,right:Rm},styles:{fontSize:8.2,cellPadding:1.5,lineColor:[225,225,232]},headStyles:{fillColor:[240,236,252],textColor:[60,40,140]}});
+  y=doc.lastAutoTable.finalY+7;
+  // Reflection
+  tajuk('4. Refleksi');
+  doc.setFont('helvetica','normal'); doc.setFontSize(9.5); const lines=doc.splitTextToSize(asc(refleksi||'-'),CW); y+=3;
+  for(const ln of lines){ if(y>275){ doc.addPage(); y=18; } doc.text(ln,L,y); y+=4.8; }
+  // Signatures
+  y+=8; if(y>255){ doc.addPage(); y=24; }
+  doc.setFontSize(9); doc.setDrawColor(150,150,160);
+  doc.line(L,y+12,L+70,y+12); doc.text('Disediakan oleh:',L,y); doc.text(asc(UST.nama),L,y+17); doc.text('Tarikh:',L,y+22);
+  doc.line(W-Rm-70,y+12,W-Rm,y+12); doc.text('Disemak oleh (Pentadbir):',W-Rm-70,y); doc.text('Nama & cop:',W-Rm-70,y+17); doc.text('Tarikh:',W-Rm-70,y+22);
+  // Footer
+  const n=doc.getNumberOfPages(); for(let i=1;i<=n;i++){ doc.setPage(i); doc.setFontSize(7.5); doc.setTextColor(...kelabu); doc.text('Dijana oleh Jejak Ilmu daripada log aktiviti bertarikh masa (waktu Malaysia). Data kuiz ialah penilaian formatif dalam aplikasi.',L,290); doc.text(`Halaman ${i}/${n}`,W-Rm,290,{align:'right'}); }
+  return doc;
+}
 function guruLigaCard(){
   if(!SB) return '';
   if(!creds()) return `<div class="card" id="gliga" style="margin-top:16px"><div class="eyebrow">Liga semua kelas · hidup</div><p class="small muted" style="margin-top:6px">Log keluar dan log masuk semula sebagai guru untuk melihat liga sebenar.</p></div>`;
@@ -1409,6 +1649,8 @@ function vGuruLive(){
         ${ready&&sukar.length?`<p class="small" style="margin-top:8px;font-weight:700">Soalan paling banyak salah:</p>${sukar.slice(0,5).map(x=>`<div class="student"><div class="av" style="background:color-mix(in srgb,var(--bad) 18%,var(--surface));color:var(--bad);font-size:12px">${Math.round(x.salah/x.cubaan*100)}%</div><div class="grow"><div class="nm" style="font-weight:600;font-size:13.5px">${esc(String(qText(x.soalan_id)).slice(0,140))}</div><div class="why">${esc(x.soalan_id)} · SP ${esc(x.sp_kod||'')} · ${x.salah}/${x.cubaan} salah</div></div></div>`).join('')}<p class="small muted" style="margin-top:6px">Cadangan: bincang 5 minit dalam PdP seterusnya; semak juga jika soalan atau kunci jawapan dalam Sheets betul.</p>`:''}
       </div>
       ${gPesanCard()}
+      ${gUlasanCard()}
+      ${gLaporanCard()}
     </div>
 
     <div class="section g-heat">
@@ -1714,8 +1956,8 @@ async function gateLogin(){
   if(SB&&m){ try{ srv=await rpc('semak_pin',{p_nama:m.n,p_kelas:m.k,p_pin:gate.pin}); ok=!!(srv&&srv.ok); }catch(e){ srv=null; } }
   if(srv===null){ if(m&&m.h){ try{ ok=(await pinHash(gate.pin,m.n,m.k))===m.h; }catch(e){ ok=false; } } else { const er=$('#g-err'); if(er){ er.textContent='Tidak dapat menyemak PIN: semak sambungan internet dan cuba lagi.'; er.hidden=false; } if(btn){ btn.disabled=false; btn.textContent='Masuk'; } return; } }
   if(!ok){ buzz([40,60,40]); const er=$('#g-err'); if(er) er.hidden=false; if(btn){ btn.disabled=false; btn.textContent='Masuk'; } gate.pin=''; const inp=$('#g-pin'); if(inp){ inp.value=''; inp.focus(); } return; }
-  const same=state.user&&state.user.nama===m.n&&state.user.kelas===m.k; if(!same) saveUserSnap(); state.user={nama:m.n,kelas:m.k,guru:!!(srv?srv.guru:m.g),pin:SB?gate.pin:undefined}; state.nama=m.n; state.kelas=m.k; if(!same){ freshProgress(); loadUserSnap(state.user); } rebuildSets(); pS.t=0; gP.t=0; gP.rows=null;
-  if(srv&&srv.ok&&!state.user.guru){ if(!srv.migrasi&&state.xp>0&&!state.migrasiDihantar){ state.outbox=(state.outbox||[]).filter(x=>x.sebab!=='migrasi'); state.outbox.unshift({xp:Math.min(state.xp,5000),sebab:'migrasi'}); state.migrasiDihantar=true; } if(srv.xp>state.xp) state.xp=srv.xp; setTimeout(()=>flushXP(),50); } save(); hideGate(); render(); toast(m.g?`Selamat datang, ${m.n}. Mod guru aktif.`:`Selamat datang, ${m.n}. Hanya nama dan kelas kamu disimpan.`);
+  const same=state.user&&state.user.nama===m.n&&state.user.kelas===m.k; if(!same) saveUserSnap(); state.user={nama:m.n,kelas:m.k,guru:!!(srv?srv.guru:m.g),pin:SB?gate.pin:undefined}; state.nama=m.n; state.kelas=m.k; if(!same){ freshProgress(); loadUserSnap(state.user); } rebuildSets(); pS.t=0; gP.t=0; gP.rows=null; syncLast=''; syncTarikAt=0;
+  if(srv&&srv.ok&&!state.user.guru){ if(!srv.migrasi&&state.xp>0&&!state.migrasiDihantar){ state.outbox=(state.outbox||[]).filter(x=>x.sebab!=='migrasi'); state.outbox.unshift({xp:Math.min(state.xp,5000),sebab:'migrasi'}); state.migrasiDihantar=true; } if(srv.xp>state.xp) state.xp=srv.xp; setTimeout(()=>flushXP(),50); } save(); hideGate(); render(); if(srv&&srv.ok&&!state.user.guru) tarikKemajuan(true); toast(m.g?`Selamat datang, ${m.n}. Mod guru aktif.`:`Selamat datang, ${m.n}. Hanya nama dan kelas kamu disimpan.`);
 }
 function hideGate(){ $('#gate').hidden=true; $('#tabbar').hidden=false; document.body.style.overflow=''; }
 
@@ -1912,7 +2154,7 @@ const blobB64=b=>new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=(
 async function kirimTasmik(){
   if(!rec||!rec.blob) return; const btn=$('#btn-kirim'); if(btn){ btn.disabled=true; btn.textContent='Menghantar…'; }
   let r=null; try{ const b64=await blobB64(rec.blob); r=await rpc('hantar_tasmik',{...creds(),p_rujukan:(hafazanHariIni()||{}).rujukan||'Hafazan',p_durasi:rec.t,p_intai:rec.peeks,p_mime:rec.blob.type||'audio/webm',p_audio_b64:b64}); }catch(e){ r=null; }
-  if(r&&r.ok){ state.tasmik.unshift({nama:state.nama,ayat:(hafazanHariIni()||{}).rujukan||'Hafazan',dur:fmt(rec.t),peeks:rec.peeks}); state.usaha.hafazan++; state.xp+=30; logAktiviti(30); queueXP(30,'tasmik'); hari().tasmik++; save(); if(rec.url) URL.revokeObjectURL(rec.url); rec=null; $('#layer').hidden=true; document.body.style.overflow=''; render(); toast('Tasmik dihantar kepada Ustazah. +30 XP.'); return; }
+  if(r&&r.ok){ state.tasmik.unshift({nama:state.nama,ayat:(hafazanHariIni()||{}).rujukan||'Hafazan',dur:fmt(rec.t),peeks:rec.peeks,at:Date.now()}); catatAyatTasmik(); state.usaha.hafazan++; state.xp+=30; logAktiviti(30); queueXP(30,'tasmik'); hari().tasmik++; save(); if(rec.url) URL.revokeObjectURL(rec.url); rec=null; $('#layer').hidden=true; document.body.style.overflow=''; render(); toast('Tasmik dihantar kepada Ustazah. +30 XP.'); return; }
   rec.kirimErr=r?({saiz:'Rakaman terlalu besar. Rakam semula dengan lebih ringkas.',had_harian:'Had 12 rakaman sehari dicapai.',pin:'Sesi tamat. Log keluar dan masuk semula.'}[r.ralat]||'Tidak berjaya dihantar.'):'Gagal dihantar. Semak internet dan tekan Hantar sekali lagi.';
   renderTasmik();
 }
@@ -1933,7 +2175,7 @@ let playT=null;
 document.addEventListener('click',e=>{
   const el=e.target.closest('[data-act]'); if(!el) return;
   const act=el.dataset.act, v=el.dataset.v;
-  if(act==='nav'){ if(v==='guru'&&!isGuru()){ toast('Papan guru hanya untuk akaun guru.'); return; } if(v==='laporan'&&SHEETS&&state.user) hari().laporan=true; state.view=v; save(); render(); window.scrollTo({top:0}); }
+  if(act==='nav'){ if(v==='guru'&&!isGuru()){ toast('Papan guru hanya untuk akaun guru.'); return; } if(v==='laporan'&&SHEETS&&state.user) hari().laporan=true; state.view=v; save(); render(); window.scrollTo({top:0}); if(v==='laporan') tarikKemajuan(); }
   else if(act==='theme'){ state.theme={auto:'light',light:'dark',dark:'auto'}[state.theme]; applyTheme(); save(); toast('Tema: '+THEME_LABEL[state.theme]); if(!$('#gate').hidden) renderGate(); else render(); }
   else if(act==='theme-set'){ state.theme=v; applyTheme(); save(); render(); sheetSettings(); }
   else if(act==='skrip'){ state.skrip=v; save(); render(); if(!$('#sheet').hidden) sheetSettings(); }
@@ -1950,6 +2192,15 @@ document.addEventListener('click',e=>{
   else if(act==='quiz-close'){ closeQuiz(); }
   else if(act==='pick'){ answer(+el.dataset.k); }
   else if(act==='g-login'){ gateLogin(); }
+  else if(act==='ul-buka'){ bukaUlasan(); }
+  else if(act==='ul-ai'){ ulDrafAI([+el.dataset.id]); }
+  else if(act==='ul-ai-semua'){ const D=state.drafUlasan||{}; ulDrafAI((UL.rows||[]).filter(r=>!D[r.akaun_id]&&(!r.ulasan_at||Date.now()-new Date(r.ulasan_at)>6*864e5)).map(r=>r.akaun_id)); }
+  else if(act==='ul-sahkan'){ const id=+el.dataset.id; const ta=document.querySelector(`#sheet .ul-teks[data-id="${id}"]`); const tx=(ta&&ta.value||'').trim(); if(!tx){ toast('Tulis atau jana ulasan dahulu.'); return; } state.drafUlasan[id]={teks:tx,ai:!!(state.drafUlasan[id]&&state.drafUlasan[id].ai)}; ulSahkan([id]); }
+  else if(act==='ul-sahkan-semua'){ const D=state.drafUlasan||{}; const ids=(UL.rows||[]).filter(r=>D[r.akaun_id]&&D[r.akaun_id].teks.trim()).map(r=>r.akaun_id); if(ids.length&&confirm(`Sahkan ${ids.length} ulasan? Pastikan Ustazah sudah membaca setiap satu.`)) ulSahkan(ids); }
+  else if(act==='lh-buka'){ bukaLaporanHarian(); }
+  else if(act==='lh-ai'){ const ta=$('#lh-ref'); if(ta) LH.refleksi=ta.value; lhAI(); }
+  else if(act==='lh-auto'){ LH.refleksi=lhRefleksiAuto(LH.d); LH.msg=''; sheetLaporanHarian(); }
+  else if(act==='lh-pdf'){ const ta=$('#lh-ref'); if(ta) LH.refleksi=ta.value; lhPDF(); }
   else if(act==='hz-pilih'){ state.hafazanPilih=v; save(); if(!$('#layer').hidden&&rec&&rec.ctx==='tasmik') renderTasmik(); else render(); }
   else if(act==='pg-dengar'){ dengarPesanan(); }
   else if(act==='pv-baru'){ pv={phase:'idle',t:0,blob:null,url:null,real:null,timer:null,err:'',kelas:pv.kelas||''}; sheetPesananLive(); }
@@ -1989,7 +2240,7 @@ document.addEventListener('click',e=>{
   else if(act==='rec-stop'){ recStop(); }
   else if(act==='rec-peek'){ rec.peeks++; rec.peeking=true; renderTasmik(); rec.peekT=setTimeout(()=>{ if(rec&&rec.phase==='rec'){ rec.peeking=false; renderTasmik(); } },3000); }
   else if(act==='rec-reset'){ stopRec(); const ctx=rec.ctx; rec={ctx,phase:'idle',t:0,timer:null,peeks:0,peeking:false,janji:ctx==='tasmik',cd:0}; if(ctx==='tasmik') renderTasmik(); else openSheet(renderPesananSheet()); }
-  else if(act==='tasmik-hantar'){ state.tasmik.unshift({nama:state.nama,ayat:(hafazanHariIni()||{}).rujukan||'Hafazan',dur:fmt(rec.t),peeks:rec.peeks}); state.usaha.hafazan++; state.xp+=30; logAktiviti(30); queueXP(30,'tasmik'); hari().tasmik++; save(); if(rec.url) URL.revokeObjectURL(rec.url); rec=null; $('#layer').hidden=true; document.body.style.overflow=''; render(); toast(SHEETS?'Tasmik direkod sebagai usaha (+30 XP).':'Tasmik dihantar kepada Ustazah. +30 XP usaha.'); }
+  else if(act==='tasmik-hantar'){ state.tasmik.unshift({nama:state.nama,ayat:(hafazanHariIni()||{}).rujukan||'Hafazan',dur:fmt(rec.t),peeks:rec.peeks,at:Date.now()}); catatAyatTasmik(); state.usaha.hafazan++; state.xp+=30; logAktiviti(30); queueXP(30,'tasmik'); hari().tasmik++; save(); if(rec.url) URL.revokeObjectURL(rec.url); rec=null; $('#layer').hidden=true; document.body.style.overflow=''; render(); toast(SHEETS?'Tasmik direkod sebagai usaha (+30 XP).':'Tasmik dihantar kepada Ustazah. +30 XP usaha.'); }
   else if(act==='play-pesan'){ const bar=$('#pp'); if(!bar) return; if(playT){ clearInterval(playT); playT=null; el.textContent='▶'; return; } let p=0; el.textContent='❚❚'; toast('Demo: tiada audio. Versi penuh memainkan suara Ustazah.'); playT=setInterval(()=>{ p+=100/32; const b=$('#pp'); if(b) b.style.width=Math.min(100,p)+'%'; if(p>=100){ clearInterval(playT); playT=null; const pb=$('[data-act="play-pesan"]'); if(pb) pb.textContent='▶'; } },250); }
   else if(act==='share'){ const txt=`Kad Laporan ${state.nama} (${state.kelas}): Level ${lvl()}, ${state.xp} XP, streak ${state.streak} hari, ${state.usaha.dicuba} soalan dicuba bulan ini.`; const done=()=>toast('Ringkasan disalin. Versi penuh: pautan kad laporan untuk ibu bapa.'); try{ navigator.clipboard.writeText(txt).then(done,done); }catch(err){ done(); } }
   else if(act==='toast'){ toast(el.dataset.msg); }
@@ -2034,7 +2285,7 @@ async function boot(saved){
   render();
   if(!state.user){ gate={kelas:KELAS_CFG[0]||'2 Amanah',nama:null,pin:''}; showGate(); }
   else if(SB&&SHEETS&&!state.user.pin){ gate={kelas:state.user.kelas,nama:state.user.nama,pin:'',sahkan:true}; showGate(); }
-  else if(SB){ flushXP(); flushJawapan(); }
+  else if(SB){ flushXP(); flushJawapan(); tarikKemajuan(true); }
   if(SB) window.addEventListener('online',()=>{ flushXP(); flushJawapan(); });
 }
 try{ if(window.claude&&window.claude.hot&&typeof window.claude.hot.snapshot==='function') window.claude.hot.snapshot(()=>state); }catch(e){}
