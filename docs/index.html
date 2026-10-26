@@ -380,7 +380,13 @@ table.ht td.c{font-weight:800;min-width:44px}
 .delta .down{color:var(--bad);font-weight:800}
 
 /* Tasmik recorder */
-.blurred .quran{filter:blur(9px);user-select:none;transition:filter .3s}
+.blurred .quran,.blurred .ayat-img{filter:blur(9px);user-select:none;transition:filter .3s}
+.ayat-img{display:block;width:100%;height:auto;margin:4px 0}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .ayat-img{filter:invert(.93)} :root:not([data-theme="light"]) .blurred .ayat-img{filter:invert(.93) blur(9px)} }
+:root[data-theme="dark"] .ayat-img{filter:invert(.93)} :root[data-theme="dark"] .blurred .ayat-img{filter:invert(.93) blur(9px)}
+.hz-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.hz-chips button{padding:5px 10px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-size:12px;font-weight:700}
+.hz-chips button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .peek-btn{position:absolute;inset:0;display:grid;place-items:center;border-radius:18px;background:color-mix(in srgb,var(--surface) 40%,transparent)}
 .peek-btn span{background:var(--surface);border:1.5px solid var(--line);border-radius:999px;padding:8px 14px;font-weight:700;font-size:13px;box-shadow:var(--shadow)}
 .wave{display:flex;align-items:center;justify-content:center;gap:3px;height:56px;margin-top:14px}
@@ -667,14 +673,20 @@ async function loadBank(){
 }
 function recomputePelajaran(){ for(const p of PELAJARAN){ const v=(SPS[p.n]||[]).map(x=>state.sp[x.k]).filter(x=>x!=null); p.m=v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):(p.m&&!SHEETS?p.m:null); }
   if(SHEETS){ for(const b of BIDANG){ const v=PELAJARAN.filter(p=>p.b===b.id&&p.m!=null).map(p=>p.m); state.bidangM[b.id]=v.length?Math.round(v.reduce((a,c)=>a+c,0)/v.length):0; } } }
+const HAFAZAN_BUKU=[
+  {id:'3-8',pel:1,img:'img/ayat/ali-imran-3-8.png',rujukan:'Surah Ali Imran 3:8',ms:'m.s. 2–3',label:'Ali Imran 8'},
+  {id:'3-18',pel:2,img:'img/ayat/ali-imran-3-18.png',rujukan:'Surah Ali Imran 3:18',ms:'m.s. 5–6',label:'Ali Imran 18'},
+  {id:'3-26-27',pel:3,img:'img/ayat/ali-imran-3-26-27.png',rujukan:'Surah Ali Imran 3:26–27',ms:'m.s. 9–12',label:'Ali Imran 26–27'},
+];
+function hafazanBuku(){ const pick=HAFAZAN_BUKU.find(h=>h.id===state.hafazanPilih); if(pick) return pick; const cur=currentLesson(); const n=cur?cur.n:3; const c=HAFAZAN_BUKU.filter(h=>h.pel<=n); return c.length?c[c.length-1]:HAFAZAN_BUKU[0]; }
+const ayatHTML=h=>h.img?`<img class="ayat-img" src="${h.img}" alt="${esc(h.rujukan)}">`:`<p class="quran">${h.ayat}</p>`;
+const hzChips=h=>h.buku?`<div class="hz-chips" role="group" aria-label="Pilih ayat hafazan">${HAFAZAN_BUKU.map(x=>`<button data-act="hz-pilih" data-v="${x.id}" aria-pressed="${x.id===h.id}">${esc(x.label)}</button>`).join('')}</div>`:'';
 function hafazanHariIni(){
   if(!SHEETS) return {ayat:'فَلَمْ تَجِدُوا مَاءً فَتَيَمَّمُوا صَعِيدًا طَيِّبًا',rujukan:'Surah al-Maidah 5:6 (potongan) · dalil tayamum'};
+  // 1) Sheet "Hafazan" (jika diterbitkan) mengatasi; 2) jika tidak, ayat hafazan buku teks (Ali Imran 8, 18, 26–27).
   const today=todayKey(); const rows=HAFAZAN.filter(r=>(r.ayat||r.ayat_arab)&&(!r.tarikh||r.tarikh.trim()<=today)).sort((a,b)=>(b.tarikh||'').localeCompare(a.tarikh||''));
   if(rows.length){ const r=rows[0]; return {ayat:r.ayat||r.ayat_arab,rujukan:r.rujukan||'',maksud:r.maksud||''}; }
-  const cur=currentLesson(); const kz=SETS['kuiz'+cur.n]; const id=kz&&kz.ids.find(i=>Q[i].type==='fill'&&isArabic(Q[i].ar));
-  if(id){ const q=Q[id]; return {ayat:q.ar.replace('____',q.opts[q.ans]),rujukan:`Pelajaran ${cur.n}${q.ms?' · m.s. '+q.ms:''}`}; }
-  const d=CFG.hafazanLalai||{ayat:'فَلَمْ تَجِدُوا مَاءً فَتَيَمَّمُوا صَعِيدًا طَيِّبًا',rujukan:'Surah al-Maidah 5:6 (potongan) · dalil tayamum'};
-  return d&&d.ayat?d:null;
+  const b=hafazanBuku(); return {...b,buku:true,rujukan:`${b.rujukan} · Pelajaran ${b.pel} · ${b.ms}`};
 }
 function isLocked(n){ if(!SHEETS) return false; if(state.user&&state.user.guru) return false; const p=pelOf(n); return !!(p&&p.st==='kunci'); }
 function rebuildSets(){ if(SHEETS&&typeof buildBank.lastRows!=='undefined') buildBank(buildBank.lastRows.so,buildBank.lastRows.sp,buildBank.lastRows.pl); }
@@ -749,7 +761,7 @@ const DEFAULT_STATE = {
 };
 let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
 const LS=SHEETS?'jejak-ilmu-v1':'jejak-ilmu-demo-v3';
-const PROG_KEYS=['jbox','migrasiDihantar','outbox','progressVersion','xp','streak','dailyDone','dailyDate','lastSet','lastWrong','lastLesson','aktiviti','usaha','tasmik','sp','best','bidangM','hari'];
+const PROG_KEYS=['hafazanPilih','jbox','migrasiDihantar','outbox','progressVersion','xp','streak','dailyDone','dailyDate','lastSet','lastWrong','lastLesson','aktiviti','usaha','tasmik','sp','best','bidangM','hari'];
 const userKey=u=>LS+':u:'+u.kelas+'|'+u.nama;
 function saveUserSnap(){ if(!SHEETS||!state.user) return; try{ const o={}; for(const k of PROG_KEYS) o[k]=state[k]; localStorage.setItem(userKey(state.user),JSON.stringify(o)); }catch(e){} }
 function loadUserSnap(u){ try{ const raw=localStorage.getItem(userKey(u)); if(!raw) return false; const o=JSON.parse(raw); if(CFG.progressVersion!=null&&o.progressVersion!==CFG.progressVersion) return false; Object.assign(state,o); recomputePelajaran(); return true; }catch(e){ return false; } }
@@ -883,6 +895,7 @@ function vUtama(){
   const p16=currentLesson();
   const pct=lvlPct();
   const pesan=PESANAN[dayIndex()%PESANAN.length];
+  if(SB&&creds()&&!state.user.guru) setTimeout(()=>refreshPS(),0);
   return `
   <header class="band"><div class="inner gut">
     <div class="row">
@@ -905,7 +918,8 @@ function vUtama(){
       ${pose('point',96)}
       <div class="bubble">
         <div class="who"><span class="wordmark">${UST.nama}</span><span class="small muted">· pesanan hari ini</span></div>
-        <p class="txt">${esc(pesan)}</p>
+        <p class="txt">${esc(SB&&pS.m&&pS.m.ada?(pS.m.teks||'Pesanan suara daripada Ustazah.'):pesan)}</p>
+        ${SB&&pS.m&&pS.m.ada&&pS.m.ada_audio?`<div class="player"><button class="pb" data-act="pg-dengar" aria-label="Dengar pesanan suara">${pS.playing?'❚❚':'▶'}</button><div class="bar thin"><i id="pgp" style="width:0%"></i></div><span class="t">${fmt(pS.m.durasi_s||0)} · suara Ustazah${pS.m.didengar?' · didengar':''}</span></div>`:''}
         ${SHEETS?'':'<div class="player" id="player"><button class="pb" data-act="play-pesan" aria-label="Main pesanan suara">▶</button><div class="bar thin"><i id="pp" style="width:0%"></i></div><span class="t">0:32 · suara</span></div>'}
         <div class="acts"><button class="btn sm" data-act="quiz" data-set="harian">${doneToday()?'Ulang Cabaran Harian':'Mula Cabaran Harian'}</button><button class="btn sm ghost" data-act="lesson" data-n="${p16.n}">${p16.m!=null?'Sambung':'Mula'} Pelajaran ${p16.n}</button></div>
       </div>
@@ -936,10 +950,11 @@ function vUtama(){
     ${(()=>{ const h=hafazanHariIni(); if(!h) return ''; return `<div class="section" style="padding-top:4px">
       <div class="head"><h2>Hafazan hari ini</h2>${SETS.hafazan?'<button class="link" data-act="quiz" data-set="hafazan">Sambung ayat</button>':''}</div>
       <div class="card">
-        <p class="quran">${h.ayat}</p>
+        ${hzChips(h)}
+        ${ayatHTML(h)}
         ${h.maksud?`<p class="small" style="margin-top:8px">${esc(h.maksud)}</p>`:''}
         <p class="small muted" style="margin-top:8px">${esc(h.rujukan||'')}${SHEETS?'':' · ulangan ke-3 (jarak 4 hari)'}</p>
-        <div class="row" style="margin-top:12px;gap:8px"><button class="btn sm gold" data-act="tasmik">Rakam tasmik</button><span class="small muted">${SHEETS?'Rakam dan dengar bacaan kamu sendiri':'Hantar bacaan kamu kepada Ustazah'}</span></div>
+        <div class="row" style="margin-top:12px;gap:8px"><button class="btn sm gold" data-act="tasmik">Rakam tasmik</button><span class="small muted">${SB&&creds()?'Hantar bacaan kamu kepada Ustazah':SHEETS?'Rakam dan dengar bacaan kamu sendiri':'Hantar bacaan kamu kepada Ustazah'}</span></div>
       </div>
     </div>`; })()}
 
@@ -1239,6 +1254,58 @@ async function runImport(){
   if(r&&r.ok){ imp.res=r; try{ localStorage.removeItem('jejak-nama-cache'); }catch(x){} loadNama(); urus.rows=null; } else imp.err='Import tidak berjaya. Semak internet atau log masuk semula sebagai guru.';
   sheetImport();
 }
+const b64Blob=(b64,mime)=>new Blob([Uint8Array.from(atob(b64),c=>c.charCodeAt(0))],{type:mime||'audio/webm'});
+let pS={m:null,t:0,audio:null,playing:false};
+async function refreshPS(){ const u=state.user?state.user.kelas+'|'+state.user.nama:''; if(pS.u!==u){ if(pS.audio) pS.audio.pause(); pS={m:null,t:0,audio:null,playing:false,u}; } if(Date.now()-pS.t<60000) return; pS.t=Date.now(); try{ const r=await rpc('pesanan_terkini',creds()); if(r&&r.ok){ const changed=JSON.stringify(r)!==JSON.stringify(pS.m); pS.m=r; if(changed&&state.view==='utama'&&$('#layer').hidden) render(); } }catch(e){} }
+async function dengarPesanan(){
+  if(pS.audio&&pS.playing){ pS.audio.pause(); pS.playing=false; render(); return; }
+  if(!pS.audio){ let r=null; try{ r=await rpc('pesanan_audio',{...creds(),p_id:pS.m.id}); }catch(e){} if(!r||!r.ok){ toast('Pesanan suara tidak dapat dimuat. Semak internet.'); return; }
+    const au=new Audio(URL.createObjectURL(b64Blob(r.b64,r.mime))); pS.audio=au; au.addEventListener('timeupdate',()=>{ const b=$('#pgp'); if(b&&au.duration&&isFinite(au.duration)) b.style.width=(au.currentTime/au.duration*100)+'%'; }); au.addEventListener('ended',()=>{ if(pS.audio!==au) return; pS.playing=false; if(pS.m) pS.m.didengar=true; render(); }); }
+  try{ await pS.audio.play(); pS.playing=true; }catch(e){ toast('Tekan sekali lagi untuk main.'); }
+  render();
+}
+// ---------- teacher: record and send voice messages ----------
+let pv={phase:'idle',t:0,blob:null,url:null,real:null,timer:null,err:'',kelas:''};
+let gP={rows:null,t:0,err:false};
+async function refreshGP(){ if(Date.now()-gP.t<30000) return; gP.t=Date.now(); try{ const r=await rpc('guru_pesanan_senarai',creds()); gP={rows:Array.isArray(r)?r:[],t:Date.now(),err:false}; }catch(e){ gP.err=true; gP.t=Date.now(); } const el=document.getElementById('gpesan'); if(el) el.outerHTML=gPesanCard(); }
+function gPesanCard(){
+  setTimeout(()=>refreshGP(),0); const rows=gP.rows;
+  return `<div class="card" id="gpesan" style="margin-top:12px">
+    <div class="row" style="gap:12px;align-items:flex-start">${pose('point',64)}<div class="grow"><div class="eyebrow">Pesanan suara kepada murid</div><p class="small muted" style="margin-top:4px">Murid dengar di skrin Utama. Pesanan terkini (14 hari) dipaparkan; teks Sheets digunakan bila tiada.</p></div></div>
+    <button class="btn sm gold" data-act="pv-baru" style="margin-top:10px">Rakam pesanan baharu</button>
+    ${!rows?`<p class="small muted" style="margin-top:8px">${gP.err?'Tidak dapat dimuat.':'Memuat…'}</p>`:rows.slice(0,5).map(m=>`<div class="student"><div class="av" style="background:var(--gold-soft);color:var(--gold-text)">${m.ada_audio?'▶':'✉'}</div><div class="grow"><div class="nm" style="font-weight:600;font-size:13.5px">${esc((m.teks||'(suara sahaja)').slice(0,90))}</div><div class="why">${esc(m.kelas||'Semua kelas')} · ${new Date(m.created_at).toLocaleString('ms-MY',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}${m.ada_audio?` · ${fmt(m.durasi_s||0)} · didengar ${m.didengar}/${m.sasaran}`:''}</div></div>${m.ada_audio?`<button class="btn sm ghost" data-act="pv-ulang" data-id="${m.id}">▶</button>`:''}<button class="btn sm ghost" data-act="pv-padam" data-id="${m.id}" aria-label="Padam">✕</button></div>`).join('')}
+  </div>`;
+}
+function sheetPesananLive(){
+  const kls=KELAS_CFG.filter(k=>!/lain/i.test(k));
+  const ctl = pv.phase==='idle' ? `<button class="btn gold block" data-act="pv-rakam">🎙 Mula rakam (maks 90 saat)</button>`
+    : pv.phase==='rec' ? `<div class="row" style="justify-content:center;gap:10px"><span class="rec-dot"></span><span class="rec-time num" id="pv-time" style="margin:0">${fmt(pv.t)}</span></div><div class="wave" aria-hidden="true">${Array.from({length:22},(_,i)=>`<i style="animation-delay:${(i*0.07)%1}s"></i>`).join('')}</div><button class="btn block" data-act="pv-henti">Berhenti</button>`
+    : `${pv.url?`<audio controls src="${pv.url}" style="width:100%"></audio>`:'<p class="small muted">Mikrofon tidak tersedia; hanya teks akan dihantar.</p>'}<button class="btn sm ghost" data-act="pv-semula" style="margin-top:8px">Rakam semula</button>`;
+  openSheet(`<div class="gut">
+    <div class="row"><h2>Pesanan kepada murid</h2><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div>
+    <div class="field" style="margin-top:12px"><label for="pv-kelas">Kepada</label><select id="pv-kelas"><option value="">Semua kelas</option>${kls.map(k=>`<option value="${esc(k)}" ${pv.kelas===k?'selected':''}>${esc(k)}</option>`).join('')}</select></div>
+    <div class="field" style="margin-top:12px"><label for="pv-teks">Teks (dipaparkan bersama suara)</label><textarea id="pv-teks" maxlength="600" placeholder="Contoh: Assalamualaikum semua, minggu ni kita fokus hafazan Ali Imran 26–27.">${esc(pv.teks||'')}</textarea></div>
+    <div class="field" style="margin-top:12px"><label>Suara (20–60 saat paling sesuai)</label>${ctl}</div>
+    ${pv.err?`<p class="small" style="color:var(--bad);font-weight:700;margin-top:8px">${esc(pv.err)}</p>`:''}
+    <button class="btn block" data-act="pv-hantar" style="margin-top:14px" ${pv.phase==='rec'?'disabled':''}>Hantar pesanan</button>
+  </div>`);
+  const t=$('#pv-teks'); if(t) t.addEventListener('input',()=>{ pv.teks=t.value; });
+  const k=$('#pv-kelas'); if(k) k.addEventListener('change',()=>{ pv.kelas=k.value; });
+}
+async function pvRakam(){
+  pv.real=await realRecorder(); if(!pv.real){ pv.err='Mikrofon tidak dapat dibuka. Benarkan mikrofon dalam tetapan pelayar.'; return sheetPesananLive(); }
+  pv.err=''; pv.phase='rec'; pv.t=0; sheetPesananLive();
+  pv.timer=setInterval(()=>{ pv.t++; const el=$('#pv-time'); if(el) el.textContent=fmt(pv.t); if(pv.t>=90) pvHenti(); },1000);
+}
+async function pvHenti(){ clearInterval(pv.timer); pv.timer=null; if(pv.real){ try{ pv.blob=await pv.real.stop(); pv.url=URL.createObjectURL(pv.blob); }catch(e){} pv.real=null; } pv.phase='done'; sheetPesananLive(); }
+async function pvHantar(){
+  const teks=(($('#pv-teks')||{}).value||'').trim(); const kelas=(($('#pv-kelas')||{}).value||'');
+  if(!teks&&!pv.blob){ pv.err='Tulis teks atau rakam suara dahulu.'; return sheetPesananLive(); }
+  const btn=$('[data-act="pv-hantar"]'); if(btn){ btn.disabled=true; btn.textContent='Menghantar…'; }
+  let r=null; try{ r=await rpc('guru_pesanan_hantar',{...creds(),p_kelas_sasar:kelas||null,p_teks:teks,p_mime:pv.blob?pv.blob.type:null,p_durasi:pv.blob?pv.t:null,p_audio_b64:pv.blob?await blobB64(pv.blob):null}); }catch(e){}
+  if(r&&r.ok){ if(pv.url) URL.revokeObjectURL(pv.url); pv={phase:'idle',t:0,blob:null,url:null,real:null,timer:null,err:'',kelas}; closeSheet(); toast(`Pesanan dihantar kepada ${kelas||'semua kelas'}.`); gP.t=0; refreshGP(); return; }
+  pv.err=r&&r.ralat==='saiz'?'Rakaman terlalu panjang.':'Tidak berjaya dihantar. Semak internet.'; sheetPesananLive();
+}
 function guruLigaCard(){
   if(!SB) return '';
   if(!creds()) return `<div class="card" id="gliga" style="margin-top:16px"><div class="eyebrow">Liga semua kelas · hidup</div><p class="small muted" style="margin-top:6px">Log keluar dan log masuk semula sebagai guru untuk melihat liga sebenar.</p></div>`;
@@ -1341,6 +1408,7 @@ function vGuruLive(){
         ${!ready?'<p class="small muted" style="margin-top:6px">…</p>':weakest?`<h3 style="font-size:16px;margin-top:4px">${esc(SP_NAMA[weakest.k]||weakest.k)} (${esc(weakest.k)}) paling lemah: purata ${weakest.v}%</h3>`:'<p class="small muted" style="margin-top:6px">Belum ada jawapan untuk pelajaran ini dalam kelas ini.</p>'}
         ${ready&&sukar.length?`<p class="small" style="margin-top:8px;font-weight:700">Soalan paling banyak salah:</p>${sukar.slice(0,5).map(x=>`<div class="student"><div class="av" style="background:color-mix(in srgb,var(--bad) 18%,var(--surface));color:var(--bad);font-size:12px">${Math.round(x.salah/x.cubaan*100)}%</div><div class="grow"><div class="nm" style="font-weight:600;font-size:13.5px">${esc(String(qText(x.soalan_id)).slice(0,140))}</div><div class="why">${esc(x.soalan_id)} · SP ${esc(x.sp_kod||'')} · ${x.salah}/${x.cubaan} salah</div></div></div>`).join('')}<p class="small muted" style="margin-top:6px">Cadangan: bincang 5 minit dalam PdP seterusnya; semak juga jika soalan atau kunci jawapan dalam Sheets betul.</p>`:''}
       </div>
+      ${gPesanCard()}
     </div>
 
     <div class="section g-heat">
@@ -1646,7 +1714,7 @@ async function gateLogin(){
   if(SB&&m){ try{ srv=await rpc('semak_pin',{p_nama:m.n,p_kelas:m.k,p_pin:gate.pin}); ok=!!(srv&&srv.ok); }catch(e){ srv=null; } }
   if(srv===null){ if(m&&m.h){ try{ ok=(await pinHash(gate.pin,m.n,m.k))===m.h; }catch(e){ ok=false; } } else { const er=$('#g-err'); if(er){ er.textContent='Tidak dapat menyemak PIN: semak sambungan internet dan cuba lagi.'; er.hidden=false; } if(btn){ btn.disabled=false; btn.textContent='Masuk'; } return; } }
   if(!ok){ buzz([40,60,40]); const er=$('#g-err'); if(er) er.hidden=false; if(btn){ btn.disabled=false; btn.textContent='Masuk'; } gate.pin=''; const inp=$('#g-pin'); if(inp){ inp.value=''; inp.focus(); } return; }
-  const same=state.user&&state.user.nama===m.n&&state.user.kelas===m.k; if(!same) saveUserSnap(); state.user={nama:m.n,kelas:m.k,guru:!!(srv?srv.guru:m.g),pin:SB?gate.pin:undefined}; state.nama=m.n; state.kelas=m.k; if(!same){ freshProgress(); loadUserSnap(state.user); } rebuildSets();
+  const same=state.user&&state.user.nama===m.n&&state.user.kelas===m.k; if(!same) saveUserSnap(); state.user={nama:m.n,kelas:m.k,guru:!!(srv?srv.guru:m.g),pin:SB?gate.pin:undefined}; state.nama=m.n; state.kelas=m.k; if(!same){ freshProgress(); loadUserSnap(state.user); } rebuildSets(); pS.t=0; gP.t=0; gP.rows=null;
   if(srv&&srv.ok&&!state.user.guru){ if(!srv.migrasi&&state.xp>0&&!state.migrasiDihantar){ state.outbox=(state.outbox||[]).filter(x=>x.sebab!=='migrasi'); state.outbox.unshift({xp:Math.min(state.xp,5000),sebab:'migrasi'}); state.migrasiDihantar=true; } if(srv.xp>state.xp) state.xp=srv.xp; setTimeout(()=>flushXP(),50); } save(); hideGate(); render(); toast(m.g?`Selamat datang, ${m.n}. Mod guru aktif.`:`Selamat datang, ${m.n}. Hanya nama dan kelas kamu disimpan.`);
 }
 function hideGate(){ $('#gate').hidden=true; $('#tabbar').hidden=false; document.body.style.overflow=''; }
@@ -1804,9 +1872,9 @@ function openTasmik(){
 function renderTasmik(){
   const r=rec;
   const hz=hafazanHariIni()||{ayat:'فَلَمْ تَجِدُوا مَاءً فَتَيَمَّمُوا صَعِيدًا طَيِّبًا',rujukan:'Surah al-Maidah 5:6'};
-  const textBox=`<div class="arabic-box ${r.phase==='rec'&&!r.peeking?'blurred':''}"><p class="quran">${SHEETS?hz.ayat:'فَلَمْ تَجِدُوا مَاءً فَتَيَمَّمُوا صَعِيدًا طَيِّبًا فَامْسَحُوا بِوُجُوهِكُمْ وَأَيْدِيكُم مِّنْهُ'}</p>
+  const textBox=`${r.phase==='idle'?hzChips(hz):''}<div class="arabic-box ${r.phase==='rec'&&!r.peeking?'blurred':''}">${SHEETS?ayatHTML(hz):'<p class="quran">فَلَمْ تَجِدُوا مَاءً فَتَيَمَّمُوا صَعِيدًا طَيِّبًا فَامْسَحُوا بِوُجُوهِكُمْ وَأَيْدِيكُم مِّنْهُ</p>'}
     ${r.phase==='rec'&&!r.peeking?`<button class="peek-btn" data-act="rec-peek"><span>Intai teks 3 saat · dicatat (${r.peeks}×)</span></button>`:''}</div>
-    <p class="small muted" style="margin-top:6px">${SHEETS?esc(hz.rujukan||''):'Surah al-Maidah 5:6 (potongan) · dalil tayamum'} · <button class="link" data-act="toast" data-msg="Demo: dalam versi penuh, audio contoh daripada QR code buku teks dimainkan di sini.">Dengar bacaan contoh</button></p>`;
+    <p class="small muted" style="margin-top:6px">${SHEETS?esc(hz.rujukan||''):'Surah al-Maidah 5:6 (potongan) · dalil tayamum'} · ${hz.buku?`Bacaan contoh: imbas kod QR dalam buku teks ${esc(hz.ms)}`:'<button class="link" data-act="toast" data-msg="Demo: dalam versi penuh, audio contoh daripada QR code buku teks dimainkan di sini.">Dengar bacaan contoh</button>'}</p>`;
   let ctl='';
   if(r.phase==='idle') ctl=`
     <div class="amanah">${pose('point',92)}<div class="grow"><b>Amanah dalam hafazan</b>
@@ -1820,7 +1888,7 @@ function renderTasmik(){
     <div class="qfoot stack" style="gap:8px">${SB&&creds()&&r.blob?`<button class="btn gold block" data-act="tasmik-kirim" id="btn-kirim">Hantar kepada Ustazah (+30 XP)</button>${r.kirimErr?`<p class="small" style="color:var(--bad);font-weight:700;text-align:center">${esc(r.kirimErr)}</p>`:''}<button class="btn block line" data-act="rec-share">Kongsi melalui WhatsApp (cara lain)</button>`:(SHEETS&&r.blob?`<button class="btn block line" data-act="rec-share">Kongsi rakaman (WhatsApp) kepada Ustazah</button><p class="small muted" style="text-align:center">Kongsi dahulu jika Ustazah minta, kemudian tekan Selesai.</p>`:'')}${SB&&creds()&&r.blob?'':`<button class="btn gold block" data-act="tasmik-hantar">${SHEETS?'Selesai (+30 XP usaha)':'Hantar kepada Ustazah'}</button>`}<button class="btn block ghost" data-act="rec-reset">Rakam semula</button></div>`;
   $('#layer').innerHTML=`<div class="inner"><div class="qbar gut"><button class="icon" data-act="quiz-close" aria-label="Tutup">✕</button><div class="grow"><div class="qtype">Rakam Tasmik · hafazan</div></div><span class="pill gold">+30 XP</span></div>
     <div class="gut" style="padding-block:6px 16px;flex:1;display:flex;flex-direction:column"><div class="qtext">Bacakan ayat ini daripada hafazan.</div>${textBox}${ctl}
-    <p class="note-demo" style="margin-top:14px">${SHEETS?'Rakaman disimpan dalam telefon kamu sahaja. Jika Ustazah minta, tekan Kongsi rakaman untuk menghantarnya melalui WhatsApp.':'Prototaip: mikrofon tidak dirakam. Versi penuh guna MediaRecorder; rakaman disimpan di storan fail dan hanya Ustazah boleh dengar.'}</p></div></div>`;
+    <p class="note-demo" style="margin-top:14px">${SB&&creds()?'Selepas berhenti, dengar semula dahulu, kemudian hantar. Hanya Ustazah boleh mendengar rakaman kamu.':SHEETS?'Rakaman disimpan dalam telefon kamu sahaja. Jika Ustazah minta, tekan Kongsi rakaman untuk menghantarnya melalui WhatsApp.':'Prototaip: mikrofon tidak dirakam. Versi penuh guna MediaRecorder; rakaman disimpan di storan fail dan hanya Ustazah boleh dengar.'}</p></div></div>`;
 }
 async function realRecorder(){
   try{ const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
@@ -1877,11 +1945,20 @@ document.addEventListener('click',e=>{
   else if(act==='liga-tab'){ ligaTab=v; sheetLiga(); }
   else if(act==='pesanan'){ sheetPesanan(); }
   else if(act==='pesanan-hantar'){ stopRec(); const suara=rec&&rec.phase==='done'?` + suara ${fmt(rec.t)}`:''; rec=null; closeSheet(); toast(`Pesanan teks${suara} dihantar kepada 30 murid (demo).`); }
-  else if(act==='close-sheet'){ if(rec&&rec.ctx==='pesanan'){ stopRec(); rec=null; } closeSheet(); }
+  else if(act==='close-sheet'){ if(pv&&pv.real){ try{ pv.real.cancel(); }catch(e){} pv.real=null; clearInterval(pv.timer); pv.phase='idle'; } if(rec&&rec.ctx==='pesanan'){ stopRec(); rec=null; } closeSheet(); }
   else if(act==='quiz'){ startQuiz(el.dataset.set, el.dataset.retry==='1'); }
   else if(act==='quiz-close'){ closeQuiz(); }
   else if(act==='pick'){ answer(+el.dataset.k); }
   else if(act==='g-login'){ gateLogin(); }
+  else if(act==='hz-pilih'){ state.hafazanPilih=v; save(); if(!$('#layer').hidden&&rec&&rec.ctx==='tasmik') renderTasmik(); else render(); }
+  else if(act==='pg-dengar'){ dengarPesanan(); }
+  else if(act==='pv-baru'){ pv={phase:'idle',t:0,blob:null,url:null,real:null,timer:null,err:'',kelas:pv.kelas||''}; sheetPesananLive(); }
+  else if(act==='pv-rakam'){ pvRakam(); }
+  else if(act==='pv-henti'){ pvHenti(); }
+  else if(act==='pv-semula'){ if(pv.url) URL.revokeObjectURL(pv.url); pv.blob=null; pv.url=null; pv.phase='idle'; pv.t=0; sheetPesananLive(); }
+  else if(act==='pv-hantar'){ pvHantar(); }
+  else if(act==='pv-padam'){ (async()=>{ let r; try{ r=await rpc('guru_pesanan_padam',{...creds(),p_id:+el.dataset.id}); }catch(e){} toast(r&&r.ok?'Pesanan dipadam.':'Tidak berjaya.'); gP.t=0; refreshGP(); })(); }
+  else if(act==='pv-ulang'){ (async()=>{ let r; try{ r=await rpc('guru_pesanan_audio',{...creds(),p_id:+el.dataset.id}); }catch(e){} if(r&&r.ok){ const a=new Audio(URL.createObjectURL(b64Blob(r.b64,r.mime))); a.play().catch(()=>{}); } else toast('Audio tidak dapat dimuat.'); })(); }
   else if(act==='gd-kelas'){ GD.kelas=v; render(); }
   else if(act==='gd-muat'){ loadGD(true); refreshGT(true); gLiga.t=0; refreshGuruLiga(); }
   else if(act==='urus'){ urus.rows=null; urus.edit=null; urus.err=''; sheetUrus(); }
