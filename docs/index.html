@@ -735,7 +735,7 @@ const todayKey=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.get
 function logAktiviti(xp){ if(!state.aktiviti) state.aktiviti={}; const k=todayKey(); const had=!!state.aktiviti[k]; state.aktiviti[k]=(state.aktiviti[k]||0)+xp; if(!had){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); state.streak=state.aktiviti[yk]?(state.streak||0)+1:1; state.usaha.hariAktif=Object.keys(state.aktiviti).filter(d=>d.slice(0,7)===k.slice(0,7)).length; } }
 let ULASAN=[]; let HAFAZAN=[];
 const isArabic=t=>/[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/.test(String(t||''));
-function freshProgress(){ Object.assign(state,{progressVersion:CFG.progressVersion==null?state.progressVersion:CFG.progressVersion,xp:0,streak:1,dailyDone:false,lastSet:null,lastWrong:null,lastLesson:null,aktiviti:{},usaha:{hariAktif:1,dicuba:0,bangkit:0,hafazan:0,kuizUlang:0},tasmik:[],sp:{},best:{},bidangM:{quran:0,hadis:0,akidah:0,fiqah:0,sirah:0,akhlak:0}}); recomputePelajaran(); }
+function freshProgress(){ Object.assign(state,{progressVersion:CFG.progressVersion==null?state.progressVersion:CFG.progressVersion,xp:0,streak:1,dailyDone:false,lastSet:null,lastWrong:null,lastLesson:null,aktiviti:{},outbox:[],migrasiDihantar:false,usaha:{hariAktif:1,dicuba:0,bangkit:0,hafazan:0,kuizUlang:0},tasmik:[],sp:{},best:{},bidangM:{quran:0,hadis:0,akidah:0,fiqah:0,sirah:0,akhlak:0}}); recomputePelajaran(); }
 
 /* ---------- STATE ---------- */
 const DEFAULT_STATE = {
@@ -749,7 +749,7 @@ const DEFAULT_STATE = {
 };
 let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
 const LS=SHEETS?'jejak-ilmu-v1':'jejak-ilmu-demo-v3';
-const PROG_KEYS=['progressVersion','xp','streak','dailyDone','dailyDate','lastSet','lastWrong','lastLesson','aktiviti','usaha','tasmik','sp','best','bidangM','hari'];
+const PROG_KEYS=['migrasiDihantar','outbox','progressVersion','xp','streak','dailyDone','dailyDate','lastSet','lastWrong','lastLesson','aktiviti','usaha','tasmik','sp','best','bidangM','hari'];
 const userKey=u=>LS+':u:'+u.kelas+'|'+u.nama;
 function saveUserSnap(){ if(!SHEETS||!state.user) return; try{ const o={}; for(const k of PROG_KEYS) o[k]=state[k]; localStorage.setItem(userKey(state.user),JSON.stringify(o)); }catch(e){} }
 function loadUserSnap(u){ try{ const raw=localStorage.getItem(userKey(u)); if(!raw) return false; const o=JSON.parse(raw); if(CFG.progressVersion!=null&&o.progressVersion!==CFG.progressVersion) return false; Object.assign(state,o); recomputePelajaran(); return true; }catch(e){ return false; } }
@@ -797,7 +797,55 @@ function applyTheme(){ try{ const r=document.documentElement; if(state.theme==='
 const themeBtn=()=>`<button class="tbtn" data-act="theme" aria-label="Tukar tema (${THEME_LABEL[state.theme]})" title="Tema: ${THEME_LABEL[state.theme]}">${THEME_ICON[state.theme]}</button>`;
 
 /* ---------- VIEWS ---------- */
+const SB=(CFG.supabaseUrl&&CFG.supabaseKey)?{url:String(CFG.supabaseUrl).replace(/\/+$/,''),key:CFG.supabaseKey}:null;
+async function rpc(fn,args){
+  const h={'apikey':SB.key,'Content-Type':'application/json'}; if(/^eyJ/.test(SB.key)) h['Authorization']='Bearer '+SB.key;
+  const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),12000);
+  try{ const r=await fetch(`${SB.url}/rest/v1/rpc/${fn}`,{method:'POST',headers:h,body:JSON.stringify(args),signal:ctl.signal}); if(!r.ok) throw new Error('HTTP '+r.status); return await r.json(); } finally{ clearTimeout(t); }
+}
+const creds=()=>state.user&&state.user.pin?{p_nama:state.user.nama,p_kelas:state.user.kelas,p_pin:state.user.pin}:null;
+let flushing=false;
+async function flushXP(){
+  if(!SB||flushing||!creds()) return; state.outbox=state.outbox||[]; if(!state.outbox.length) return;
+  flushing=true;
+  try{
+    while(state.outbox.length){
+      const it=state.outbox[0]; let res;
+      try{ res=await rpc('catat_xp',{...creds(),p_xp:it.xp,p_sebab:it.sebab}); }catch(e){ break; }  // luar talian: cuba lagi kemudian
+      if(res&&res.ok===false&&res.ralat==='pin'){ break; }
+      state.outbox.shift(); save();
+    }
+  } finally{ flushing=false; }
+  ligaCache.t=0; refreshLiga();
+}
+function queueXP(xp,sebab){ if(!SB||!state.user||state.user.guru||!(xp>0)) return; state.outbox=state.outbox||[]; let left=xp; while(left>0){ const c=Math.min(200,left); state.outbox.push({xp:c,sebab}); left-=c; } save(); flushXP(); }
+let ligaCache={kelas:null,rows:null,t:0,err:false}; let ligaMode='minggu';
+async function refreshLiga(force){
+  if(!SB||!state.user||state.user.guru) return;
+  const k=state.kelas; if(!force&&ligaCache.kelas===k&&Date.now()-ligaCache.t<60000) return;
+  try{ const rows=await rpc('liga_kelas',{p_kelas:k}); ligaCache={kelas:k,rows:Array.isArray(rows)?rows:[],t:Date.now(),err:false}; }catch(e){ ligaCache.err=true; ligaCache.t=Date.now(); }
+  const el=document.getElementById('liga'); if(el) el.outerHTML=ligaCard();
+}
+function ligaLive(){
+  const rows=(ligaCache.kelas===state.kelas&&ligaCache.rows)?ligaCache.rows.slice():null;
+  const key=ligaMode==='minggu'?'xp_minggu':'xp_jumlah';
+  if(rows) rows.sort((a,b)=>(+b[key])-(+a[key])||a.nama.localeCompare(b.nama));
+  const meIdx=rows?rows.findIndex(r=>r.nama===state.nama):-1;
+  let gap='';
+  if(rows&&meIdx>0){ const d=(+rows[meIdx-1][key])-(+rows[meIdx][key]); gap=d>0?`${d} XP lagi untuk naik ke #${meIdx}`:`Seri dengan #${meIdx}. Satu kuiz lagi!`; }
+  else if(rows&&meIdx===0&&(+rows[0][key])>0) gap='Kamu di tempat pertama. Pertahankan!';
+  const medal=i=>i===0?'background:#e8bb5b;color:#2a1d05':i===1?'background:#cfd3dc;color:#222':i===2?'background:#d9a36a;color:#2a1405':'';
+  const pend=(state.outbox||[]).reduce((a,b)=>a+b.xp,0);
+  return `<div class="card" id="liga">
+    <div class="liga-head"><div class="liga-glyph">☾</div><div class="grow"><div class="eyebrow">Liga kelas · hidup</div><h3 style="font-size:16px">${esc(state.kelas)}${rows?' · '+rows.length+' murid':''}</h3></div>${meIdx>=0?`<span class="pill acc">#${meIdx+1}</span>`:''}</div>
+    <div class="segs" style="margin-bottom:8px"><button data-act="liga-mode" data-v="minggu" aria-pressed="${ligaMode==='minggu'}">Minggu ini</button><button data-act="liga-mode" data-v="semua" aria-pressed="${ligaMode==='semua'}">Keseluruhan</button></div>
+    ${gap?`<p class="small" style="font-weight:700;margin:4px 0 8px">${esc(gap)}</p>`:''}
+    ${rows?rows.map((r,i)=>`<div class="lrow ${i===meIdx?'me':''}"><span class="pos num" style="${medal(i)};border-radius:50%;width:24px;height:24px;display:grid;place-items:center">${i+1}</span><span class="grow">${esc(r.nama)}${i===meIdx?' (kamu)':''}</span><span class="xp num">${+r[key]} XP</span></div>`).join(''):`<p class="small muted">${ligaCache.err?'Liga tidak dapat dimuat (semak internet). Cuba lagi sebentar.':'Memuat liga…'}</p>`}
+    <p class="small muted" style="margin-top:10px">${ligaMode==='minggu'?'Kedudukan ikut XP usaha minggu ini; bermula semula setiap Isnin, jadi semua orang ada peluang.':'Jumlah XP sejak liga dibuka.'}${pend?` · ${pend} XP sedang dihantar…`:''}</p>
+  </div>`;
+}
 function ligaCard(){
+  if(SHEETS&&SB&&state.user&&!state.user.guru){ setTimeout(()=>refreshLiga(),0); return ligaLive(); }
   if(SHEETS){
     const mates=ROSTER?ROSTER.murid.filter(m=>m.k===state.kelas&&!m.g).map(m=>m.n).sort((a,b)=>a.localeCompare(b)):[state.nama];
     return `<div class="card">
@@ -1055,6 +1103,22 @@ function vLaporan(){
   </div>`;
 }
 
+let gLiga={rows:null,t:0,err:false};
+async function refreshGuruLiga(){ if(!SB||!creds()||!state.user.guru) return; if(Date.now()-gLiga.t<60000&&gLiga.rows) return; try{ const r=await rpc('liga_semua',creds()); gLiga={rows:Array.isArray(r)?r:[],t:Date.now(),err:false}; }catch(e){ gLiga.err=true; gLiga.t=Date.now(); } const el=document.getElementById('gliga'); if(el) el.outerHTML=guruLigaCard(); }
+function guruLigaCard(){
+  if(!SB) return '';
+  if(!creds()) return `<div class="card" id="gliga" style="margin-top:16px"><div class="eyebrow">Liga semua kelas · hidup</div><p class="small muted" style="margin-top:6px">Log keluar dan log masuk semula sebagai guru untuk melihat liga sebenar.</p></div>`;
+  setTimeout(()=>refreshGuruLiga(),0);
+  const rows=gLiga.rows; if(!rows) return `<div class="card" id="gliga" style="margin-top:16px"><div class="eyebrow">Liga semua kelas · hidup</div><p class="small muted" style="margin-top:6px">${gLiga.err?'Tidak dapat dimuat.':'Memuat…'}</p></div>`;
+  const by={}; for(const r of rows){ (by[r.kelas]||=(by[r.kelas]=[])).push(r); }
+  const minggu=Date.now()-7*864e5;
+  return `<div class="card" id="gliga" style="margin-top:16px">
+    <div class="row" style="justify-content:space-between"><div class="eyebrow">Liga semua kelas · hidup (XP minggu ini)</div><span class="pill good">sebenar</span></div>
+    <div class="tiles4" style="grid-template-columns:repeat(${Math.min(Object.keys(by).length,6)},1fr)">${Object.entries(by).map(([k,l])=>`<div><b class="num">${l.reduce((a,r)=>a+(+r.xp_minggu),0)}</b><span>${esc(k)} · ${l.filter(r=>r.aktif_terakhir&&new Date(r.aktif_terakhir).getTime()>minggu).length}/${l.length} aktif</span></div>`).join('')}</div>
+    ${Object.entries(by).map(([k,l])=>`<details style="margin-top:10px"><summary class="small" style="font-weight:800;cursor:pointer">${esc(k)}: 3 teratas ${l.slice(0,3).map(r=>esc(r.nama)+' ('+r.xp_minggu+')').join(', ')}</summary>
+      <div class="tablewrap" style="margin-top:6px"><table class="ht" style="min-width:0"><thead><tr><th>#</th><th>Murid</th><th>Minggu</th><th>Jumlah</th><th>Aktif terakhir</th></tr></thead><tbody>${l.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.nama)}</td><td class="num">${r.xp_minggu}</td><td class="num">${r.xp_jumlah}</td><td class="${r.aktif_terakhir?'':'muted'}">${r.aktif_terakhir?new Date(r.aktif_terakhir).toLocaleString('ms-MY',{weekday:'short',hour:'2-digit',minute:'2-digit'}):'belum'}</td></tr>`).join('')}</tbody></table></div></details>`).join('')}
+  </div>`;
+}
 function kandunganCard(){
   const ids=Object.keys(Q); const perPel={}; for(const id of ids){ const n=Q[id].pel||0; perPel[n]=(perPel[n]||0)+1; }
   const open=PELAJARAN.filter(p=>p.st!=='kunci'), locked=PELAJARAN.filter(p=>p.st==='kunci');
@@ -1104,6 +1168,7 @@ function vGuru(){
   </div></header>
   <div class="gut body">
     <div class="g-cerapan">
+      ${SHEETS?guruLigaCard():''}
       ${SHEETS?kandunganCard():''}
       ${SHEETS?'<div class="banner">Bahagian di bawah ini masih DATA CONTOH. Data murid sebenar (penguasaan, tasmik, perhatian) dipaparkan selepas Fasa 2 (Supabase), kerana dalam Fasa 1 kemajuan hanya ada dalam telefon murid.</div>':''}
       <div class="card hi" style="margin-top:16px">
@@ -1319,6 +1384,7 @@ function renderGate(){
       <div class="hdr-acts">${themeBtn()}</div>
     </div></div>
     <div class="form gut">
+      ${gate.sahkan?`<div class="banner" style="margin-top:0">Liga kelas sudah dibuka! Masukkan PIN kamu sekali lagi untuk sertai liga. XP kamu tidak hilang.</div>`:''}
       <div class="step"><div class="eyebrow">1 · Kelas kamu</div><div class="chips">${(SHEETS?KELAS_CFG:Object.keys(KELAS_SENARAI)).map(k=>`<button data-act="g-kelas" data-v="${esc(k)}" aria-pressed="${gate.kelas===k}">${esc(k)}</button>`).join('')}</div></div>
       ${SHEETS&&!ROSTER?`<div class="step"><div class="eyebrow">2 · Nama kamu</div><div class="field"><input class="wide" id="g-nama" type="text" autocomplete="off" maxlength="40" placeholder="Taip nama penuh" value="${esc(gate.nama||'')}" aria-label="Nama"></div>
         <div class="row" style="margin-top:12px;gap:10px"><button class="btn" data-act="g-masuk" ${ok?'':'disabled'}>Masuk</button><span class="small muted">Kemajuan disimpan dalam telefon ini sahaja.</span></div></div>`:`
@@ -1340,9 +1406,12 @@ function showGate(){ $('#gate').hidden=false; $('#tabbar').hidden=true; document
 async function gateLogin(){
   const btn=$('[data-act="g-login"]'); if(btn){ btn.disabled=true; btn.textContent='Menyemak…'; }
   const m=ROSTER.murid.find(x=>x.n===gate.nama&&x.k===gate.kelas);
-  let ok=false; try{ ok=!!m&&(await pinHash(gate.pin,m.n,m.k))===m.h; }catch(e){ ok=false; }
+  let ok=false, srv=null;
+  if(SB&&m){ try{ srv=await rpc('semak_pin',{p_nama:m.n,p_kelas:m.k,p_pin:gate.pin}); ok=!!(srv&&srv.ok); }catch(e){ srv=null; } }
+  if(srv===null){ try{ ok=!!m&&(await pinHash(gate.pin,m.n,m.k))===m.h; }catch(e){ ok=false; } }
   if(!ok){ buzz([40,60,40]); const er=$('#g-err'); if(er) er.hidden=false; if(btn){ btn.disabled=false; btn.textContent='Masuk'; } gate.pin=''; const inp=$('#g-pin'); if(inp){ inp.value=''; inp.focus(); } return; }
-  const same=state.user&&state.user.nama===m.n&&state.user.kelas===m.k; if(!same) saveUserSnap(); state.user={nama:m.n,kelas:m.k,guru:!!m.g}; state.nama=m.n; state.kelas=m.k; if(!same){ freshProgress(); loadUserSnap(state.user); } rebuildSets(); save(); hideGate(); render(); toast(m.g?`Selamat datang, ${m.n}. Mod guru aktif.`:`Selamat datang, ${m.n}. Hanya nama dan kelas kamu disimpan.`);
+  const same=state.user&&state.user.nama===m.n&&state.user.kelas===m.k; if(!same) saveUserSnap(); state.user={nama:m.n,kelas:m.k,guru:!!(srv?srv.guru:m.g),pin:SB?gate.pin:undefined}; state.nama=m.n; state.kelas=m.k; if(!same){ freshProgress(); loadUserSnap(state.user); } rebuildSets();
+  if(srv&&srv.ok&&!state.user.guru){ if(!srv.migrasi&&state.xp>0&&!state.migrasiDihantar){ state.outbox=(state.outbox||[]).filter(x=>x.sebab!=='migrasi'); state.outbox.unshift({xp:Math.min(state.xp,5000),sebab:'migrasi'}); state.migrasiDihantar=true; } if(srv.xp>state.xp) state.xp=srv.xp; setTimeout(()=>flushXP(),50); } save(); hideGate(); render(); toast(m.g?`Selamat datang, ${m.n}. Mod guru aktif.`:`Selamat datang, ${m.n}. Hanya nama dan kelas kamu disimpan.`);
 }
 function hideGate(){ $('#gate').hidden=true; $('#tabbar').hidden=false; document.body.style.overflow=''; }
 
@@ -1452,6 +1521,7 @@ function finishQuiz(){
   state.usaha.dicuba+=n; state.usaha.bangkit+=bangkit; if(state.lastSet===quiz.key) state.usaha.kuizUlang++;
   state.lastWrong={set:quiz.key,ids:wrongNow}; state.lastSet=quiz.key; lastRun={key:quiz.key,ids:quiz.items.map(it=>it.id)};
   { const H=hari(); const pct=Math.round(c/n*100); const mp=misiPel(); if(quiz.key==='harian') H.harian=true; else if(/^kuiz\d+$/.test(quiz.key)){ H.kuiz[quiz.key]=Math.max(H.kuiz[quiz.key]||0,pct); if(!mp||quiz.key!=='kuiz'+mp.n) H.pilihan.ulangkaji=(H.pilihan.ulangkaji||0)+1; } else H.pilihan[quiz.key]=(H.pilihan[quiz.key]||0)+1; }
+  queueXP(gained, quiz.key==='harian'?'harian':(/^kuiz/.test(quiz.key)?'kuiz':quiz.key));
   state.xp+=gained; if(quiz.key==='harian'){ state.dailyDone=true; state.dailyDate=todayKey(); } if(/^kuiz\d+$/.test(quiz.key)) state.lastLesson=+quiz.key.slice(4); logAktiviti(gained);
   { state.best=state.best||{}; const prev=state.best[quiz.key]; const pv=prev?parseInt(prev):-1; if(c>pv) state.best[quiz.key]=`${c}/${n}`; }
   save();
@@ -1565,6 +1635,7 @@ document.addEventListener('click',e=>{
   else if(act==='quiz-close'){ closeQuiz(); }
   else if(act==='pick'){ answer(+el.dataset.k); }
   else if(act==='g-login'){ gateLogin(); }
+  else if(act==='liga-mode'){ ligaMode=v; const el=document.getElementById('liga'); if(el) el.outerHTML=ligaCard(); }
   else if(act==='place'){ quiz.order.push(el.dataset.x); renderQ(); }
   else if(act==='unplace'){ quiz.order=quiz.order.filter(x=>x!==el.dataset.x); renderQ(); }
   else if(act==='check-order'){ answer(null); }
@@ -1576,7 +1647,7 @@ document.addEventListener('click',e=>{
   else if(act==='rec-stop'){ recStop(); }
   else if(act==='rec-peek'){ rec.peeks++; rec.peeking=true; renderTasmik(); rec.peekT=setTimeout(()=>{ if(rec&&rec.phase==='rec'){ rec.peeking=false; renderTasmik(); } },3000); }
   else if(act==='rec-reset'){ stopRec(); const ctx=rec.ctx; rec={ctx,phase:'idle',t:0,timer:null,peeks:0,peeking:false,janji:ctx==='tasmik',cd:0}; if(ctx==='tasmik') renderTasmik(); else openSheet(renderPesananSheet()); }
-  else if(act==='tasmik-hantar'){ state.tasmik.unshift({nama:state.nama,ayat:(hafazanHariIni()||{}).rujukan||'Hafazan',dur:fmt(rec.t),peeks:rec.peeks}); state.usaha.hafazan++; state.xp+=30; logAktiviti(30); hari().tasmik++; save(); if(rec.url) URL.revokeObjectURL(rec.url); rec=null; $('#layer').hidden=true; document.body.style.overflow=''; render(); toast(SHEETS?'Tasmik direkod sebagai usaha (+30 XP).':'Tasmik dihantar kepada Ustazah. +30 XP usaha.'); }
+  else if(act==='tasmik-hantar'){ state.tasmik.unshift({nama:state.nama,ayat:(hafazanHariIni()||{}).rujukan||'Hafazan',dur:fmt(rec.t),peeks:rec.peeks}); state.usaha.hafazan++; state.xp+=30; logAktiviti(30); queueXP(30,'tasmik'); hari().tasmik++; save(); if(rec.url) URL.revokeObjectURL(rec.url); rec=null; $('#layer').hidden=true; document.body.style.overflow=''; render(); toast(SHEETS?'Tasmik direkod sebagai usaha (+30 XP).':'Tasmik dihantar kepada Ustazah. +30 XP usaha.'); }
   else if(act==='play-pesan'){ const bar=$('#pp'); if(!bar) return; if(playT){ clearInterval(playT); playT=null; el.textContent='▶'; return; } let p=0; el.textContent='❚❚'; toast('Demo: tiada audio. Versi penuh memainkan suara Ustazah.'); playT=setInterval(()=>{ p+=100/32; const b=$('#pp'); if(b) b.style.width=Math.min(100,p)+'%'; if(p>=100){ clearInterval(playT); playT=null; const pb=$('[data-act="play-pesan"]'); if(pb) pb.textContent='▶'; } },250); }
   else if(act==='share'){ const txt=`Kad Laporan ${state.nama} (${state.kelas}): Level ${lvl()}, ${state.xp} XP, streak ${state.streak} hari, ${state.usaha.dicuba} soalan dicuba bulan ini.`; const done=()=>toast('Ringkasan disalin. Versi penuh: pautan kad laporan untuk ibu bapa.'); try{ navigator.clipboard.writeText(txt).then(done,done); }catch(err){ done(); } }
   else if(act==='toast'){ toast(el.dataset.msg); }
@@ -1603,6 +1674,9 @@ async function boot(saved){
   recomputePelajaran();
   render();
   if(!state.user){ gate={kelas:KELAS_CFG[0]||'2 Amanah',nama:null,pin:''}; showGate(); }
+  else if(SB&&SHEETS&&!state.user.pin){ gate={kelas:state.user.kelas,nama:state.user.nama,pin:'',sahkan:true}; showGate(); }
+  else if(SB){ flushXP(); }
+  if(SB) window.addEventListener('online',()=>flushXP());
 }
 try{ if(window.claude&&window.claude.hot&&typeof window.claude.hot.snapshot==='function') window.claude.hot.snapshot(()=>state); }catch(e){}
 (window.claude&&window.claude.hot&&typeof window.claude.hot.ready==='function') ? window.claude.hot.ready(boot) : boot((window.claude&&window.claude.hot&&window.claude.hot.data)||{});
