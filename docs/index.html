@@ -1090,6 +1090,7 @@ function vLaporan(){
       <p class="small muted" style="margin-top:10px">≈TP ialah <b>cadangan</b> daripada kuiz, maksimum TP3 (tahu, faham, boleh buat). TP4–TP6 memerlukan pemerhatian adab dan amali oleh guru, bukan skor kuiz. Peperiksaan sebenar tetap bertulis.</p>
     </div>
 
+    ${SB&&creds()&&!state.user.guru?tasmikSayaCard():''}
     <div class="card">
       <div class="row" style="justify-content:space-between;margin-bottom:10px"><div class="eyebrow">Konsistensi · 8 minggu</div><span class="pill gold">🔥 ${state.streak} hari</span></div>
       <div class="heat" aria-label="Aktiviti harian 8 minggu">${SHEETS?heatReal():heatCells()}</div>
@@ -1133,7 +1134,7 @@ async function sheetUrus(){
     ${urus.err?`<p class="small" style="color:var(--bad);font-weight:700;margin-top:8px">${esc(urus.err)}</p>`:''}
     <div class="chips" style="margin-top:12px">${kls.map(k=>`<button data-act="urus-kelas" data-v="${esc(k)}" aria-pressed="${urus.kelas===k}">${esc(k)}</button>`).join('')}</div>
     <div style="margin-top:10px">${list.map(r=>`<div class="student"><div class="av">${esc(r.nama[0]||'?')}</div><div class="grow"><div class="nm">${esc(r.nama)}</div></div><button class="btn sm ghost" data-act="urus-ubah" data-id="${r.id}">Ubah</button></div>`).join('')||'<p class="small muted">Tiada murid.</p>'}</div>
-    <div class="row wrap" style="margin-top:14px;gap:8px"><button class="btn" data-act="urus-tambah">Tambah murid</button><button class="btn ghost" data-act="urus-pin-guru">Tukar PIN guru</button></div>
+    <div class="row wrap" style="margin-top:14px;gap:8px"><button class="btn" data-act="urus-tambah">Tambah murid</button><button class="btn ghost" data-act="urus-pin-guru">Tukar PIN guru</button><button class="btn ghost" data-act="import">Import dari Google Sheets</button></div>
     <p class="small muted" style="margin-top:10px">Perubahan terus berkuat kuasa di semua telefon (muka depan dimuat semula). Helaian Murid di Google Sheets tidak lagi digunakan untuk log masuk.</p>
   </div>`);
 }
@@ -1145,6 +1146,83 @@ async function urusSubmit(){
   if(!r||!r.ok){ urus.err={nama_wujud:'Nama ini sudah ada dalam kelas itu.',tak_lengkap:'Lengkapkan nama, kelas dan PIN.',pin_format:'PIN mesti 4 hingga 8 digit.',bukan_guru:'Sesi guru tamat. Log keluar dan masuk semula.'}[r&&r.ralat]||'Tidak berjaya.'; return sheetUrus(); }
   if(e.self&&pin){ state.user.pin=pin; save(); }
   urus.edit=null; urus.err=''; urus.kelas=kelas||urus.kelas; await urusLoad(); try{ localStorage.removeItem('jejak-nama-cache'); }catch(x){} loadNama(); toast(e.id?'Disimpan.':'Murid ditambah.'); sheetUrus();
+}
+let tSaya={rows:null,t:0,err:false};
+async function refreshTasmikSaya(){ if(Date.now()-tSaya.t<30000&&tSaya.rows) return; try{ const r=await rpc('tasmik_saya',creds()); tSaya={rows:Array.isArray(r)?r:[],t:Date.now(),err:false}; }catch(e){ tSaya.err=true; tSaya.t=Date.now(); } const el=document.getElementById('tsaya'); if(el) el.outerHTML=tasmikSayaCard(); }
+function tasmikSayaCard(){
+  setTimeout(()=>refreshTasmikSaya(),0);
+  const rows=tSaya.rows;
+  return `<div class="card" id="tsaya">
+    <div class="row" style="justify-content:space-between"><div class="eyebrow">Tasmik saya · maklum balas Ustazah</div><button class="btn sm gold" data-act="tasmik">Rakam</button></div>
+    ${!rows?`<p class="small muted" style="margin-top:8px">${tSaya.err?'Tidak dapat dimuat.':'Memuat…'}</p>`:rows.length?rows.slice(0,8).map(t=>`<div class="student"><div class="av" style="${t.gred?'background:var(--good);color:#fff':'background:var(--gold-soft);color:var(--gold-text)'}">${t.gred?esc(String(t.gred).replace(/^TP/,'')):'…'}</div><div class="grow"><div class="nm">${esc(t.rujukan||'Hafazan')} <span class="small muted" style="font-weight:600">· ${new Date(t.created_at).toLocaleDateString('ms-MY',{day:'numeric',month:'short'})} · ${fmt(t.durasi_s||0)}${t.intai?` · intai ${t.intai}×`:''}</span></div><div class="why">${t.disemak_at?(t.gred?`<b>${esc(t.gred)}</b> · `:'')+esc(t.komen||'Sudah didengar oleh Ustazah.'):'Menunggu Ustazah mendengar.'}</div></div></div>`).join(''):'<p class="small muted" style="margin-top:8px">Belum ada tasmik dihantar. Tekan Rakam.</p>'}
+  </div>`;
+}
+let gT={tapis:'belum',rows:null,t:0,err:false,cur:null,gred:null};
+async function refreshGT(force){ if(!force&&gT.rows&&Date.now()-gT.t<30000) return; try{ const r=await rpc('guru_tasmik',{...creds(),p_kelas_tapis:(gT.tapis==='belum'||gT.tapis==='semua')?null:gT.tapis}); gT.rows=Array.isArray(r)?r:[]; gT.t=Date.now(); gT.err=false; }catch(e){ gT.err=true; gT.t=Date.now(); } const el=document.getElementById('gtasmik'); if(el) el.outerHTML=gTasmikCard(); }
+function gTasmikCard(){
+  setTimeout(()=>refreshGT(),0);
+  const all=gT.rows; const rows=all?(gT.tapis==='belum'?all.filter(t=>!t.disemak_at):all):null; const belum=all?all.filter(t=>!t.disemak_at).length:0;
+  const kls=KELAS_CFG.filter(k=>!/lain/i.test(k));
+  return `<div class="section" id="gtasmik">
+    <div class="head"><h2>Peti Tasmik</h2><span class="pill ${belum?'warn':'good'}">${all?belum+' belum didengar':'…'}</span></div>
+    <div class="card tight">
+      <div class="chips" style="margin-bottom:6px">${[['belum','Belum'],['semua','Semua'],...kls.map(k=>[k,k])].map(([k,t])=>`<button data-act="gt-tapis" data-v="${esc(k)}" aria-pressed="${gT.tapis===k}" style="padding:6px 10px;font-size:12px">${esc(t)}</button>`).join('')}</div>
+      ${!rows?`<p class="small muted">${gT.err?'Tidak dapat dimuat.':'Memuat…'}</p>`:rows.length?rows.slice(0,40).map(t=>`<div class="student"><div class="av" style="${t.disemak_at?'background:var(--good);color:#fff':'background:var(--gold-soft);color:var(--gold-text)'}">${t.disemak_at?(t.gred?esc(String(t.gred).replace(/^TP/,'')):'✓'):'▶'}</div><div class="grow"><div class="nm">${esc(t.nama)} <span class="small muted" style="font-weight:600">· ${esc(t.kelas)}</span></div><div class="why">${esc(t.rujukan||'')} · ${fmt(t.durasi_s||0)} · ${t.intai?`<span class="tag warn">intai ${t.intai}×</span>`:'<span class="tag good">tanpa intai</span>'} · ${new Date(t.created_at).toLocaleString('ms-MY',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div></div><button class="btn sm ${t.disemak_at?'ghost':''}" data-act="gt-buka" data-id="${t.id}" ${t.ada_audio?'':'disabled'}>${t.disemak_at?'Lihat':'Dengar'}</button></div>`).join(''):`<p class="small muted">${gT.tapis==='belum'?'Semua rakaman sudah didengar.':'Tiada rakaman.'}</p>`}
+      <div class="row wrap" style="margin-top:8px;gap:8px;justify-content:space-between"><p class="small muted" style="flex:1;min-width:200px">"Intai" ialah bilangan kali murid membuka teks semasa merakam. Dicatat secara telus, bukan dihukum.</p><button class="btn sm ghost" data-act="gt-kemas">Kosongkan audio lama</button></div>
+    </div>
+  </div>`;
+}
+async function bukaTasmik(id){
+  const t=(gT.rows||[]).find(x=>x.id===id); if(!t) return; gT.cur=t; gT.gred=t.gred||null;
+  const TP=['TP1','TP2','TP3','TP4','TP5','TP6']; const quick=['Bacaan lancar.','Jaga hukum tajwid.','Jaga panjang pendek (mad).','Ulang bahagian akhir ayat.','Cuba sekali lagi tanpa intai.','Barakallahu fik, teruskan!'];
+  openSheet(`<div class="gut">
+    <div class="row"><h2>${esc(t.nama)}</h2><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div>
+    <p class="small muted">${esc(t.kelas)} · ${esc(t.rujukan||'')} · ${fmt(t.durasi_s||0)} · ${t.intai?`intai ${t.intai}×`:'tanpa intai'}</p>
+    <div id="gt-audio" style="margin-top:12px"><p class="small muted">Memuat audio…</p></div>
+    <div class="field" style="margin-top:14px"><label>Tahap penguasaan</label><div class="chips">${TP.map(x=>`<button data-act="gt-tp" data-v="${x}" aria-pressed="${gT.gred===x}">${x}</button>`).join('')}</div></div>
+    <div class="field" style="margin-top:12px"><label for="gt-komen">Komen kepada murid</label><textarea id="gt-komen" maxlength="500">${esc(t.komen||'')}</textarea>
+      <div class="pool" style="margin-top:4px">${quick.map(x=>`<button class="chip" data-act="gt-komen" data-v="${esc(x)}" style="font-size:12.5px;padding:6px 10px">${esc(x)}</button>`).join('')}</div></div>
+    <button class="btn block" data-act="gt-simpan" style="margin-top:14px">Simpan dan hantar maklum balas</button>
+  </div>`);
+  let r=null; try{ r=await rpc('guru_tasmik_audio',{...creds(),p_id:id}); }catch(e){}
+  const box=$('#gt-audio'); if(!box) return;
+  if(r&&r.ok){ const bin=Uint8Array.from(atob(r.b64),c=>c.charCodeAt(0)); const url=URL.createObjectURL(new Blob([bin],{type:r.mime||'audio/webm'})); box.innerHTML=`<audio controls autoplay src="${url}" style="width:100%"></audio>${/webm/.test(r.mime||'')?'<p class="small muted" style="margin-top:4px">Tiada bunyi di iPhone? Rakaman dari Android (webm) mungkin perlu didengar di laptop atau telefon Android.</p>':''}`; }
+  else box.innerHTML='<p class="small" style="color:var(--bad);font-weight:700">Audio tidak dapat dimuat.</p>';
+}
+async function simpanGred(){
+  const t=gT.cur; if(!t) return; const komen=($('#gt-komen')||{}).value||'';
+  let r=null; try{ r=await rpc('guru_tasmik_gred',{...creds(),p_id:t.id,p_gred:gT.gred||'',p_komen:komen.trim()}); }catch(e){}
+  if(r&&r.ok){ closeSheet(); toast('Maklum balas disimpan. Murid akan nampak di Kad Laporan.'); refreshGT(true); } else toast('Tidak berjaya disimpan. Semak internet.');
+}
+let imp={teks:'',ganti:false,res:null,err:''};
+function parseImport(teks){
+  const rows=[]; const lines=String(teks||'').replace(/\r/g,'').split('\n').map(l=>l.trim()).filter(Boolean);
+  for(const [i,l] of lines.entries()){ const c=(l.includes('\t')?l.split('\t'):l.split(',')).map(x=>x.trim().replace(/^"|"$/g,'')); if(i===0&&/^nama$/i.test(c[0])) continue; if(c.length<2) continue; rows.push({nama:c[0],kelas:c[1],pin:(c[2]||'').replace(/\D/g,'')}); }
+  return rows;
+}
+function impSummary(rows){ const by={}; for(const r of rows) by[r.kelas]=(by[r.kelas]||0)+1; return `<b>${rows.length}</b> baris dikesan${rows.length?': '+Object.entries(by).map(([k,n])=>`${esc(k)} ${n}`).join(' · '):''}`; }
+function sheetImport(){
+  const rows=parseImport(imp.teks);
+  openSheet(`<div class="gut">
+    <div class="row"><h2>Import dari Google Sheets</h2><button class="icon" data-act="urus" aria-label="Kembali" style="margin-left:auto">←</button></div>
+    <p class="small" style="margin-top:8px">Dalam Sheets, pilih lajur <b>nama, kelas, PIN</b> (boleh termasuk tajuk), salin (Ctrl/⌘+C), tampal di bawah. Murid sedia ada dengan PIN kosong: PIN tidak berubah. Murid baharu mesti ada PIN.</p>
+    <div class="field" style="margin-top:10px"><textarea id="imp-teks" style="min-height:160px;font-family:ui-monospace,Menlo,monospace;font-size:13px" placeholder="nama&#9;kelas&#9;pin_4_digit">${esc(imp.teks)}</textarea></div>
+    <p class="small" style="margin-top:6px" id="imp-count">${impSummary(rows)}</p>
+    <label class="janji" style="margin-top:10px"><input type="checkbox" id="imp-ganti" ${imp.ganti?'checked':''}><span><b>Ganti senarai kelas</b> (tahun baharu): murid dalam kelas yang ada di atas tetapi <u>tiada</u> dalam senarai akan <b>dipadam bersama XP mereka</b>. Kelas lain tidak disentuh.</span></label>
+    ${imp.err?`<p class="small" style="color:var(--bad);font-weight:700;margin-top:8px">${esc(imp.err)}</p>`:''}
+    ${imp.res?`<div class="card" style="margin-top:10px"><b>Selesai.</b> Baharu ${imp.res.baru} · PIN dikemas kini ${imp.res.pin_dikemas} · Dipadam ${imp.res.dipadam}${(imp.res.ralat||[]).length?`<p class="small" style="color:var(--bad);margin-top:6px">Tidak diimport (${imp.res.ralat.length}): ${imp.res.ralat.map(esc).join('; ')}</p>`:''}</div>`:''}
+    <button class="btn block" data-act="imp-run" style="margin-top:12px" ${rows.length?'':'disabled'}>Import ${rows.length} murid</button>
+  </div>`);
+  const ta=$('#imp-teks'); if(ta){ ta.addEventListener('input',()=>{ imp.teks=ta.value; const rs=parseImport(imp.teks); const b=$('[data-act="imp-run"]'); if(b){ b.disabled=!rs.length; b.textContent=`Import ${rs.length} murid`; } const c=$('#imp-count'); if(c) c.innerHTML=impSummary(rs); }); }
+  const cb=$('#imp-ganti'); if(cb) cb.addEventListener('change',()=>{ imp.ganti=cb.checked; });
+}
+async function runImport(){
+  const ta=$('#imp-teks'); if(ta) imp.teks=ta.value; const rows=parseImport(imp.teks); if(!rows.length) return;
+  if(imp.ganti&&!imp.sah){ imp.sah=true; imp.err='Pilihan "Ganti senarai kelas" akan memadam murid yang tiada dalam senarai. Tekan Import sekali lagi untuk sahkan.'; return sheetImport(); }
+  imp.sah=false; imp.err='';
+  let r=null; try{ r=await rpc('guru_import',{...creds(),p_rows:rows,p_ganti:imp.ganti}); }catch(e){}
+  if(r&&r.ok){ imp.res=r; try{ localStorage.removeItem('jejak-nama-cache'); }catch(x){} loadNama(); urus.rows=null; } else imp.err='Import tidak berjaya. Semak internet atau log masuk semula sebagai guru.';
+  sheetImport();
 }
 function guruLigaCard(){
   if(!SB) return '';
@@ -1248,7 +1326,8 @@ function vGuru(){
         </div>
       </div>
 
-      <div class="section">
+      ${SB&&creds()?gTasmikCard():''}
+      <div class="section" ${SB&&creds()?'hidden':''}>
         <div class="head"><h2>Peti Tasmik</h2><span class="pill warn">${tasmik.length} rakaman</span></div>
         <div class="card tight">
           ${tasmik.map(t=>`<div class="student"><div class="av" style="background:var(--gold-soft);color:var(--gold-text)">▶</div><div class="grow"><div class="nm">${esc(t.nama)} · ${esc(t.ayat)} ${t.baru?'<span class="tag good">baharu</span>':''}</div><div class="why">${t.dur} · ${t.peeks?`<span class="tag warn">intai ${t.peeks}×</span>`:'<span class="tag good">tanpa intai</span>'}</div></div><button class="btn sm" data-act="toast" data-msg="Demo: rakaman audio tidak disertakan dalam prototaip.">Dengar</button></div>`).join('')}
@@ -1619,7 +1698,7 @@ function renderTasmik(){
   else if(r.phase==='rec') ctl=`<div class="row" style="justify-content:center;gap:10px;margin-top:14px"><span class="rec-dot"></span><span class="rec-time num" id="rec-time" style="margin:0">${fmt(r.t)}</span></div><div class="wave" aria-hidden="true">${Array.from({length:24},(_,i)=>`<i style="animation-delay:${(i*0.09)%1}s"></i>`).join('')}</div><p class="small muted" style="text-align:center">Intai setakat ini: ${r.peeks}×</p><div class="qfoot"><button class="btn block" data-act="rec-stop">Berhenti dan semak</button></div>`;
   else ctl=`<div class="card" style="margin-top:14px"><div class="row" style="gap:12px">${pose(r.peeks?'think':'thumbs',72)}<div class="grow"><b style="font-family:var(--display)">${r.peeks?`Siap. Kamu intai ${r.peeks} kali; itu dicatat, tak apa.`:'Siap, tanpa intai. Itu hafazan yang sebenar.'}</b><p class="small muted" style="margin-top:4px">Durasi ${fmt(r.t)} · ${r.peeks?`<span class="tag warn">intai ${r.peeks}×</span>`:'<span class="tag good">tanpa intai</span>'}</p></div></div>
       ${r.url?`<audio controls src="${r.url}" style="width:100%;margin-top:12px"></audio>`:`<div class="player" style="margin-top:12px"><button class="pb" data-act="toast" data-msg="Mikrofon tidak tersedia pada peranti/pelayar ini, jadi rakaman disimulasikan.">▶</button><div class="bar thin"><i style="width:0%"></i></div><span class="t">${fmt(r.t)} · rakaman kamu</span></div>`}</div>
-    <div class="qfoot stack" style="gap:8px">${SHEETS&&r.blob?`<button class="btn block line" data-act="rec-share">Kongsi rakaman (WhatsApp) kepada Ustazah</button><p class="small muted" style="text-align:center">Kongsi dahulu jika Ustazah minta, kemudian tekan Selesai.</p>`:''}<button class="btn gold block" data-act="tasmik-hantar">${SHEETS?'Selesai (+30 XP usaha)':'Hantar kepada Ustazah'}</button><button class="btn block ghost" data-act="rec-reset">Rakam semula</button></div>`;
+    <div class="qfoot stack" style="gap:8px">${SB&&creds()&&r.blob?`<button class="btn gold block" data-act="tasmik-kirim" id="btn-kirim">Hantar kepada Ustazah (+30 XP)</button>${r.kirimErr?`<p class="small" style="color:var(--bad);font-weight:700;text-align:center">${esc(r.kirimErr)}</p>`:''}<button class="btn block line" data-act="rec-share">Kongsi melalui WhatsApp (cara lain)</button>`:(SHEETS&&r.blob?`<button class="btn block line" data-act="rec-share">Kongsi rakaman (WhatsApp) kepada Ustazah</button><p class="small muted" style="text-align:center">Kongsi dahulu jika Ustazah minta, kemudian tekan Selesai.</p>`:'')}${SB&&creds()&&r.blob?'':`<button class="btn gold block" data-act="tasmik-hantar">${SHEETS?'Selesai (+30 XP usaha)':'Hantar kepada Ustazah'}</button>`}<button class="btn block ghost" data-act="rec-reset">Rakam semula</button></div>`;
   $('#layer').innerHTML=`<div class="inner"><div class="qbar gut"><button class="icon" data-act="quiz-close" aria-label="Tutup">✕</button><div class="grow"><div class="qtype">Rakam Tasmik · hafazan</div></div><span class="pill gold">+30 XP</span></div>
     <div class="gut" style="padding-block:6px 16px;flex:1;display:flex;flex-direction:column"><div class="qtext">Bacakan ayat ini daripada hafazan.</div>${textBox}${ctl}
     <p class="note-demo" style="margin-top:14px">${SHEETS?'Rakaman disimpan dalam telefon kamu sahaja. Jika Ustazah minta, tekan Kongsi rakaman untuk menghantarnya melalui WhatsApp.':'Prototaip: mikrofon tidak dirakam. Versi penuh guna MediaRecorder; rakaman disimpan di storan fail dan hanya Ustazah boleh dengar.'}</p></div></div>`;
@@ -1627,12 +1706,12 @@ function renderTasmik(){
 async function realRecorder(){
   try{ const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
     const mime=['audio/webm;codecs=opus','audio/webm','audio/mp4'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||'';
-    const mr=new MediaRecorder(stream,mime?{mimeType:mime,audioBitsPerSecond:32000}:undefined); const chunks=[]; mr.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); }; mr.start(1000);
+    const mr=new MediaRecorder(stream,mime?{mimeType:mime,audioBitsPerSecond:24000}:undefined); const chunks=[]; mr.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); }; mr.start(1000);
     return { stop:()=>new Promise(res=>{ mr.onstop=()=>{ stream.getTracks().forEach(t=>t.stop()); res(new Blob(chunks,{type:mr.mimeType||mime||'audio/webm'})); }; mr.stop(); }), cancel:()=>{ try{mr.stop();}catch(e){} stream.getTracks().forEach(t=>t.stop()); } };
   }catch(e){ return null; }
 }
 function recStart(){
-  if(rec.ctx==='tasmik'){ rec.phase='cd'; rec.cd=3; renderTasmik(); rec.timer=setInterval(async()=>{ rec.cd--; if(rec.cd<=0){ clearInterval(rec.timer); rec.real=await realRecorder(); rec.phase='rec'; rec.t=0; renderTasmik(); rec.timer=setInterval(()=>{ rec.t++; const el=$('#rec-time'); if(el) el.textContent=fmt(rec.t); },1000); } else renderTasmik(); },1000); }
+  if(rec.ctx==='tasmik'){ rec.phase='cd'; rec.cd=3; renderTasmik(); rec.timer=setInterval(async()=>{ rec.cd--; if(rec.cd<=0){ clearInterval(rec.timer); rec.real=await realRecorder(); rec.phase='rec'; rec.t=0; renderTasmik(); rec.timer=setInterval(()=>{ rec.t++; const el=$('#rec-time'); if(el) el.textContent=fmt(rec.t); if(rec.t>=120){ toast('Had 2 minit dicapai. Rakaman dihentikan.'); recStop(); } },1000); } else renderTasmik(); },1000); }
   else { rec.phase='rec'; rec.t=0; openSheet(renderPesananSheet()); rec.timer=setInterval(()=>{ rec.t++; const el=$('#rec-time'); if(el) el.textContent=fmt(rec.t); if(rec.t>=60) recStop(); },1000); }
 }
 async function shareRec(){
@@ -1641,6 +1720,14 @@ async function shareRec(){
   const name=`Tasmik-${state.nama.replace(/[^A-Za-z0-9]+/g,'_')}-${state.kelas.replace(/\s+/g,'')}-${todayKey()}.${ext}`;
   try{ const file=new File([rec.blob],name,{type:rec.blob.type||'audio/webm'}); if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:'Tasmik '+state.nama,text:`Tasmik ${state.nama} (${state.kelas}), ${todayKey()}`}); return; } }catch(e){ if(e&&e.name==='AbortError') return; }
   try{ const a=document.createElement('a'); a.href=rec.url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); toast('Rakaman dimuat turun. Hantar fail itu kepada Ustazah melalui WhatsApp.'); }catch(e){ toast('Telefon ini tidak membenarkan perkongsian fail. Tunjukkan rakaman kepada Ustazah terus.'); }
+}
+const blobB64=b=>new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(',')[1]||''); fr.onerror=rej; fr.readAsDataURL(b); });
+async function kirimTasmik(){
+  if(!rec||!rec.blob) return; const btn=$('#btn-kirim'); if(btn){ btn.disabled=true; btn.textContent='Menghantar…'; }
+  let r=null; try{ const b64=await blobB64(rec.blob); r=await rpc('hantar_tasmik',{...creds(),p_rujukan:(hafazanHariIni()||{}).rujukan||'Hafazan',p_durasi:rec.t,p_intai:rec.peeks,p_mime:rec.blob.type||'audio/webm',p_audio_b64:b64}); }catch(e){ r=null; }
+  if(r&&r.ok){ state.tasmik.unshift({nama:state.nama,ayat:(hafazanHariIni()||{}).rujukan||'Hafazan',dur:fmt(rec.t),peeks:rec.peeks}); state.usaha.hafazan++; state.xp+=30; logAktiviti(30); queueXP(30,'tasmik'); hari().tasmik++; save(); if(rec.url) URL.revokeObjectURL(rec.url); rec=null; $('#layer').hidden=true; document.body.style.overflow=''; render(); toast('Tasmik dihantar kepada Ustazah. +30 XP.'); return; }
+  rec.kirimErr=r?({saiz:'Rakaman terlalu besar. Rakam semula dengan lebih ringkas.',had_harian:'Had 12 rakaman sehari dicapai.',pin:'Sesi tamat. Log keluar dan masuk semula.'}[r.ralat]||'Tidak berjaya dihantar.'):'Gagal dihantar. Semak internet dan tekan Hantar sekali lagi.';
+  renderTasmik();
 }
 async function recStop(){ stopRec(); rec.timer=null; rec.phase='done'; rec.peeking=false; if(rec.real){ try{ const blob=await rec.real.stop(); rec.blob=blob; rec.url=URL.createObjectURL(blob); }catch(e){} rec.real=null; } if(rec.ctx==='tasmik') renderTasmik(); else openSheet(renderPesananSheet()); }
 
@@ -1690,6 +1777,15 @@ document.addEventListener('click',e=>{
   else if(act==='next'){ nextQ(); }
   else if(act==='tasmik'){ openTasmik(); }
   else if(act==='rec-share'){ shareRec(); }
+  else if(act==='tasmik-kirim'){ kirimTasmik(); }
+  else if(act==='gt-tapis'){ gT.tapis=v; gT.rows=null; const el=document.getElementById('gtasmik'); if(el) el.outerHTML=gTasmikCard(); }
+  else if(act==='gt-buka'){ bukaTasmik(+el.dataset.id); }
+  else if(act==='gt-tp'){ gT.gred=v; document.querySelectorAll('[data-act="gt-tp"]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v)); }
+  else if(act==='gt-komen'){ const t=$('#gt-komen'); if(t){ t.value=(t.value?t.value.trim()+' ':'')+el.dataset.v; } }
+  else if(act==='gt-simpan'){ simpanGred(); }
+  else if(act==='gt-kemas'){ (async()=>{ let r; try{ r=await rpc('guru_tasmik_kemas',{...creds(),p_hari:30}); }catch(e){} toast(r&&r.ok?`${r.dikosongkan} audio lama dikosongkan. Audio tersimpan: ${r.mb_audio} MB.`:'Tidak berjaya.'); })(); }
+  else if(act==='import'){ imp={teks:'',ganti:false,res:null,err:''}; sheetImport(); }
+  else if(act==='imp-run'){ runImport(); }
   else if(act==='rec-janji'){ rec.janji=el.checked; const b=$('[data-act="rec-start"]'); if(b) b.disabled=!rec.janji; }
   else if(act==='rec-start'){ recStart(); }
   else if(act==='rec-stop'){ recStop(); }
