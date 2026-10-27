@@ -112,28 +112,37 @@ Peraturan:
 - Nyatakan penglibatan (berapa murid aktif daripada jumlah), pencapaian objektif mengikut SP (yang kukuh dan yang perlu pengukuhan), tasmik hafazan, dan tindakan susulan (pengukuhan, pemulihan, bimbingan murid tidak aktif).
 - Guna HANYA angka dalam data. Jangan reka angka atau peristiwa. Jangan sebut nama murid.
 - Data kuiz ialah penilaian formatif dalam aplikasi, bukan peperiksaan.
+- Jika data merangkumi beberapa kelas, nyatakan gambaran keseluruhan dahulu, kemudian bandingkan penyertaan dan ketepatan antara kelas secara ringkas (sebut kelas tertinggi dan yang memerlukan perhatian), dan cadangkan tindakan susulan mengikut kelas. Untuk laporan keseluruhan, boleh tulis sehingga 6 ayat.
 Balas dengan teks refleksi sahaja.`;
 
 async function refleksi(key: string, cred: Record<string, string>, b: Record<string, unknown>) {
   const dari = clean(b.dari, 10), hingga = clean(b.hingga || b.dari, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dari) || !/^\d{4}-\d{2}-\d{2}$/.test(hingga)) return { ok: false, ralat: 'tarikh' };
-  const d = await rpc(key, 'guru_laporan_harian', { ...cred, p_kelas_tapis: clean(b.kelas, 40), p_dari: dari, p_hingga: hingga });
+  const kelas = clean(b.kelas, 40); const semua = kelas === '*';
+  const d = await rpc(key, 'guru_laporan_harian', { ...cred, p_kelas_tapis: kelas, p_dari: dari, p_hingga: hingga });
   if (!d || !d.ok) return { ok: false, ralat: d?.ralat || 'data' };
   const info = (b.sp_info && typeof b.sp_info === 'object' ? b.sp_info : {}) as SpInfo;
-  const murid = d.murid as Array<Record<string, any>>;
+  const murid = (d.murid as Array<Record<string, any>>).filter((m) => !semua || !/lain/i.test(String(m.kelas || '')));
+  const isAktif = (m: Record<string, any>) => m.jawapan > 0 || (m.tasmik || []).length > 0;
+  const perKelas = semua ? [...new Set(murid.map((m) => String(m.kelas)))].sort().map((k) => {
+    const ms = murid.filter((m) => m.kelas === k); const j = ms.reduce((s, m) => s + m.jawapan, 0), bt = ms.reduce((s, m) => s + m.betul, 0);
+    return `- ${clean(k, 30)}: ${ms.filter(isAktif).length}/${ms.length} murid aktif, ${j} soalan, ketepatan ${j ? Math.round((bt / j) * 100) : 0}%, tasmik ${ms.reduce((s, m) => s + (m.tasmik || []).length, 0)}`;
+  }).join('\n') : '';
   const n = murid.length;
-  const aktif = murid.filter((m) => m.jawapan > 0 || (m.tasmik || []).length > 0).length;
+  const aktif = murid.filter(isAktif).length;
   const jaw = murid.reduce((s, m) => s + m.jawapan, 0), bet = murid.reduce((s, m) => s + m.betul, 0);
   const tas = murid.reduce((s, m) => s + (m.tasmik || []).length, 0);
   const rendah = murid.filter((m) => m.jawapan >= 5 && m.betul / m.jawapan < 0.5).length;
-  const sp = (d.sp as Array<Record<string, any>>).map((s) =>
-    `${clean(s.sp_kod, 20)}${info[s.sp_kod]?.n ? ' ' + clean(info[s.sp_kod].n) : ''}: ${s.murid} murid, ${s.cubaan} cubaan, ${Math.round((s.betul / Math.max(1, s.cubaan)) * 100)}% betul`).join('\n') || 'tiada';
-  const user = `Kelas: ${clean(b.kelas, 40)}. Tarikh: ${dari}${hingga !== dari ? ' hingga ' + hingga : ''}. Pelajaran semasa: ${clean(b.pelajaran, 160) || '-'}.
+  const spAgg: Record<string, { cubaan: number; betul: number; murid: number }> = {};
+  for (const r of d.sp as Array<Record<string, any>>) { if (semua && /lain/i.test(String(r.kelas || ''))) continue; const o = spAgg[r.sp_kod] = spAgg[r.sp_kod] || { cubaan: 0, betul: 0, murid: 0 }; o.cubaan += r.cubaan; o.betul += r.betul; o.murid += r.murid; }
+  const sp = Object.entries(spAgg).map(([k, s]) =>
+    `${clean(k, 20)}${info[k]?.n ? ' ' + clean(info[k].n) : ''}: ${s.murid} murid, ${s.cubaan} cubaan, ${Math.round((s.betul / Math.max(1, s.cubaan)) * 100)}% betul`).join('\n') || 'tiada';
+  const user = `Skop: ${semua ? 'semua kelas' : 'kelas ' + kelas}. Tarikh: ${dari}${hingga !== dari ? ' hingga ' + hingga : ''}. Pelajaran semasa: ${clean(b.pelajaran, 160) || '-'}.
 Murid aktif: ${aktif} daripada ${n}. Soalan dijawab: ${jaw}, ketepatan purata ${jaw ? Math.round((bet / jaw) * 100) : 0}%.
 Tasmik hafazan diterima: ${tas}. Murid dengan ketepatan bawah 50% (sekurang-kurangnya 5 soalan): ${rendah}. Murid tidak aktif: ${n - aktif}.
 Pencapaian mengikut SP:
-${sp}`;
-  const text = await claude(SISTEM_REFLEKSI, user, 600);
+${sp}${semua ? `\nMengikut kelas:\n${perKelas}` : ''}`;
+  const text = await claude(SISTEM_REFLEKSI, user, semua ? 900 : 600);
   return { ok: true, refleksi: text.trim().slice(0, 1500), model: MODEL };
 }
 

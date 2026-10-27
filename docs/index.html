@@ -262,6 +262,28 @@ p{margin:0}
 .heat i.l2{background:color-mix(in srgb,var(--accent) 55%,var(--surface-2))}
 .heat i.l3{background:var(--accent)}
 .badges{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.lc-kat{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+.lc-grid{display:grid;grid-template-columns:1fr;gap:8px}
+@media (min-width:700px){ .lc-grid{grid-template-columns:1fr 1fr} }
+.lc{display:flex;gap:10px;align-items:center;padding:10px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line)}
+.lc b{font-size:13.5px}.lc .lc-cara{font-size:12px;color:var(--muted);margin-top:1px}
+.lc .lc-st{font-size:11.5px;font-weight:700;color:var(--muted);margin-top:3px}.lc .lc-st.ok{color:var(--good)}
+.lc-ic{width:42px;height:42px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:18px;font-weight:800;background:var(--line);filter:grayscale(1);opacity:.7}
+.lc-ic.jawi{font-family:var(--arab,serif);font-size:20px}
+.lc.on{border-color:color-mix(in srgb,var(--gold) 55%,var(--line))}.lc.on .lc-ic{background:var(--gold-soft);color:var(--gold-text);filter:none;opacity:1;box-shadow:0 0 0 2px var(--gold)}
+.lc-mini{display:flex;flex-wrap:wrap;gap:6px}
+.lc-mini span{font-size:11.5px;font-weight:700;padding:4px 8px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted)}
+.lc-mini span.on{background:var(--gold-soft);color:var(--gold-text);border-color:color-mix(in srgb,var(--gold) 45%,var(--line))}
+.lc-mini i{font-style:normal;opacity:.8;margin-left:2px}
+.lc-line{font-size:12px;margin-top:5px;color:var(--muted)}.lc-line.on{color:var(--good)}
+.hz-ayat{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px}
+.hz-ayat button{display:flex;flex-direction:column;gap:2px;align-items:flex-start;padding:8px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);text-align:left;min-height:52px}
+.hz-ayat button b{font-size:13px}.hz-ayat button span{font-size:10.5px;font-weight:700;color:var(--muted);line-height:1.2}
+.hz-ayat button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 35%,transparent)}
+.hz-ayat .hz-lulus span{color:var(--good)}.hz-ayat .hz-ulang span{color:var(--bad)}
+.hz-ringkas{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.hz-ringkas span{font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--surface-2)}
+.hz-ringkas .hz-lulus{color:var(--good)}
+.cincin{flex:none}
 .badge{text-align:center;padding:12px 6px;border-radius:16px;background:var(--surface-2);font-size:11.5px;font-weight:700;line-height:1.25}
 .badge .b{width:44px;height:44px;margin:0 auto 6px;border-radius:50%;display:grid;place-items:center;background:var(--gold-soft);color:var(--gold-text);font-family:var(--display);font-weight:800;font-size:16px}
 .badge.lock{opacity:.5}
@@ -688,8 +710,23 @@ const HAFAZAN_BUKU=[
 // Lalai: ayat pertama (setakat pelajaran semasa) yang belum pernah dihantar tasmik; jika semua sudah, ayat terakhir.
 function hafazanBuku(){ const pick=HAFAZAN_BUKU.find(h=>h.id===state.hafazanPilih); if(pick) return pick; const cur=currentLesson(); const n=cur?cur.n:3; const c=HAFAZAN_BUKU.filter(h=>h.pel<=n); if(!c.length) return HAFAZAN_BUKU[0]; const done=state.tasmikAyat||{}; return c.find(h=>!done[h.id])||c[c.length-1]; }
 function catatAyatTasmik(){ const h=hafazanHariIni(); if(h&&h.id){ state.tasmikAyat=state.tasmikAyat||{}; state.tasmikAyat[h.id]=(state.tasmikAyat[h.id]||0)+1; if(state.hafazanPilih===h.id) state.hafazanPilih=null; } }
+const AYAT_NO={'3-8':8,'3-18':18,'3-26':26,'3-27':27};
+const LULUS_TP=+(CFG.hafazanLulusTP||3);
+function ayatDariRujukan(r){ r=String(r||''); if(!/ali\s*imran/i.test(r)) return []; const m=/3\s*:\s*(\d+)(?:\s*[–-]\s*(\d+))?/.exec(r); if(!m) return []; const a=+m[1], b=m[2]?+m[2]:a; return HAFAZAN_BUKU.filter(h=>AYAT_NO[h.id]>=a&&AYAT_NO[h.id]<=b).map(h=>h.id); }
+// Status setiap ayat: lulus (Ustazah beri TP3+) > semak (menunggu Ustazah) > ulang (TP1–2) > didengar (disemak tanpa TP) > hantar (rekod tempatan) > belum.
+function statusHafazan(rows,lokal){
+  const st={}; for(const h of HAFAZAN_BUKU) st[h.id]={s:'belum',gred:null,n:0,tanpaIntai:0,f:{}};
+  for(const t of rows||[]) for(const id of ayatDariRujukan(t.rujukan)){ const o=st[id]; o.n++; if(!t.intai) o.tanpaIntai++; const tp=+(String(t.gred||'').replace(/\D/g,''))||0; const disemak=t.disemak!=null?!!t.disemak:!!t.disemak_at;
+    if(tp>=LULUS_TP){ o.f.lulus=1; if(!o.gred||tp>(+String(o.gred).replace(/\D/g,'')||0)) o.gred=t.gred; } else if(!disemak) o.f.semak=1; else if(tp){ o.f.ulang=1; if(!o.f.lulus) o.gredU=t.gred; } else o.f.didengar=1; }
+  for(const [id,o] of Object.entries(st)){ o.s=o.f.lulus?'lulus':o.f.semak?'semak':o.f.ulang?'ulang':o.f.didengar?'didengar':((lokal||{})[id]>0?'hantar':'belum'); if(o.s==='ulang') o.gred=o.gredU; }
+  const V=Object.values(st); const skor=V.reduce((a,o)=>a+(o.s==='lulus'?1:o.s==='belum'?0:0.5),0);
+  return {st,lulus:V.filter(o=>o.s==='lulus').length,proses:V.filter(o=>o.s!=='lulus'&&o.s!=='belum').length,pct:Math.round(skor/V.length*100)};
+}
+const HZ_LABEL={lulus:['✓','Lulus'],semak:['⏳','Menunggu semakan'],ulang:['↻','Ulang'],didengar:['🎧','Didengar'],hantar:['⏳','Dihantar'],belum:['○','Belum']};
+function hafazanSaya(){ return statusHafazan(SB&&creds()&&tSaya.rows?tSaya.rows:[],state.tasmikAyat); }
 const ayatHTML=h=>h.img?`<img class="ayat-img" src="${h.img}" alt="${esc(h.rujukan)}">`:`<p class="quran">${h.ayat}</p>`;
-const hzChips=h=>h.buku?`<div class="hz-chips" role="group" aria-label="Pilih ayat hafazan"><span class="small muted" style="align-self:center;font-weight:700;margin-right:2px">Surah Ali Imran · ayat</span>${HAFAZAN_BUKU.map(x=>`<button data-act="hz-pilih" data-v="${x.id}" aria-pressed="${x.id===h.id}">${(state.tasmikAyat||{})[x.id]?'✓ ':''}${esc(x.label)}</button>`).join('')}</div>`:'';
+const hzChips=h=>{ if(!h.buku) return ''; const S=hafazanSaya().st; return `<div class="hz-chips" role="group" aria-label="Pilih ayat hafazan"><span class="small muted" style="align-self:center;font-weight:700;margin-right:2px">Surah Ali Imran · ayat</span>${HAFAZAN_BUKU.map(x=>`<button data-act="hz-pilih" data-v="${x.id}" aria-pressed="${x.id===h.id}">${S[x.id].s!=='belum'?HZ_LABEL[S[x.id].s][0]+' ':''}${esc(x.label)}</button>`).join('')}</div>`; };
+function cincin(pct,sz){ const r=(sz-8)/2, c=2*Math.PI*r; return `<svg class="cincin" width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}" aria-hidden="true"><circle cx="${sz/2}" cy="${sz/2}" r="${r}" fill="none" stroke="var(--line)" stroke-width="7"/><circle cx="${sz/2}" cy="${sz/2}" r="${r}" fill="none" stroke="var(--accent)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${(c*pct/100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 ${sz/2} ${sz/2})"/><text x="50%" y="53%" text-anchor="middle" dominant-baseline="middle" font-size="${sz/4.2}" font-weight="800" fill="var(--fg)">${pct}%</text></svg>`; }
 function hafazanHariIni(){
   if(!SHEETS) return {ayat:'فَلَمْ تَجِدُوا مَاءً فَتَيَمَّمُوا صَعِيدًا طَيِّبًا',rujukan:'Surah al-Maidah 5:6 (potongan) · dalil tayamum'};
   // 1) Sheet "Hafazan" (jika diterbitkan) mengatasi; 2) jika tidak, ayat hafazan buku teks (Ali Imran 8, 18, 26, 27).
@@ -736,7 +773,7 @@ const PILIHAN=[['tajwid','Tajwid Tap'],['jawi','Jawi Sprint'],['susun','Susun La
 function misiCard(){
   if(!SHEETS||!state.user) return '';
   const items=misiItems(); const done=items.filter(x=>x.ok).length; const all=items.length&&done===items.length; const H=hari();
-  const now=new Date(); const tarikh=now.toLocaleDateString('ms-MY',{weekday:'long',day:'numeric',month:'long'}); const masa=now.toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'});
+  const now=new Date(); const tarikh=now.toLocaleDateString('ms-MY',{weekday:'long',day:'numeric',month:'long'}); const masa=jamAMPM(now);
   const xpHari=(state.aktiviti||{})[todayKey()]||0;
   const pil=PILIHAN.filter(([k])=>k==='ulangkaji'||SETS[k]);
   const pilDone=pil.filter(([k])=>H.pilihan[k]).length;
@@ -751,12 +788,74 @@ function misiCard(){
       <p class="small muted" style="margin-top:8px">Cabar diri: 100% dalam satu kuiz · 90% Tajwid Tap (lencana Ahli Tajwid) · 300 XP hari ini.</p></div>`:''}
   </div>`;
 }
+function hzKemajuan(h){
+  const H=hafazanSaya(); const semak=Object.values(H.st).filter(o=>o.s==='semak'||o.s==='hantar').length;
+  const L=senaraiLencana().filter(x=>x.kat==='Hafazan');
+  return `<div class="row" style="gap:14px;align-items:center">${cincin(H.pct,74)}<div class="grow"><b style="font-size:15px">Kemajuan hafazan kamu</b><div class="small muted" style="margin-top:2px">${H.lulus}/4 ayat lulus${semak?` · ${semak} menunggu Ustazah`:''}. Hafal keempat-empat ayat sepanjang Tingkatan 2.</div></div></div>
+    <div class="hz-ayat" role="group" aria-label="Pilih ayat">${HAFAZAN_BUKU.map(x=>{ const o=H.st[x.id]; const [ic,lb]=HZ_LABEL[o.s]; return `<button data-act="hz-pilih" data-v="${x.id}" aria-pressed="${x.id===h.id}" class="hz-${o.s}"><b>Ayat ${esc(x.label)}</b><span>${ic} ${lb}${o.gred&&(o.s==='lulus'||o.s==='ulang')?' '+esc(o.gred):''}</span></button>`; }).join('')}</div>
+    <p class="small muted" style="margin:8px 0 6px">Lulus bila Ustazah beri TP${LULUS_TP} ke atas. Ayat yang sudah dihantar (⏳ atau ↻) dikira separuh.</p>
+    <div class="lc-mini">${L.map(x=>`<span class="${x.ok?'on':''}" title="${esc(x.cara)}">${x.ic} ${esc(x.t)} <i>${x.ok?'✓':Math.min(x.n,x.max)+'/'+x.max}</i></span>`).join('')}</div>`;
+}
+// ---------- Lencana: syarat jelas + kemajuan; sekali dapat, kekal ----------
+function hari7(){ const ak=state.aktiviti||{}; let n=0; for(let i=0;i<7;i++){ const d=new Date(); d.setDate(d.getDate()-i); const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); if(ak[k]) n++; } return n; }
+const pctBest=k=>{ const b=state.best&&state.best[k]; if(!b) return 0; const [c,n]=String(b).split('/').map(Number); return n?Math.round(c/n*100):0; };
+function senaraiLencana(){
+  const u=state.usaha||{}; const H=hafazanSaya(); const srv=SB&&creds()&&tSaya.rows;
+  const tasN=Math.max(u.hafazan||0,srv?tSaya.rows.length:0);
+  const tanpaIntai=srv?tSaya.rows.filter(t=>!t.intai).length:(state.tasmik||[]).filter(t=>!t.peeks).length;
+  const kuizMax=Math.max(0,...Object.keys(state.best||{}).filter(k=>/^kuiz\d+$/.test(k)).map(pctBest));
+  const L=[
+    {id:'langkah',kat:'Usaha',ic:'👣',t:'Langkah Pertama',cara:'Jawab 10 soalan (betul atau salah)',n:u.dicuba||0,max:10,go:'harian'},
+    {id:'pencuba',kat:'Usaha',ic:'💯',t:'Pencuba 100',cara:'Jawab 100 soalan; salah pun dikira',n:u.dicuba||0,max:100,go:'harian'},
+    {id:'pejuang',kat:'Usaha',ic:'📅',t:'Pejuang Minggu',cara:'Aktif 5 hari dalam 7 hari terakhir',n:hari7(),max:5,go:'harian'},
+    {id:'istiqamah',kat:'Usaha',ic:'🔥',t:'Istiqamah 7',cara:'Streak 7 hari berturut-turut',n:state.streak||0,max:7,go:'harian'},
+    {id:'bangkit',kat:'Usaha',ic:'↻',t:'Bangkit ×20',cara:'Betulkan 20 soalan yang pernah salah',n:u.bangkit||0,max:20,go:'ulang'},
+    {id:'suara',kat:'Hafazan',ic:'🎙',t:'Suara Pertama',cara:'Hantar tasmik pertama kepada Ustazah',n:tasN,max:1,go:'tasmik'},
+    {id:'amanah',kat:'Hafazan',ic:'🤲',t:'Suara Amanah',cara:'3 tasmik tanpa intai teks',n:tanpaIntai,max:3,go:'tasmik'},
+    {id:'separuh',kat:'Hafazan',ic:'🌓',t:'Separuh Jalan',cara:`2 ayat hafazan lulus (TP${LULUS_TP}+ daripada Ustazah)`,n:H.lulus,max:2,go:'tasmik'},
+    {id:'hafiz',kat:'Hafazan',ic:'📖',t:'Hafiz Ali Imran',cara:'Keempat-empat ayat hafazan T2 lulus',n:H.lulus,max:4,go:'tasmik'},
+    {id:'juara',kat:'Cabaran',ic:'⚡',t:'Juara Harian',cara:'100% dalam Cabaran Harian',n:pctBest('harian'),max:100,unit:'%',go:'harian'},
+    {id:'sempurna',kat:'Cabaran',ic:'★',t:'Kuiz Sempurna',cara:'100% dalam mana-mana Kuiz Pelajaran',n:kuizMax,max:100,unit:'%',go:'kuiz'},
+    {id:'tajwid',kat:'Cabaran',set:'tajwid',ic:'نْ',t:'Ahli Tajwid',cara:'Capai 90% dalam Tajwid Tap',n:pctBest('tajwid'),max:90,unit:'%'},
+    {id:'jawi',kat:'Cabaran',set:'jawi',ic:'ڤ',t:'Pakar Jawi',cara:'Capai 90% dalam Jawi Sprint',n:pctBest('jawi'),max:90,unit:'%'},
+    {id:'susun',kat:'Cabaran',set:'susun',ic:'1→5',t:'Tersusun Rapi',cara:'100% dalam Susun Langkah',n:pctBest('susun'),max:100,unit:'%'},
+    {id:'sambung',kat:'Cabaran',set:'hafazan',ic:'آ',t:'Penyambung Ayat',cara:'100% dalam Sambung Ayat',n:pctBest('hafazan'),max:100,unit:'%'},
+    {id:'sirah',kat:'Cabaran',set:'sirah',ic:'🐪',t:'Sejarawan Muda',cara:'Capai 80% dalam Garis Masa Sirah',n:pctBest('sirah'),max:80,unit:'%'},
+    {id:'dilema',kat:'Cabaran',set:'dilema',ic:'⚖',t:'Hati Budiman',cara:'Capai 80% dalam Dilema Akhlak',n:pctBest('dilema'),max:80,unit:'%'},
+  ].filter(x=>!x.set||SETS[x.set]);
+  const got=state.lencana||{}; for(const x of L){ x.ok=!!got[x.id]||x.n>=x.max; x.bila=got[x.id]||null; }
+  return L;
+}
+function semakLencana(){
+  if(!SHEETS||!state.user||state.user.guru) return; const L=senaraiLencana(); const first=!state.lencana; state.lencana=state.lencana||{};
+  const baru=L.filter(x=>x.n>=x.max&&!state.lencana[x.id]); if(!baru.length){ if(first) save(); return; }
+  for(const x of baru) state.lencana[x.id]=todayKey(); save();
+  if(!first){ buzz([30,40,30]); toast(baru.length===1?`🏅 Lencana baharu: ${baru[0].t}!`:`🏅 ${baru.length} lencana baharu: ${baru.map(x=>x.t).join(', ')}!`); }
+}
+function lcTile(x){
+  const pc=Math.min(100,Math.round(Math.min(x.n,x.max)/x.max*100)); const lagi=x.max-Math.min(x.n,x.max);
+  const go=x.ok?'':x.set?`data-act="quiz" data-set="${x.set}"`:x.go==='harian'?'data-act="quiz" data-set="harian"':x.go==='tasmik'?'data-act="tasmik"':x.go==='kuiz'?'data-act="nav" data-v="peta"':x.go==='ulang'?'data-act="nav" data-v="peta"':'';
+  return `<div class="lc ${x.ok?'on':''}"><div class="lc-ic ${/[\u0600-\u06FF]/.test(x.ic)?'jawi':''}">${x.ic}</div><div class="grow"><b>${esc(x.t)}</b><div class="lc-cara">${esc(x.cara)}</div>
+    ${x.ok?`<div class="lc-st ok">✓ Diperoleh${x.bila?' · '+new Date(x.bila+'T00:00:00').toLocaleDateString('ms-MY',{day:'numeric',month:'short'}):''}</div>`:`<div class="bar thin" style="margin-top:6px"><i style="width:${pc}%"></i></div><div class="lc-st">${x.unit?`terbaik ${Math.min(x.n,100)}% · sasaran ${x.max}%`:`${Math.min(x.n,x.max)}/${x.max} · ${lagi} lagi`}</div>`}
+  </div>${!x.ok&&go?`<button class="btn sm ghost" ${go}>Cuba</button>`:''}</div>`;
+}
+function lencanaCard(){
+  const L=senaraiLencana(); const ok=L.filter(x=>x.ok).length;
+  return `<div class="card" id="lencana"><div class="row" style="justify-content:space-between"><div class="eyebrow">Lencana</div><span class="pill gold">${ok}/${L.length} diperoleh</span></div>
+    <div class="bar gold" style="margin-top:8px"><i style="width:${Math.round(ok/L.length*100)}%"></i></div>
+    <p class="small muted" style="margin-top:8px">Setiap lencana ada syarat yang jelas. Bar menunjukkan berapa dekat kamu; tekan <b>Cuba</b> untuk terus ke aktivitinya. Lencana yang sudah diperoleh kekal.</p>
+    ${['Usaha','Hafazan','Cabaran'].map(k=>`<div class="lc-kat">${k==='Usaha'?'Usaha · rajin mencuba':k==='Hafazan'?'Hafazan · Ayat Tingkatan 2':'Cabaran · mod permainan'}</div><div class="lc-grid">${L.filter(x=>x.kat===k).map(lcTile).join('')}</div>`).join('')}
+  </div>`;
+}
 const doneToday=()=>state.dailyDate?state.dailyDate===todayKey():!!(state.dailyDone&&!SHEETS);
 const todayKey=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 function logAktiviti(xp){ if(!state.aktiviti) state.aktiviti={}; const k=todayKey(); const had=!!state.aktiviti[k]; state.aktiviti[k]=(state.aktiviti[k]||0)+xp; if(!had){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); state.streak=state.aktiviti[yk]?(state.streak||0)+1:1; state.usaha.hariAktif=Object.keys(state.aktiviti).filter(d=>d.slice(0,7)===k.slice(0,7)).length; } }
 let ULASAN=[]; let HAFAZAN=[];
+const ZON={timeZone:'Asia/Kuala_Lumpur'};
+const jamAMPM=t=>new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true,...ZON});
+const tarikhJam=t=>new Date(t).toLocaleDateString('ms-MY',{day:'numeric',month:'short',...ZON})+', '+jamAMPM(t);
 const isArabic=t=>/[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/.test(String(t||''));
-function freshProgress(){ Object.assign(state,{progressVersion:CFG.progressVersion==null?state.progressVersion:CFG.progressVersion,xp:0,streak:1,dailyDone:false,lastSet:null,lastWrong:null,lastLesson:null,aktiviti:{},outbox:[],jbox:[],migrasiDihantar:false,usaha:{hariAktif:1,dicuba:0,bangkit:0,hafazan:0,kuizUlang:0},tasmik:[],tasmikAyat:{},ulasanGuru:null,drafUlasan:{},sp:{},best:{},bidangM:{quran:0,hadis:0,akidah:0,fiqah:0,sirah:0,akhlak:0}}); recomputePelajaran(); }
+function freshProgress(){ Object.assign(state,{progressVersion:CFG.progressVersion==null?state.progressVersion:CFG.progressVersion,xp:0,streak:1,dailyDone:false,lastSet:null,lastWrong:null,lastLesson:null,aktiviti:{},outbox:[],jbox:[],migrasiDihantar:false,usaha:{hariAktif:1,dicuba:0,bangkit:0,hafazan:0,kuizUlang:0},tasmik:[],tasmikAyat:{},lencana:null,ulasanGuru:null,drafUlasan:{},sp:{},best:{},bidangM:{quran:0,hadis:0,akidah:0,fiqah:0,sirah:0,akhlak:0}}); recomputePelajaran(); }
 
 /* ---------- STATE ---------- */
 const DEFAULT_STATE = {
@@ -770,7 +869,7 @@ const DEFAULT_STATE = {
 };
 let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
 const LS=SHEETS?'jejak-ilmu-v1':'jejak-ilmu-demo-v3';
-const PROG_KEYS=['hafazanPilih','tasmikAyat','ulasanGuru','drafUlasan','jbox','migrasiDihantar','outbox','progressVersion','xp','streak','dailyDone','dailyDate','lastSet','lastWrong','lastLesson','aktiviti','usaha','tasmik','sp','best','bidangM','hari'];
+const PROG_KEYS=['lencana','hafazanPilih','tasmikAyat','ulasanGuru','drafUlasan','jbox','migrasiDihantar','outbox','progressVersion','xp','streak','dailyDone','dailyDate','lastSet','lastWrong','lastLesson','aktiviti','usaha','tasmik','sp','best','bidangM','hari'];
 const userKey=u=>LS+':u:'+u.kelas+'|'+u.nama;
 function saveUserSnap(){ if(!SHEETS||!state.user) return; try{ const o={}; for(const k of PROG_KEYS) o[k]=state[k]; localStorage.setItem(userKey(state.user),JSON.stringify(o)); }catch(e){} }
 function loadUserSnap(u){ try{ const raw=localStorage.getItem(userKey(u)); if(!raw) return false; const o=JSON.parse(raw); if(CFG.progressVersion!=null&&o.progressVersion!==CFG.progressVersion) return false; Object.assign(state,o); recomputePelajaran(); return true; }catch(e){ return false; } }
@@ -826,7 +925,7 @@ async function rpc(fn,args){
 }
 const creds=()=>state.user&&state.user.pin?{p_nama:state.user.nama,p_kelas:state.user.kelas,p_pin:state.user.pin}:null;
 // ---------- Kad Laporan ikut murid: salinan kemajuan di Supabase, digabung di setiap telefon ----------
-const SYNC_KEYS=['progressVersion','xp','streak','dailyDate','lastLesson','aktiviti','usaha','tasmik','tasmikAyat','sp','best','bidangM','hari'];
+const SYNC_KEYS=['lencana','progressVersion','xp','streak','dailyDate','lastLesson','aktiviti','usaha','tasmik','tasmikAyat','sp','best','bidangM','hari'];
 let syncT=null, syncLast='', syncTarikAt=0;
 const bolehSync=()=>!!(SB&&SHEETS&&creds()&&!state.user.guru);
 function syncJadual(){ if(!bolehSync()) return; clearTimeout(syncT); syncT=setTimeout(()=>syncTolak(),10000); }
@@ -847,6 +946,7 @@ function gabungKemajuan(r){
   const ratio=b=>{ if(!b) return -1; const [c,n]=String(b).split('/').map(Number); return n?c/n:-1; };
   state.best={...(state.best||{})}; for(const [k,v] of Object.entries(d.best||{})) if(ratio(v)>ratio(state.best[k])) state.best[k]=v;
   state.tasmikAyat={...(state.tasmikAyat||{})}; for(const [k,v] of Object.entries(d.tasmikAyat||{})) state.tasmikAyat[k]=mx(state.tasmikAyat[k],v);
+  if(d.lencana){ state.lencana={...(state.lencana||{})}; for(const [k,v] of Object.entries(d.lencana)) if(!state.lencana[k]||v<state.lencana[k]) state.lencana[k]=v; }
   const key=t=>[t.ayat,t.dur,t.peeks,t.at||''].join('|'); state.tasmik=state.tasmik||[]; const seen=new Set(state.tasmik.map(key)); for(const t of (d.tasmik||[])) if(!seen.has(key(t))){ state.tasmik.push(t); seen.add(key(t)); } state.tasmik=state.tasmik.slice(0,30);
   state.sp={...(d.sp||{}),...(state.sp||{})}; for(const [k,o] of Object.entries(r.sp||{})) if(o&&o.m!=null) state.sp[k]=o.m;
   const t=todayKey(); const H=hari(); const dh=d.hari; if(dh&&dh.d===t){ H.harian=H.harian||!!dh.harian; H.laporan=H.laporan||!!dh.laporan; H.tasmik=mx(H.tasmik,dh.tasmik); for(const [k,v] of Object.entries(dh.kuiz||{})) H.kuiz[k]=mx(H.kuiz[k],v); Object.assign(H.pilihan,dh.pilihan||{}); }
@@ -943,7 +1043,7 @@ function vUtama(){
   const p16=currentLesson();
   const pct=lvlPct();
   const pesan=PESANAN[dayIndex()%PESANAN.length];
-  if(SB&&creds()&&!state.user.guru) setTimeout(()=>refreshPS(),0);
+  if(SB&&creds()&&!state.user.guru){ setTimeout(()=>refreshPS(),0); setTimeout(()=>refreshTasmikSaya(),0); }
   return `
   <header class="band"><div class="inner gut">
     <div class="row">
@@ -996,9 +1096,9 @@ function vUtama(){
     </button>
 
     ${(()=>{ const h=hafazanHariIni(); if(!h) return ''; return `<div class="section" style="padding-top:4px">
-      <div class="head"><h2>Hafazan hari ini</h2>${SETS.hafazan?'<button class="link" data-act="quiz" data-set="hafazan">Sambung ayat</button>':''}</div>
-      <div class="card">
-        ${hzChips(h)}
+      <div class="head"><h2>${h.buku?'Ayat Hafazan Tingkatan 2':'Hafazan hari ini'}</h2>${SETS.hafazan?'<button class="link" data-act="quiz" data-set="hafazan">Sambung ayat</button>':''}</div>
+      <div class="card" id="hzcard">
+        ${h.buku?hzKemajuan(h):hzChips(h)}
         ${ayatHTML(h)}
         ${h.maksud?`<p class="small" style="margin-top:8px">${esc(h.maksud)}</p>`:''}
         <p class="small muted" style="margin-top:8px">${esc(h.rujukan||'')}${SHEETS?'':' · ulangan ke-3 (jarak 4 hari)'}</p>
@@ -1066,6 +1166,9 @@ function vCabaran(){
     <div class="row"><div class="grow"><div class="eyebrow">Cabaran</div><h1>Pilih mod permainan</h1><div class="sub">Setiap mod melatih kemahiran berbeza. Skor terbaik disimpan untuk lencana.</div></div><div class="hdr-acts">${themeBtn()}</div></div>
   </div></header>
   <div class="gut stack body" style="padding-top:16px">
+    ${SHEETS&&state.user&&!state.user.guru?(()=>{ const L=senaraiLencana().filter(x=>x.kat==='Cabaran'); const ok=L.filter(x=>x.ok).length; return `<div class="card gold"><div class="row" style="justify-content:space-between"><div class="eyebrow">Lencana Cabaran</div><span class="pill gold">${ok}/${L.length}</span></div>
+      <p class="small" style="margin-top:6px">Setiap mod ada satu lencana. Capai sasaran sekali sahaja, lencana kekal milik kamu.</p>
+      <div class="lc-mini" style="margin-top:8px">${L.map(x=>`<span class="${x.ok?'on':''}">${x.ic} ${esc(x.t)} <i>${x.ok?'✓':x.unit?x.n+'%/'+x.max+'%':x.n+'/'+x.max}</i></span>`).join('')}</div></div>`; })():''}
     <button class="mode" data-act="tasmik" style="border-color:color-mix(in srgb,var(--gold) 50%,var(--line))">
       <div class="ic" style="background:var(--gold-soft);color:var(--gold-text)">🎙</div>
       <div class="grow"><h3>Rakam Tasmik</h3><div class="d">Rakam hafazan dengan suara sendiri, hantar kepada Ustazah. Teks disembunyikan semasa rakaman.</div></div>
@@ -1073,7 +1176,7 @@ function vCabaran(){
     </button>
     ${modes.filter(m=>SETS[m.set]).map(m=>`<button class="mode" data-act="quiz" data-set="${m.set}">
       <div class="ic ${m.cls||''}" style="background:color-mix(in srgb,${m.hue} 18%,var(--surface));color:${m.hue}">${m.ic}</div>
-      <div class="grow"><h3>${esc(m.t)}</h3><div class="d">${esc(m.d)}</div></div>
+      <div class="grow"><h3>${esc(m.t)}</h3><div class="d">${esc(m.d)}</div>${(()=>{ if(!SHEETS||!state.user||state.user.guru) return ''; const x=senaraiLencana().find(l=>l.set===m.set); if(!x) return ''; return `<div class="lc-line ${x.ok?'on':''}">🏅 <b>${esc(x.t)}</b> · ${x.ok?'diperoleh ✓':`sasaran ${x.max}% · terbaik ${Math.min(x.n,100)}%`}</div>${x.ok?'':`<div class="bar thin" style="margin-top:4px"><i style="width:${Math.min(100,Math.round(x.n/x.max*100))}%"></i></div>`}`; })()}</div>
       <div class="best">${state.best[m.set]?('Terbaik '+esc(state.best[m.set])):'Baharu'}</div>
     </button>`).join('')}
     <div class="card" style="margin-top:4px">
@@ -1176,11 +1279,12 @@ function vLaporan(){
       <p class="small muted" style="margin-top:8px">Setiap petak = satu hari (56 hari terakhir). Lebih gelap, lebih banyak XP.${SHEETS?'':' Streak boleh dibekukan sekali seminggu (cuti, sakit) supaya tidak jadi tekanan.'}</p>
     </div>
 
-    <div class="card">
+    ${SHEETS?(()=>{ const H=hafazanSaya(); return `<div class="card"><div class="row" style="gap:14px;align-items:center">${cincin(H.pct,64)}<div class="grow"><div class="eyebrow">Ayat Hafazan Tingkatan 2</div><div class="hz-ringkas">${HAFAZAN_BUKU.map(x=>{ const o=H.st[x.id]; return `<span class="hz-${o.s}">${HZ_LABEL[o.s][0]} Ayat ${x.label}${o.gred&&o.s==='lulus'?' · '+esc(o.gred):''}</span>`; }).join('')}</div></div></div></div>`; })():''}
+    ${SHEETS?lencanaCard():`<div class="card">
       <div class="eyebrow" style="margin-bottom:10px">Lencana</div>
-      <div class="badges">${badges.map(b=>`<div class="badge ${b.on?'':'lock'}"><div class="b ${/[^\x00-\x7F]/.test(b.ic)&&b.ic.length<3&&!/[🎙↻]/.test(b.ic)?'jawi':''}">${b.ic}</div>${esc(b.t)}<div class="muted" style="font-weight:500;font-size:10.5px">${esc(b.s)}</div></div>`).join('')}</div>
-    </div>
-  </div>`;
+      <div class="badges">${badges.map(b=>`<div class="badge ${b.on?'':'lock'}"><div class="b">${b.ic}</div>${esc(b.t)}<div class="muted" style="font-weight:500;font-size:10.5px">${esc(b.s)}</div></div>`).join('')}</div>
+    </div>`}
+    </div>`;
 }
 
 let gLiga={rows:null,t:0,err:false};
@@ -1226,8 +1330,8 @@ async function urusSubmit(){
   if(e.self&&pin){ state.user.pin=pin; save(); }
   urus.edit=null; urus.err=''; urus.kelas=kelas||urus.kelas; await urusLoad(); try{ localStorage.removeItem('jejak-nama-cache'); }catch(x){} loadNama(); toast(e.id?'Disimpan.':'Murid ditambah.'); sheetUrus();
 }
-let tSaya={rows:null,t:0,err:false};
-async function refreshTasmikSaya(){ if(Date.now()-tSaya.t<30000&&tSaya.rows) return; try{ const r=await rpc('tasmik_saya',creds()); tSaya={rows:Array.isArray(r)?r:[],t:Date.now(),err:false}; }catch(e){ tSaya.err=true; tSaya.t=Date.now(); } const el=document.getElementById('tsaya'); if(el) el.outerHTML=tasmikSayaCard(); }
+let tSaya={rows:null,t:0,err:false,u:''};
+async function refreshTasmikSaya(){ if(Date.now()-tSaya.t<30000&&(tSaya.rows||tSaya.err)) return; tSaya.t=Date.now(); const before=JSON.stringify(tSaya.rows); try{ const r=await rpc('tasmik_saya',creds()); tSaya={rows:Array.isArray(r)?r:[],t:Date.now(),err:false}; }catch(e){ tSaya.err=true; tSaya.t=Date.now(); } if(JSON.stringify(tSaya.rows)!==before&&['utama','cabaran'].includes(state.view)&&$('#layer').hidden&&$('#sheet').hidden){ render(); return; } const el=document.getElementById('tsaya'); if(el) el.outerHTML=tasmikSayaCard(); }
 function tasmikSayaCard(){
   setTimeout(()=>refreshTasmikSaya(),0);
   const rows=tSaya.rows;
@@ -1246,7 +1350,7 @@ function gTasmikCard(){
     <div class="head"><h2>Peti Tasmik</h2><span class="pill ${belum?'warn':'good'}">${all?belum+' belum didengar':'…'}</span></div>
     <div class="card tight">
       <div class="chips" style="margin-bottom:6px">${[['belum','Belum'],['semua','Semua'],...kls.map(k=>[k,k])].map(([k,t])=>`<button data-act="gt-tapis" data-v="${esc(k)}" aria-pressed="${gT.tapis===k}" style="padding:6px 10px;font-size:12px">${esc(t)}</button>`).join('')}</div>
-      ${!rows?`<p class="small muted">${gT.err?'Tidak dapat dimuat.':'Memuat…'}</p>`:rows.length?rows.slice(0,40).map(t=>`<div class="student"><div class="av" style="${t.disemak_at?'background:var(--good);color:#fff':'background:var(--gold-soft);color:var(--gold-text)'}">${t.disemak_at?(t.gred?esc(String(t.gred).replace(/^TP/,'')):'✓'):'▶'}</div><div class="grow"><div class="nm">${esc(t.nama)} <span class="small muted" style="font-weight:600">· ${esc(t.kelas)}</span></div><div class="why">${esc(t.rujukan||'')} · ${fmt(t.durasi_s||0)} · ${t.intai?`<span class="tag warn">intai ${t.intai}×</span>`:'<span class="tag good">tanpa intai</span>'} · ${new Date(t.created_at).toLocaleString('ms-MY',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div></div><button class="btn sm ${t.disemak_at?'ghost':''}" data-act="gt-buka" data-id="${t.id}" ${t.ada_audio?'':'disabled'}>${t.disemak_at?'Lihat':'Dengar'}</button></div>`).join(''):`<p class="small muted">${gT.tapis==='belum'?'Semua rakaman sudah didengar.':'Tiada rakaman.'}</p>`}
+      ${!rows?`<p class="small muted">${gT.err?'Tidak dapat dimuat.':'Memuat…'}</p>`:rows.length?rows.slice(0,40).map(t=>`<div class="student"><div class="av" style="${t.disemak_at?'background:var(--good);color:#fff':'background:var(--gold-soft);color:var(--gold-text)'}">${t.disemak_at?(t.gred?esc(String(t.gred).replace(/^TP/,'')):'✓'):'▶'}</div><div class="grow"><div class="nm">${esc(t.nama)} <span class="small muted" style="font-weight:600">· ${esc(t.kelas)}</span></div><div class="why">${esc(t.rujukan||'')} · ${fmt(t.durasi_s||0)} · ${t.intai?`<span class="tag warn">intai ${t.intai}×</span>`:'<span class="tag good">tanpa intai</span>'} · ${tarikhJam(t.created_at)}</div></div><button class="btn sm ${t.disemak_at?'ghost':''}" data-act="gt-buka" data-id="${t.id}" ${t.ada_audio?'':'disabled'}>${t.disemak_at?'Lihat':'Dengar'}</button></div>`).join(''):`<p class="small muted">${gT.tapis==='belum'?'Semua rakaman sudah didengar.':'Tiada rakaman.'}</p>`}
       <div class="row wrap" style="margin-top:8px;gap:8px;justify-content:space-between"><p class="small muted" style="flex:1;min-width:200px">"Intai" ialah bilangan kali murid membuka teks semasa merakam. Dicatat secara telus, bukan dihukum.</p><button class="btn sm ghost" data-act="gt-kemas">Kosongkan audio lama</button></div>
     </div>
   </div>`;
@@ -1322,7 +1426,7 @@ function gPesanCard(){
   return `<div class="card" id="gpesan" style="margin-top:12px">
     <div class="row" style="gap:12px;align-items:flex-start">${pose('point',64)}<div class="grow"><div class="eyebrow">Pesanan suara kepada murid</div><p class="small muted" style="margin-top:4px">Murid dengar di skrin Utama. Pesanan terkini (14 hari) dipaparkan; teks Sheets digunakan bila tiada.</p></div></div>
     <button class="btn sm gold" data-act="pv-baru" style="margin-top:10px">Rakam pesanan baharu</button>
-    ${!rows?`<p class="small muted" style="margin-top:8px">${gP.err?'Tidak dapat dimuat.':'Memuat…'}</p>`:rows.slice(0,5).map(m=>`<div class="student"><div class="av" style="background:var(--gold-soft);color:var(--gold-text)">${m.ada_audio?'▶':'✉'}</div><div class="grow"><div class="nm" style="font-weight:600;font-size:13.5px">${esc((m.teks||'(suara sahaja)').slice(0,90))}</div><div class="why">${esc(m.kelas||'Semua kelas')} · ${new Date(m.created_at).toLocaleString('ms-MY',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}${m.ada_audio?` · ${fmt(m.durasi_s||0)} · didengar ${m.didengar}/${m.sasaran}`:''}</div></div>${m.ada_audio?`<button class="btn sm ghost" data-act="pv-ulang" data-id="${m.id}">▶</button>`:''}<button class="btn sm ghost" data-act="pv-padam" data-id="${m.id}" aria-label="Padam">✕</button></div>`).join('')}
+    ${!rows?`<p class="small muted" style="margin-top:8px">${gP.err?'Tidak dapat dimuat.':'Memuat…'}</p>`:rows.slice(0,5).map(m=>`<div class="student"><div class="av" style="background:var(--gold-soft);color:var(--gold-text)">${m.ada_audio?'▶':'✉'}</div><div class="grow"><div class="nm" style="font-weight:600;font-size:13.5px">${esc((m.teks||'(suara sahaja)').slice(0,90))}</div><div class="why">${esc(m.kelas||'Semua kelas')} · ${tarikhJam(m.created_at)}${m.ada_audio?` · ${fmt(m.durasi_s||0)} · didengar ${m.didengar}/${m.sasaran}`:''}</div></div>${m.ada_audio?`<button class="btn sm ghost" data-act="pv-ulang" data-id="${m.id}">▶</button>`:''}<button class="btn sm ghost" data-act="pv-padam" data-id="${m.id}" aria-label="Padam">✕</button></div>`).join('')}
   </div>`;
 }
 function sheetPesananLive(){
@@ -1423,128 +1527,90 @@ async function ulSahkan(ids,senyap){
   save(); UL.msg=ok?`${ok} ulasan disahkan. Murid nampak di Kad Laporan.`:'Tiada ulasan disimpan (teks kosong atau tiada internet).'; sheetUlasan(); if(!senyap) toast(UL.msg);
 }
 // ---------- Laporan Harian PdP (PDF) ----------
-let LH={dari:null,hingga:null,d:null,err:false,refleksi:'',busy:false,msg:''};
+let LH={dari:null,hingga:null,skop:null,d:null,err:false,refleksi:'',busy:false,msg:''};
 const tkey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-function gLaporanCard(){ const t=todayKey();
+const kelasLaporan=()=>KELAS_CFG.filter(k=>!/lain/i.test(k)&&k!=='Guru');
+function gLaporanCard(){ const t=todayKey(); const sk=LH.skop||GD.kelas;
   return `<div class="card" id="glh" style="margin-top:12px">
-    <div class="row" style="gap:12px;align-items:flex-start">${pose('clap',64)}<div class="grow"><div class="eyebrow">Laporan harian PdP · PDF</div><p class="small muted" style="margin-top:4px">Bukti bertarikh masa bagi ${esc(GD.kelas||'')}: penyertaan, pencapaian SP, tasmik, murid perlu perhatian dan refleksi.</p></div></div>
-    <div class="row" style="gap:8px;margin-top:10px"><div class="field grow"><label for="lh-dari">Dari</label><input type="date" id="lh-dari" value="${LH.dari||t}" max="${t}"></div><div class="field grow"><label for="lh-hingga">Hingga</label><input type="date" id="lh-hingga" value="${LH.hingga||t}" max="${t}"></div></div>
+    <div class="row" style="gap:12px;align-items:flex-start">${pose('clap',64)}<div class="grow"><div class="eyebrow">Laporan PdP · PDF</div><p class="small muted" style="margin-top:4px">Satu kelas atau keseluruhan: infografik, analisis statistik, perbandingan kelas, keputusan individu dan refleksi.</p></div></div>
+    <div class="field" style="margin-top:10px"><label for="lh-skop">Skop</label><select id="lh-skop">${kelasLaporan().map(k=>`<option value="${esc(k)}" ${sk===k?'selected':''}>${esc(k)}</option>`).join('')}<option value="*" ${sk==='*'?'selected':''}>Semua kelas (keseluruhan + perbandingan)</option></select></div>
+    <div class="chips" style="margin-top:10px">${[['hari','Hari ini'],['7','7 hari'],['30','30 hari'],['bulan','Bulan ini']].map(([v,l])=>`<button data-act="lh-julat" data-v="${v}">${l}</button>`).join('')}</div>
+    <div class="row" style="gap:8px;margin-top:8px"><div class="field grow"><label for="lh-dari">Dari</label><input type="date" id="lh-dari" value="${LH.dari||t}" max="${t}"></div><div class="field grow"><label for="lh-hingga">Hingga</label><input type="date" id="lh-hingga" value="${LH.hingga||t}" max="${t}"></div></div>
     <button class="btn sm" data-act="lh-buka" style="margin-top:10px">Sediakan laporan</button>
   </div>`; }
+function lhJulat(v){ const now=new Date(), t=tkey(now); const d0=new Date(now); if(v==='7') d0.setDate(d0.getDate()-6); else if(v==='30') d0.setDate(d0.getDate()-29); else if(v==='bulan') d0.setDate(1); const a=$('#lh-dari'), b=$('#lh-hingga'); if(a) a.value=v==='hari'?t:tkey(d0); if(b) b.value=t; }
 const SET_NAMA=k=>{ if(!k) return ''; if(k==='harian') return 'Cabaran Harian'; const m=/^kuiz(\d+)$/.exec(k); if(m) return 'Kuiz P'+m[1]; const p=PILIHAN.find(x=>x[0]===k); return p?p[1]:k; };
+function lhMurid(d){ return (d.murid||[]).filter(m=>!d.semua||!/lain/i.test(m.kelas)); }
 function lhRingkasan(d){
-  const M=d.murid||[]; const aktif=M.filter(m=>m.jawapan>0||(m.tasmik||[]).length); const jaw=M.reduce((a,m)=>a+m.jawapan,0), bet=M.reduce((a,m)=>a+m.betul,0);
+  const M=lhMurid(d); const aktif=M.filter(m=>m.jawapan>0||(m.tasmik||[]).length); const jaw=M.reduce((a,m)=>a+m.jawapan,0), bet=M.reduce((a,m)=>a+m.betul,0);
   const tas=M.reduce((a,m)=>a+(m.tasmik||[]).length,0); const rendah=M.filter(m=>m.jawapan>=5&&m.betul/m.jawapan<0.5);
-  const sp=(d.sp||[]).map(s=>({...s,p:Math.round(s.betul/Math.max(1,s.cubaan)*100)}));
-  const meds=aktif.map(m=>m.masa_median_ms).filter(x=>x>0).sort((a,b)=>a-b); const med=meds.length?meds[Math.floor(meds.length/2)]:null;
-  return {M,aktif,jaw,bet,tas,rendah,sp,med,tidak:M.filter(m=>!(m.jawapan>0||(m.tasmik||[]).length))};
+  const spm={}; for(const r of (d.sp||[])){ if(d.semua&&/lain/i.test(r.kelas)) continue; const o=spm[r.sp_kod]=spm[r.sp_kod]||{sp_kod:r.sp_kod,cubaan:0,betul:0,murid:0}; o.cubaan+=r.cubaan; o.betul+=r.betul; o.murid+=r.murid; }
+  const sp=Object.values(spm).map(s=>({...s,p:Math.round(s.betul/Math.max(1,s.cubaan)*100)}));
+  const kelas=[...new Set(M.map(m=>m.kelas))].sort().map(k=>{ const ms=M.filter(m=>m.kelas===k); const ak=ms.filter(m=>m.jawapan>0||(m.tasmik||[]).length); const j=ms.reduce((a,m)=>a+m.jawapan,0), b=ms.reduce((a,m)=>a+m.betul,0); return {k,n:ms.length,aktif:ak.length,jaw:j,bet:b,pa:Math.round(ak.length/Math.max(1,ms.length)*100),acc:j?Math.round(b/j*100):null}; });
+  return {M,aktif,jaw,bet,tas,rendah,sp,kelas,tidak:M.filter(m=>!(m.jawapan>0||(m.tasmik||[]).length))};
 }
 function lhRefleksiAuto(d){
   const R=lhRingkasan(d); const n=R.M.length; if(!n) return '';
   const pc=x=>Math.round(x/Math.max(1,n)*100);
   const kuat=R.sp.filter(s=>s.cubaan>=5&&s.p>=70).sort((a,b)=>b.p-a.p)[0], lemah=R.sp.filter(s=>s.cubaan>=5&&s.p<60).sort((a,b)=>a.p-b.p)[0];
   const nm=s=>`SP ${s.sp_kod}${SP_NAMA[s.sp_kod]?' ('+SP_NAMA[s.sp_kod]+')':''}`;
-  const out=[`Seramai ${R.aktif.length} daripada ${n} murid (${pc(R.aktif.length)}%) melibatkan diri dalam aktiviti PdP melalui aplikasi Jejak Ilmu dengan ${R.jaw} soalan dijawab${R.jaw?`, ketepatan purata ${Math.round(R.bet/R.jaw*100)}%`:''}.`];
+  const out=[];
+  if(d.semua){ const K=R.kelas; const hi=[...K].sort((a,b)=>b.pa-a.pa)[0], lo=[...K].sort((a,b)=>a.pa-b.pa)[0];
+    out.push(`Secara keseluruhan, ${R.aktif.length} daripada ${n} murid (${pc(R.aktif.length)}%) dalam ${K.length} kelas melibatkan diri dalam aktiviti PdP melalui aplikasi Jejak Ilmu dengan ${R.jaw} soalan dijawab${R.jaw?`, ketepatan purata ${Math.round(R.bet/R.jaw*100)}%`:''}.`);
+    if(hi&&lo&&hi.k!==lo.k) out.push(`Penyertaan tertinggi di kelas ${hi.k} (${hi.pa}%) dan terendah di kelas ${lo.k} (${lo.pa}%).`); }
+  else out.push(`Seramai ${R.aktif.length} daripada ${n} murid (${pc(R.aktif.length)}%) melibatkan diri dalam aktiviti PdP melalui aplikasi Jejak Ilmu dengan ${R.jaw} soalan dijawab${R.jaw?`, ketepatan purata ${Math.round(R.bet/R.jaw*100)}%`:''}.`);
   if(kuat) out.push(`${nm(kuat)} dikuasai dengan baik (${kuat.p}% jawapan betul).`);
   if(lemah) out.push(`${nm(lemah)} memerlukan pengukuhan (${lemah.p}% jawapan betul) dan akan diulang pada sesi berikutnya.`);
   if(R.tas) out.push(`${R.tas} rakaman tasmik hafazan diterima untuk disemak.`);
-  if(R.tidak.length) out.push(`${R.tidak.length} murid tidak aktif akan dihubungi dan dibimbing${R.rendah.length?`, manakala ${R.rendah.length} murid dengan ketepatan rendah akan diberi latihan pemulihan`:''}.`);
-  else if(R.rendah.length) out.push(`${R.rendah.length} murid dengan ketepatan rendah akan diberi latihan pemulihan.`);
+  if(R.tidak.length) out.push(`${R.tidak.length} murid tidak aktif akan dihubungi dan dibimbing${R.rendah.length?`, manakala ${R.rendah.length} murid dengan ketepatan rendah akan diberi latihan pengukuhan`:''}.`);
+  else if(R.rendah.length) out.push(`${R.rendah.length} murid dengan ketepatan rendah akan diberi latihan pengukuhan.`);
   return out.join(' ');
 }
 async function bukaLaporanHarian(){
   const t=todayKey(); let dari=(($('#lh-dari')||{}).value||t), hingga=(($('#lh-hingga')||{}).value||dari); if(hingga<dari){ const x=dari; dari=hingga; hingga=x; }
-  LH={dari,hingga,d:null,err:false,refleksi:'',busy:false,msg:'',kelas:GD.kelas}; sheetLaporanHarian();
-  try{ const r=await rpc('guru_laporan_harian',{...creds(),p_kelas_tapis:LH.kelas,p_dari:dari,p_hingga:hingga}); if(r&&r.ok){ LH.d=r; LH.refleksi=lhRefleksiAuto(r); } else LH.err=r&&r.ralat==='julat'?'Julat maksimum 62 hari.':'Tidak dapat dimuat.'; }catch(e){ LH.err='Tidak dapat dimuat. Semak internet.'; }
+  const skop=(($('#lh-skop')||{}).value)||GD.kelas;
+  LH={dari,hingga,skop,d:null,err:false,refleksi:'',busy:false,msg:'',kelas:skop==='*'?'Semua kelas':skop}; sheetLaporanHarian();
+  try{ const r=await rpc('guru_laporan_harian',{...creds(),p_kelas_tapis:skop,p_dari:dari,p_hingga:hingga}); if(r&&r.ok){ if(skop==='*'&&!r.semua){ LH.err='Laporan keseluruhan perlukan fail SQL 9 (laporan_v2) dijalankan di Supabase.'; } else { for(const m of (r.murid||[])) if(!m.kelas) m.kelas=skop; LH.d=r; LH.refleksi=lhRefleksiAuto(r); if(!('harian' in r)) LH.msg='Jalankan fail SQL 9 (laporan_v2) untuk infografik aktiviti dan hafazan penuh.'; } } else LH.err=r&&r.ralat==='julat'?'Julat maksimum 62 hari.':'Tidak dapat dimuat.'; }catch(e){ LH.err='Tidak dapat dimuat. Semak internet.'; }
   sheetLaporanHarian();
 }
-function lhTarikhLabel(){ const f=x=>new Date(x+'T00:00:00').toLocaleDateString('ms-MY',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); return LH.dari===LH.hingga?f(LH.dari):`${f(LH.dari)} hingga ${f(LH.hingga)}`; }
+function lhTarikhLabel(){ const f=x=>new Date(x+'T00:00:00').toLocaleDateString('ms-MY',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); const g=x=>new Date(x+'T00:00:00').toLocaleDateString('ms-MY',{day:'numeric',month:'short',year:'numeric'}); return LH.dari===LH.hingga?f(LH.dari):`${g(LH.dari)} hingga ${g(LH.hingga)}`; }
 function sheetLaporanHarian(){
   const d=LH.d; const R=d?lhRingkasan(d):null;
   openSheet(`<div class="gut">
-    <div class="row"><h2>Laporan harian PdP</h2><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div>
+    <div class="row"><h2>Laporan PdP</h2><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div>
     <p class="small muted" style="margin-top:4px">${esc(LH.kelas||'')} · ${esc(lhTarikhLabel())}</p>
     ${!d?`<p class="small muted" style="margin-top:12px">${LH.err?esc(LH.err):'Memuat…'}</p>`:`
     <div class="lh-stats"><div><b class="num">${R.aktif.length}/${R.M.length}</b><span>murid aktif</span></div><div><b class="num">${R.jaw}</b><span>soalan${R.jaw?' · '+Math.round(R.bet/R.jaw*100)+'%':''}</span></div><div><b class="num">${R.tas}</b><span>tasmik</span></div><div><b class="num">${R.tidak.length}</b><span>tidak aktif</span></div></div>
+    ${d.semua?`<div class="tablewrap" style="margin-top:10px"><table class="ht" style="min-width:0"><thead><tr><th>Kelas</th><th>Aktif</th><th>Soalan</th><th>Ketepatan</th></tr></thead><tbody>${R.kelas.map(k=>`<tr><td>${esc(k.k)}</td><td>${k.aktif}/${k.n} (${k.pa}%)</td><td>${k.jaw}</td><td>${k.acc!=null?k.acc+'%':'–'}</td></tr>`).join('')}</tbody></table></div>`:''}
     <div class="field" style="margin-top:12px"><label for="lh-ref">Refleksi (disunting dan disahkan oleh Ustazah)</label><textarea id="lh-ref" rows="6" maxlength="1500">${esc(LH.refleksi)}</textarea></div>
     <div class="row wrap" style="gap:8px;margin-top:8px">${AI_ON()?`<button class="btn sm ghost" data-act="lh-ai" ${LH.busy?'disabled':''}>Draf refleksi AI</button>`:''}<button class="btn sm ghost" data-act="lh-auto" ${LH.busy?'disabled':''}>Guna draf automatik</button></div>
     ${LH.msg?`<p class="small" style="margin-top:8px;font-weight:700">${esc(LH.msg)}</p>`:''}
     <button class="btn gold block" data-act="lh-pdf" style="margin-top:14px" ${LH.busy?'disabled':''}>Muat turun PDF</button>
-    <p class="small muted" style="margin-top:8px">PDF mengandungi jadual bukti setiap murid (masa mula–akhir, soalan, ketepatan, XP, tasmik) daripada log pelayan. Rakaman audio tasmik kekal dalam Peti Tasmik.</p>`}
+    <p class="small muted" style="margin-top:8px">PDF: ringkasan, infografik, analisis statistik${d.semua?', perbandingan kelas dan peta haba SP':''}, keputusan individu setiap murid (bukti bertarikh masa), murid perlu perhatian dan refleksi. Rakaman audio tasmik kekal dalam Peti Tasmik.</p>`}
   </div>`);
   const ta=$('#lh-ref'); if(ta) ta.addEventListener('input',()=>{ LH.refleksi=ta.value; });
 }
 async function lhAI(){
   LH.busy=true; LH.msg='Menjana draf refleksi AI…'; sheetLaporanHarian();
-  const cur=currentLesson(); const codes=(LH.d.sp||[]).map(s=>s.sp_kod);
-  try{ const j=await aiPanggil({mod:'refleksi',kelas:LH.kelas,dari:LH.dari,hingga:LH.hingga,pelajaran:cur?`Pelajaran ${cur.n}: ${cur.rumi||''}`:'',sp_info:spInfo(codes)}); LH.refleksi=j.refleksi||LH.refleksi; LH.msg='Draf AI dimasukkan. Baca dan sunting sebelum muat turun.'; }
+  const cur=currentLesson(); const codes=[...new Set((LH.d.sp||[]).map(s=>s.sp_kod))];
+  try{ const j=await aiPanggil({mod:'refleksi',kelas:LH.skop,dari:LH.dari,hingga:LH.hingga,pelajaran:cur?`Pelajaran ${cur.n}: ${cur.rumi||''}`:'',sp_info:spInfo(codes)}); LH.refleksi=j.refleksi||LH.refleksi; LH.msg='Draf AI dimasukkan. Baca dan sunting sebelum muat turun.'; }
   catch(e){ LH.msg=aiRalat(e.message); }
   LH.busy=false; sheetLaporanHarian();
 }
 function muatSkrip(src){ return new Promise((res,rej)=>{ const ada=document.querySelector(`script[data-src="${src}"]`); if(ada){ if(ada.dataset.ok) return res(); ada.addEventListener('load',()=>res()); ada.addEventListener('error',()=>rej(new Error('skrip'))); return; } const s=document.createElement('script'); s.src=src; s.dataset.src=src; s.onload=()=>{ s.dataset.ok='1'; res(); }; s.onerror=()=>rej(new Error('skrip')); document.head.appendChild(s); }); }
 async function lhPDF(){
   const btn=$('[data-act="lh-pdf"]'); if(btn){ btn.disabled=true; btn.textContent='Menyediakan PDF…'; }
-  try{ await muatSkrip('js/vendor/jspdf.umd.min.js'); await muatSkrip('js/vendor/jspdf.plugin.autotable.min.js'); }
+  try{ await muatSkrip('js/vendor/jspdf.umd.min.js'); await muatSkrip('js/vendor/jspdf.plugin.autotable.min.js'); await muatSkrip('js/laporan-pdf.js?v=3'); }
   catch(e){ toast('Tidak dapat memuat penjana PDF. Semak internet.'); if(btn){ btn.disabled=false; btn.textContent='Muat turun PDF'; } return; }
-  const doc=binaPDF(LH.d,LH.refleksi.trim());
-  const nama=`Laporan-PdP-${String(LH.kelas).replace(/\s+/g,'-')}-${LH.dari}${LH.hingga!==LH.dari?'_'+LH.hingga:''}.pdf`;
+  const cur=currentLesson();
+  const ctx={refleksi:LH.refleksi.trim(),dari:LH.dari,hingga:LH.hingga,tarikhLabel:lhTarikhLabel(),ust:UST.nama,
+    sekarang:new Date().toLocaleDateString('ms-MY',{day:'numeric',month:'short',year:'numeric',...ZON})+', '+jamAMPM(new Date()),
+    pelajaran:cur?`Pelajaran ${cur.n}: ${cur.rumi||''}${cur.ms?' (m.s. '+cur.ms+')':''}`:'-',spCur:(SPS[cur&&cur.n]||[]).map(x=>x.k).join(', '),
+    spNama:k=>SP_NAMA[k]||'',setNama:SET_NAMA,hafazan:rows=>statusHafazan(rows),ayat:HAFAZAN_BUKU.map(h=>({id:h.id,label:h.label})),lulusTP:LULUS_TP,
+    jam:jamAMPM,tarikhJam:t=>new Date(t).toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',...ZON})+' '+jamAMPM(t)};
+  let doc; try{ doc=JejakPDF.bina(LH.d,ctx); }catch(e){ console.error(e); toast('PDF gagal dijana: '+e.message); if(btn){ btn.disabled=false; btn.textContent='Muat turun PDF'; } return; }
+  const nama=`Laporan-PdP-${LH.skop==='*'?'Semua-Kelas':String(LH.skop).replace(/\s+/g,'-')}-${LH.dari}${LH.hingga!==LH.dari?'_'+LH.hingga:''}.pdf`;
   doc.save(nama); if(btn){ btn.disabled=false; btn.textContent='Muat turun PDF'; } toast('PDF dimuat turun: '+nama);
-}
-function binaPDF(d,refleksi){
-  const { jsPDF }=window.jspdf; const doc=new jsPDF({unit:'mm',format:'a4'}); const AT=(o)=>window.autoTable?window.autoTable(doc,o):doc.autoTable(o);
-  const W=210, L=14, Rm=14, CW=W-L-Rm; const R=lhRingkasan(d); const ungu=[91,61,201], kelabu=[110,110,120];
-  const zon={timeZone:'Asia/Kuala_Lumpur'}; const jam=t=>new Date(t).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',...zon}); const hariJam=t=>new Date(t).toLocaleString('en-GB',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',...zon}).replace(',','');
-  const satuHari=LH.dari===LH.hingga; const masa=t=>satuHari?jam(t):hariJam(t);
-  const asc=s=>String(s==null?'':s).replace(/[≥]/g,'>=').replace(/[≤]/g,'<=').replace(/[→]/g,'->').replace(/[^\x00-\xFF\u2013\u2014\u2018\u2019\u201C\u201D\u2022]/g,'');
-  // Header
-  doc.setFillColor(...ungu); doc.rect(0,0,W,24,'F'); doc.setTextColor(255,255,255);
-  doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.text('LAPORAN HARIAN PdP',L,11);
-  doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.text('Pendidikan Islam Tingkatan 2 (KSSM) · Jejak Ilmu',L,17);
-  doc.setFontSize(9); doc.text(asc(UST.nama),W-Rm,11,{align:'right'}); doc.text('Dijana: '+new Date().toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',...zon}),W-Rm,17,{align:'right'});
-  doc.setTextColor(30,30,40);
-  const cur=currentLesson(); const spCur=(SPS[cur&&cur.n]||[]).map(x=>x.k).join(', ');
-  AT({startY:30,theme:'plain',styles:{fontSize:9.5,cellPadding:1.2},columnStyles:{0:{fontStyle:'bold',cellWidth:34}},margin:{left:L,right:Rm},
-    body:[['Kelas',asc(d.kelas)],['Tarikh',asc(lhTarikhLabel())],['Pelajaran semasa',asc(cur?`Pelajaran ${cur.n}: ${cur.rumi||''}${cur.ms?' (m.s. '+cur.ms+')':''}`:'-')],['Standard Pembelajaran',asc(spCur||'-')],['Kaedah','PdPr / aktiviti dalam aplikasi Jejak Ilmu (kuiz formatif, Cabaran Harian, tasmik hafazan)']]});
-  // Summary boxes
-  let y=doc.lastAutoTable.finalY+4; const bw=(CW-9)/4;
-  const kotak=[[`${R.aktif.length}/${R.M.length}`,'murid aktif'],[String(R.jaw),'soalan dijawab'],[R.jaw?Math.round(R.bet/R.jaw*100)+'%':'-','ketepatan purata'],[String(R.tas),'tasmik diterima']];
-  kotak.forEach(([v,t],i)=>{ const x=L+i*(bw+3); doc.setDrawColor(220,214,245); doc.setFillColor(246,243,255); doc.roundedRect(x,y,bw,17,2,2,'FD'); doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(...ungu); doc.text(v,x+bw/2,y+8,{align:'center'}); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...kelabu); doc.text(t,x+bw/2,y+13.5,{align:'center'}); });
-  doc.setTextColor(30,30,40); y+=23;
-  const tajuk=(t)=>{ if(y>265){ doc.addPage(); y=18; } doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...ungu); doc.text(t,L,y); doc.setTextColor(30,30,40); y+=2; };
-  // SP table with bars
-  tajuk('1. Pencapaian mengikut Standard Pembelajaran');
-  const spRows=R.sp.map(s=>[s.sp_kod,asc(SP_NAMA[s.sp_kod]||''),String(s.murid),String(s.cubaan),s.p+'%','']);
-  AT({startY:y,head:[['SP','Huraian','Murid','Cubaan','% betul','']],body:spRows.length?spRows:[['-','Tiada jawapan direkod dalam tempoh ini','','','','']],theme:'grid',margin:{left:L,right:Rm},
-    styles:{fontSize:8.5,cellPadding:1.6,lineColor:[225,225,232]},headStyles:{fillColor:ungu,textColor:255,fontStyle:'bold'},
-    columnStyles:{0:{cellWidth:18},2:{cellWidth:14,halign:'right'},3:{cellWidth:15,halign:'right'},4:{cellWidth:16,halign:'right'},5:{cellWidth:30}},
-    didDrawCell:(h)=>{ if(h.section==='body'&&h.column.index===5&&R.sp[h.row.index]){ const p=R.sp[h.row.index].p; const c=h.cell; const bw2=c.width-4; doc.setFillColor(235,235,242); doc.rect(c.x+2,c.y+c.height/2-1.5,bw2,3,'F'); doc.setFillColor(...(p>=70?[46,160,90]:p>=55?[225,160,40]:[210,70,70])); doc.rect(c.x+2,c.y+c.height/2-1.5,bw2*p/100,3,'F'); } }});
-  y=doc.lastAutoTable.finalY+7;
-  // Student evidence table
-  tajuk('2. Bukti aktiviti murid (log bertarikh masa)');
-  const ev=R.M.map((m,i)=>{ const akt=m.jawapan>0||(m.tasmik||[]).length; const t=(m.tasmik||[]).map(x=>`${asc(String(x.rujukan||'').replace(/^Surah /,'').split(' · ')[0])}${x.gred?' ['+asc(x.gred)+']':''}${x.intai?' intai '+x.intai:''} (${masa(x.at)})`).join('; ');
-    return [String(i+1),asc(m.nama),akt&&m.mula?`${masa(m.mula)}–${masa(m.akhir)}`:'-',asc((m.set_kod||[]).map(SET_NAMA).join(', '))||'-',String(m.jawapan),m.jawapan?Math.round(m.betul/m.jawapan*100)+'%':'-',String(m.xp||0),t||'-']; });
-  AT({startY:y,head:[['Bil','Nama murid','Masa','Aktiviti','Soalan','Betul','XP','Tasmik']],body:ev,theme:'striped',margin:{left:L,right:Rm},
-    styles:{fontSize:7.8,cellPadding:1.4,overflow:'linebreak'},headStyles:{fillColor:ungu,textColor:255},alternateRowStyles:{fillColor:[248,247,252]},
-    columnStyles:{0:{cellWidth:8,halign:'right'},1:{cellWidth:40},2:{cellWidth:satuHari?20:30},4:{cellWidth:13,halign:'right'},5:{cellWidth:12,halign:'right'},6:{cellWidth:10,halign:'right'}},
-    didParseCell:(h)=>{ if(h.section==='body'){ const m=R.M[h.row.index]; if(m&&!(m.jawapan>0||(m.tasmik||[]).length)) h.cell.styles.textColor=[150,150,160]; } }});
-  y=doc.lastAutoTable.finalY+7;
-  // Attention list
-  tajuk('3. Murid perlu perhatian');
-  const att=[...R.tidak.map(m=>[asc(m.nama),'Tidak aktif dalam tempoh ini','Hubungi / bimbing']),...R.rendah.map(m=>[asc(m.nama),`Ketepatan ${Math.round(m.betul/m.jawapan*100)}% (${m.jawapan} soalan)`,'Latihan pengukuhan'])];
-  AT({startY:y,head:[['Nama','Pemerhatian','Tindakan susulan']],body:att.length?att:[['-','Tiada','-']],theme:'grid',margin:{left:L,right:Rm},styles:{fontSize:8.2,cellPadding:1.5,lineColor:[225,225,232]},headStyles:{fillColor:[240,236,252],textColor:[60,40,140]}});
-  y=doc.lastAutoTable.finalY+7;
-  // Reflection
-  tajuk('4. Refleksi');
-  doc.setFont('helvetica','normal'); doc.setFontSize(9.5); const lines=doc.splitTextToSize(asc(refleksi||'-'),CW); y+=3;
-  for(const ln of lines){ if(y>275){ doc.addPage(); y=18; } doc.text(ln,L,y); y+=4.8; }
-  // Signatures
-  y+=8; if(y>255){ doc.addPage(); y=24; }
-  doc.setFontSize(9); doc.setDrawColor(150,150,160);
-  doc.line(L,y+12,L+70,y+12); doc.text('Disediakan oleh:',L,y); doc.text(asc(UST.nama),L,y+17); doc.text('Tarikh:',L,y+22);
-  doc.line(W-Rm-70,y+12,W-Rm,y+12); doc.text('Disemak oleh (Pentadbir):',W-Rm-70,y); doc.text('Nama & cop:',W-Rm-70,y+17); doc.text('Tarikh:',W-Rm-70,y+22);
-  // Footer
-  const n=doc.getNumberOfPages(); for(let i=1;i<=n;i++){ doc.setPage(i); doc.setFontSize(7.5); doc.setTextColor(...kelabu); doc.text('Dijana oleh Jejak Ilmu daripada log aktiviti bertarikh masa (waktu Malaysia). Data kuiz ialah penilaian formatif dalam aplikasi.',L,290); doc.text(`Halaman ${i}/${n}`,W-Rm,290,{align:'right'}); }
-  return doc;
 }
 function guruLigaCard(){
   if(!SB) return '';
@@ -1641,7 +1707,7 @@ function vGuruLive(){
       <div class="card" style="margin-top:16px">
         <div class="chips">${kls.map(k=>`<button data-act="gd-kelas" data-v="${esc(k)}" aria-pressed="${GD.kelas===k}">${esc(k)}</button>`).join('')}</div>
         <div class="field" style="margin-top:10px"><select id="gd-pel" aria-label="Pelajaran">${pelOpts}</select></div>
-        <div class="row" style="margin-top:8px;justify-content:space-between"><span class="small muted">${GD.err?'Tidak dapat dimuat. Semak internet.':ready?'Dikemas kini '+new Date(GD.t).toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'}):'Memuat data kelas…'}</span><button class="btn sm ghost" data-act="gd-muat">Muat semula</button></div>
+        <div class="row" style="margin-top:8px;justify-content:space-between"><span class="small muted">${GD.err?'Tidak dapat dimuat. Semak internet.':ready?'Dikemas kini '+jamAMPM(GD.t):'Memuat data kelas…'}</span><button class="btn sm ghost" data-act="gd-muat">Muat semula</button></div>
       </div>
       <div class="card hi" style="margin-top:12px">
         <div class="eyebrow">Cerapan automatik</div>
@@ -1956,7 +2022,7 @@ async function gateLogin(){
   if(SB&&m){ try{ srv=await rpc('semak_pin',{p_nama:m.n,p_kelas:m.k,p_pin:gate.pin}); ok=!!(srv&&srv.ok); }catch(e){ srv=null; } }
   if(srv===null){ if(m&&m.h){ try{ ok=(await pinHash(gate.pin,m.n,m.k))===m.h; }catch(e){ ok=false; } } else { const er=$('#g-err'); if(er){ er.textContent='Tidak dapat menyemak PIN: semak sambungan internet dan cuba lagi.'; er.hidden=false; } if(btn){ btn.disabled=false; btn.textContent='Masuk'; } return; } }
   if(!ok){ buzz([40,60,40]); const er=$('#g-err'); if(er) er.hidden=false; if(btn){ btn.disabled=false; btn.textContent='Masuk'; } gate.pin=''; const inp=$('#g-pin'); if(inp){ inp.value=''; inp.focus(); } return; }
-  const same=state.user&&state.user.nama===m.n&&state.user.kelas===m.k; if(!same) saveUserSnap(); state.user={nama:m.n,kelas:m.k,guru:!!(srv?srv.guru:m.g),pin:SB?gate.pin:undefined}; state.nama=m.n; state.kelas=m.k; if(!same){ freshProgress(); loadUserSnap(state.user); } rebuildSets(); pS.t=0; gP.t=0; gP.rows=null; syncLast=''; syncTarikAt=0;
+  const same=state.user&&state.user.nama===m.n&&state.user.kelas===m.k; if(!same) saveUserSnap(); state.user={nama:m.n,kelas:m.k,guru:!!(srv?srv.guru:m.g),pin:SB?gate.pin:undefined}; state.nama=m.n; state.kelas=m.k; if(!same){ freshProgress(); loadUserSnap(state.user); } rebuildSets(); pS.t=0; gP.t=0; gP.rows=null; syncLast=''; syncTarikAt=0; tSaya={rows:null,t:0,err:false};
   if(srv&&srv.ok&&!state.user.guru){ if(!srv.migrasi&&state.xp>0&&!state.migrasiDihantar){ state.outbox=(state.outbox||[]).filter(x=>x.sebab!=='migrasi'); state.outbox.unshift({xp:Math.min(state.xp,5000),sebab:'migrasi'}); state.migrasiDihantar=true; } if(srv.xp>state.xp) state.xp=srv.xp; setTimeout(()=>flushXP(),50); } save(); hideGate(); render(); if(srv&&srv.ok&&!state.user.guru) tarikKemajuan(true); toast(m.g?`Selamat datang, ${m.n}. Mod guru aktif.`:`Selamat datang, ${m.n}. Hanya nama dan kelas kamu disimpan.`);
 }
 function hideGate(){ $('#gate').hidden=true; $('#tabbar').hidden=false; document.body.style.overflow=''; }
@@ -2165,6 +2231,7 @@ const VIEWS={utama:vUtama,peta:vPeta,cabaran:vCabaran,laporan:vLaporan,guru:vGur
 const TABS_ALL=[['utama','Utama'],['peta','Peta'],['cabaran','Cabaran'],['laporan','Laporan'],['guru','Guru']];
 const isGuru=()=>!ROSTER||!!(state.user&&state.user.guru);
 function render(){
+  if(SHEETS&&state.user&&!state.user.guru) setTimeout(semakLencana,0);
   const TABS=TABS_ALL.filter(([k])=>k!=='guru'||isGuru());
   if(state.view==='guru'&&!isGuru()) state.view='utama';
   $('#screen').innerHTML=`<div class="view view-${state.view}">${VIEWS[state.view]()}</div><img class="deco-figure" src="${UST.pose.point}" alt="" loading="lazy">`;
@@ -2198,6 +2265,7 @@ document.addEventListener('click',e=>{
   else if(act==='ul-sahkan'){ const id=+el.dataset.id; const ta=document.querySelector(`#sheet .ul-teks[data-id="${id}"]`); const tx=(ta&&ta.value||'').trim(); if(!tx){ toast('Tulis atau jana ulasan dahulu.'); return; } state.drafUlasan[id]={teks:tx,ai:!!(state.drafUlasan[id]&&state.drafUlasan[id].ai)}; ulSahkan([id]); }
   else if(act==='ul-sahkan-semua'){ const D=state.drafUlasan||{}; const ids=(UL.rows||[]).filter(r=>D[r.akaun_id]&&D[r.akaun_id].teks.trim()).map(r=>r.akaun_id); if(ids.length&&confirm(`Sahkan ${ids.length} ulasan? Pastikan Ustazah sudah membaca setiap satu.`)) ulSahkan(ids); }
   else if(act==='lh-buka'){ bukaLaporanHarian(); }
+  else if(act==='lh-julat'){ lhJulat(v); }
   else if(act==='lh-ai'){ const ta=$('#lh-ref'); if(ta) LH.refleksi=ta.value; lhAI(); }
   else if(act==='lh-auto'){ LH.refleksi=lhRefleksiAuto(LH.d); LH.msg=''; sheetLaporanHarian(); }
   else if(act==='lh-pdf'){ const ta=$('#lh-ref'); if(ta) LH.refleksi=ta.value; lhPDF(); }
