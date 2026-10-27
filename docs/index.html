@@ -263,7 +263,10 @@ p{margin:0}
 .heat i.l3{background:var(--accent)}
 .badges{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .bahu-kad{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.bahu-kad .m{width:38px;height:38px;font-size:18px}
+.bahu-kad .m{width:38px;height:38px;font-size:18px;border:0;padding:0}
+.bahu-kad .m.kosong,.bahu .m.kosong{background:transparent;box-shadow:none;border:2px dashed var(--line);color:var(--muted);filter:grayscale(1);opacity:.55}
+.bahu .m.kosong{border-color:rgba(255,255,255,.55);color:#fff}
+.bahu .m.lagi{background:rgba(255,255,255,.2);color:#fff;font-size:12px;box-shadow:0 0 0 2px rgba(255,255,255,.5)}
 .bahu{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:12px;text-decoration:none}
 .bahu .m,.medali .m,.bahu-kad .m{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:15px;font-weight:800;background:radial-gradient(circle at 35% 30%,#ffeaa6,#e3b448 55%,#a8781c);color:#3d2a05;box-shadow:0 0 0 2px rgba(255,255,255,.75),0 2px 6px rgba(0,0,0,.25)}
 .bahu .m.jawi,.medali .m.jawi,.bahu-kad .m.jawi{font-family:var(--arab,serif);font-size:16px}
@@ -275,6 +278,8 @@ p{margin:0}
 .kemaskini{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;gap:10px;align-items:center;background:var(--fg);color:var(--bg);padding:10px 12px 10px 16px;border-radius:999px;box-shadow:var(--shadow);font-size:13.5px;font-weight:700;max-width:calc(100% - 32px)}
 .kemaskini button{background:var(--gold);color:#2a1d05;border:0;border-radius:999px;padding:7px 12px;font-weight:800;font-size:13px}
 @media (min-width:900px){ .kemaskini{bottom:24px} }
+.link-w{background:none;border:0;padding:0;color:inherit;font:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
+.lvl-t tr.kini td{background:var(--gold-soft);font-weight:800}
 .cb-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:14px 2px 0}.cb-h h2{font-size:17px}
 .cb-status{border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}.cb-status.ok{border-color:color-mix(in srgb,var(--good) 50%,var(--line));color:var(--good)}
 .lc-kat{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
@@ -307,7 +312,7 @@ p{margin:0}
 .ulasan .q{font-size:14px;line-height:1.5}
 .ulasan .sig{margin-top:6px;font-size:22px}
 .tiles4{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.tiles4 div{background:var(--surface-2);border-radius:14px;padding:10px 12px}
+.tiles4 div{background:var(--surface-2);border-radius:14px;padding:10px 12px;min-width:0;overflow-wrap:anywhere}
 .tiles4 b{display:block;font-family:var(--display);font-size:22px;font-weight:800;line-height:1.1}
 .tiles4 span{font-size:11.5px;color:var(--muted);font-weight:600}
 
@@ -856,12 +861,14 @@ function lcTile(x){
 }
 function lencanaBahu(){
   const L=senaraiLencana(); const got=L.filter(x=>x.ok);
-  return `<a class="bahu" href="#lencana" data-act="lc-lihat" aria-label="${got.length} lencana diperoleh">${got.length?got.slice(0,10).map(x=>`<span class="m ${/[\u0600-\u06FF]/.test(x.ic)?'jawi':''}" title="${esc(x.t)}">${x.ic}</span>`).join('')+(got.length>10?`<span class="lbl">+${got.length-10}</span>`:''):''}<span class="lbl">${got.length?`${got.length} lencana`:'Belum ada lencana: lihat cara dapat'}</span></a>`;
+  return `<a class="bahu" href="#lencana" data-act="lc-lihat" aria-label="${got.length} lencana diperoleh">${got.length?got.slice(0,7).map(x=>`<span class="m ${/[\u0600-\u06FF]/.test(x.ic)?'jawi':''}" title="${esc(x.t)}">${x.ic}</span>`).join('')+(got.length>7?`<span class="m lagi">+${got.length-7}</span>`:''):'<span class="m kosong">?</span><span class="m kosong">?</span><span class="m kosong">?</span>'}<span class="lbl">${got.length?`${got.length} lencana`:'Belum ada lencana · lihat cara dapat'}</span></a>`;
 }
 function lencanaRingkas(){
   const L=senaraiLencana(); const got=L.filter(x=>x.ok); const seterus=L.filter(x=>!x.ok).sort((a,b)=>(b.n/b.max)-(a.n/a.max))[0];
-  return `<div class="card gold" id="lencana"><div class="row" style="justify-content:space-between"><div class="eyebrow">Lencana kamu</div><span class="pill gold">${got.length}/${L.length}</span></div>
-    ${got.length?`<div class="bahu-kad">${got.map(x=>`<span class="m ${/[\u0600-\u06FF]/.test(x.ic)?'jawi':''}" title="${esc(x.t)}">${x.ic}</span>`).join('')}</div>`:'<p class="small" style="margin-top:8px">Belum ada lencana lagi.</p>'}
+  const guru=state.user&&state.user.guru;
+  return `<div class="card gold" id="lencana"><div class="row" style="justify-content:space-between"><div class="eyebrow">Lencana kamu${guru?' · pratonton guru':''}</div><span class="pill gold">${got.length}/${L.length}</span></div>
+    <div class="bahu-kad">${[...got,...L.filter(x=>!x.ok)].map(x=>`<button class="m ${x.ok?'':'kosong'} ${/[\u0600-\u06FF]/.test(x.ic)?'jawi':''}" data-act="lc-info" data-v="${x.id}" title="${esc(x.t)}" aria-label="${esc(x.t)}${x.ok?' (diperoleh)':' (belum)'}">${x.ic}</button>`).join('')}</div>
+    ${got.length?'':`<p class="small" style="margin-top:8px">${guru?'Murid melihat lencana mereka di sini; bulatan kosong ialah lencana yang belum diperoleh.':'Belum ada lencana. Bulatan kosong ialah lencana yang menunggu kamu: tekan untuk lihat syaratnya.'}</p>`}
     ${seterus?`<p class="small" style="margin-top:8px">Seterusnya: <b>${esc(seterus.t)}</b> · ${esc(seterus.cara)} (${seterus.unit?`terbaik ${Math.min(seterus.n,100)}%`:`${Math.min(seterus.n,seterus.max)}/${seterus.max}`})</p>`:'<p class="small" style="margin-top:8px">Masya-Allah, semua lencana sudah diperoleh!</p>'}
     <button class="btn sm ghost" data-act="nav" data-v="cabaran" style="margin-top:10px">Semua lencana dan cara dapat: tab Cabaran →</button>
   </div>`;
@@ -882,7 +889,7 @@ const doneToday=()=>state.dailyDate?state.dailyDate===todayKey():!!(state.dailyD
 const todayKey=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 function logAktiviti(xp){ if(!state.aktiviti) state.aktiviti={}; const k=todayKey(); const had=!!state.aktiviti[k]; state.aktiviti[k]=(state.aktiviti[k]||0)+xp; if(!had){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); state.streak=state.aktiviti[yk]?(state.streak||0)+1:1; state.usaha.hariAktif=Object.keys(state.aktiviti).filter(d=>d.slice(0,7)===k.slice(0,7)).length; } }
 let ULASAN=[]; let HAFAZAN=[];
-const APP_VERSION='2026-10-27c';
+const APP_VERSION='2026-10-27d';
 const ZON={timeZone:'Asia/Kuala_Lumpur'};
 const jamAMPM=t=>new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true,...ZON});
 const tarikhJam=t=>new Date(t).toLocaleDateString('ms-MY',{day:'numeric',month:'short',...ZON})+', '+jamAMPM(t);
@@ -912,7 +919,7 @@ function load(){ try{ const s=localStorage.getItem(LS); if(s){ const o=JSON.pars
 const $=(s,el=document)=>el.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const lvl=()=>Math.min(10,Math.floor(state.xp/200)+1);
-const lvlPct=()=>Math.round(((state.xp-(lvl()-1)*200)/200)*100);
+const lvlPct=()=>lvl()>=10?100:Math.round(((state.xp-(lvl()-1)*200)/200)*100);
 const pelOf=n=>PELAJARAN.find(p=>p.n===n);
 const bidOf=id=>BIDANG.find(b=>b.id===id);
 const ust=(size='s',extra='')=>`<img class="ust ${size} ${extra}" src="${UST.bust}" alt="${UST.nama}" width="56" height="56">`;
@@ -1082,14 +1089,14 @@ function vUtama(){
       <div class="grow">
         <div class="date">${esc(todayStr())}</div>
         <h1>Assalamualaikum, ${esc(state.nama)}</h1>
-        <div class="sub">${esc(state.kelas)} · Level ${lvl()} <b>${LEVELS[lvl()-1]}</b></div>
+        <div class="sub">${esc(state.kelas)} · <button class="link-w" data-act="level">Level ${lvl()} <b>${LEVELS[lvl()-1]}</b> ⓘ</button></div>
       </div>
       <div class="hdr-acts">${themeBtn()}<button class="tbtn" data-act="settings" aria-label="Tetapan">${GEAR}</button></div>
     </div>
     <div class="stats">
       <div class="stat"><b class="num">${state.streak}</b><span>hari berturut</span></div>
       <div class="stat"><b class="num">${state.xp.toLocaleString('ms-MY')}</b><span>XP terkumpul</span></div>
-      <div class="stat"><b class="num">${pct}%</b><span>ke Level ${lvl()+1}</span><div class="lvlbar"><i style="width:${pct}%"></i></div></div>
+      <button class="stat" data-act="level" style="text-align:left;color:inherit"><b class="num">${lvl()>=10?'Maks':pct+'%'}</b><span>${lvl()>=10?'tahap tertinggi':'ke Level '+(lvl()+1)} ⓘ</span><div class="lvlbar"><i style="width:${pct}%"></i></div></button>
     </div>
   </div></header>
 
@@ -1311,7 +1318,7 @@ function vLaporan(){
       <p class="small muted" style="margin-top:10px">${u.kuizUlang?`${u.kuizUlang} kali kamu ulang kuiz yang sama sampai faham. Itu tabiat pelajar yang akan berjaya.`:'Setiap soalan yang kamu cuba dikira di sini, betul atau salah.'}</p>
     </div>
 
-    ${SHEETS&&state.user&&!state.user.guru?lencanaRingkas():''}
+    ${SHEETS&&state.user?lencanaRingkas():''}
 
     ${ulasan?`<div class="card">
       <div class="ulasan">${ust('m')}<div class="grow"><div class="eyebrow">Ulasan Ustazah${ulasan.tarikh?' · '+esc(ulasan.tarikh):' · minggu ini'}</div><p class="q" style="margin-top:4px">${esc(ulasan.teks)}</p><span class="wordmark sig">${UST.nama}</span></div></div>
@@ -1408,6 +1415,25 @@ function tasmikSayaCard(){
 }
 let gT={tapis:'belum',rows:null,t:0,err:false,cur:null,gred:null,penuh:false};
 async function refreshGT(force){ if(!force&&gT.rows&&Date.now()-gT.t<30000) return; try{ const r=await rpc('guru_tasmik',{...creds(),p_kelas_tapis:(gT.tapis==='belum'||gT.tapis==='semua')?null:gT.tapis}); gT.rows=Array.isArray(r)?r:[]; gT.t=Date.now(); gT.err=false; }catch(e){ gT.err=true; gT.t=Date.now(); } const el=document.getElementById('gtasmik'); if(el) el.outerHTML=gTasmikCard(); }
+function sheetKemas(hari){
+  const all=gT.rows||[]; const had=Date.now()-hari*864e5;
+  const layak=all.filter(t=>t.ada_audio&&t.disemak_at&&new Date(t.created_at).getTime()<had);
+  const mb=(layak.reduce((a,t)=>a+(t.saiz||0),0)/1048576).toFixed(1);
+  const belum=all.filter(t=>!t.disemak_at).length;
+  openSheet(`<div class="gut">
+    <div class="row"><h2>Kosongkan audio lama?</h2><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div>
+    <p class="small" style="margin-top:8px">Fungsi ini menjimatkan ruang storan. Ia <b>tidak</b> memadam semua rakaman.</p>
+    <div class="field" style="margin-top:10px"><label>Rakaman yang sudah disemak dan berusia lebih daripada</label><div class="chips">${[30,60,90].map(d=>`<button data-act="gt-kemas-hari" data-v="${d}" aria-pressed="${d===hari}">${d} hari</button>`).join('')}</div></div>
+    <div class="card" style="margin-top:10px">
+      <p class="small"><b>Akan dipadam:</b> fail audio bagi <b>${layak.length}</b> rakaman (≈${mb} MB). Audio ini tidak boleh didengar semula.</p>
+      <p class="small" style="margin-top:6px"><b>Kekal:</b> nama, ayat, tarikh, durasi, bilangan intai, gred TP dan komen Ustazah. Kemajuan hafazan murid tidak berubah.</p>
+      <p class="small" style="margin-top:6px"><b>Tidak disentuh:</b> ${belum} rakaman yang belum disemak, dan semua rakaman ${hari} hari terakhir.</p>
+    </div>
+    <p class="small" style="margin-top:10px;color:var(--bad);font-weight:700">Tindakan ini tidak boleh dibatalkan.</p>
+    <div class="row" style="gap:8px;margin-top:12px"><button class="btn ghost grow" data-act="close-sheet">Batal</button><button class="btn grow" style="background:var(--bad);color:#fff" data-act="gt-kemas-ya" data-v="${hari}" ${layak.length?'':'disabled'}>${layak.length?`Ya, kosongkan ${layak.length} audio`:'Tiada audio yang layak'}</button></div>
+    ${all.length>=200?'<p class="small muted" style="margin-top:8px">Kiraan berdasarkan 200 rakaman terkini; jumlah sebenar mungkin lebih.</p>':''}
+  </div>`);
+}
 function gTasmikCard(){
   setTimeout(()=>refreshGT(),0);
   const all=gT.rows; const rows=all?(gT.tapis==='belum'?all.filter(t=>!t.disemak_at):all):null; const belum=all?all.filter(t=>!t.disemak_at).length:0;
@@ -1693,7 +1719,7 @@ function guruLigaCard(){
   const minggu=Date.now()-7*864e5;
   return `<div class="card" id="gliga" style="margin-top:16px">
     <div class="row" style="justify-content:space-between"><div class="eyebrow">Liga semua kelas · hidup (XP minggu ini)</div><div class="row" style="gap:6px"><button class="btn sm ghost" data-act="urus">Urus murid</button><span class="pill good">sebenar</span></div></div>
-    <div class="tiles4" style="grid-template-columns:repeat(${Math.min(Object.keys(by).length,6)},1fr)">${Object.entries(by).map(([k,l])=>`<div><b class="num">${l.reduce((a,r)=>a+(+r.xp_minggu),0)}</b><span>${esc(k)} · ${l.filter(r=>r.aktif_terakhir&&new Date(r.aktif_terakhir).getTime()>minggu).length}/${l.length} aktif</span></div>`).join('')}</div>
+    <div class="tiles4" style="grid-template-columns:repeat(auto-fill,minmax(104px,1fr))">${Object.entries(by).filter(([k])=>!/lain/i.test(k)).map(([k,l])=>`<div><b class="num">${l.reduce((a,r)=>a+(+r.xp_minggu),0)}</b><span>${esc(k)} · ${l.filter(r=>r.aktif_terakhir&&new Date(r.aktif_terakhir).getTime()>minggu).length}/${l.length} aktif</span></div>`).join('')}</div>
     ${Object.entries(by).map(([k,l])=>`<details style="margin-top:10px"><summary class="small" style="font-weight:800;cursor:pointer">${esc(k)}: 3 teratas ${l.slice(0,3).map(r=>esc(r.nama)+' ('+r.xp_minggu+')').join(', ')}</summary>
       <div class="tablewrap" style="margin-top:6px"><table class="ht" style="min-width:0"><thead><tr><th>#</th><th>Murid</th><th>Minggu</th><th>Jumlah</th><th>Aktif terakhir</th></tr></thead><tbody>${l.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.nama)}</td><td class="num">${r.xp_minggu}</td><td class="num">${r.xp_jumlah}</td><td class="${r.aktif_terakhir?'':'muted'}">${r.aktif_terakhir?new Date(r.aktif_terakhir).toLocaleString('ms-MY',{weekday:'short',hour:'2-digit',minute:'2-digit'}):'belum'}</td></tr>`).join('')}</tbody></table></div></details>`).join('')}
   </div>`;
@@ -1708,7 +1734,7 @@ function kandunganCard(){
   const sedang=PELAJARAN.find(p=>p.st==='sedang');
   return `<div class="card" style="margin-top:16px">
     <div class="row" style="justify-content:space-between"><div class="eyebrow">Status kandungan · dari Google Sheets (sebenar)</div><span class="pill good">hidup</span></div>
-    <div class="tiles4" style="grid-template-columns:repeat(4,1fr)">
+    <div class="tiles4" style="grid-template-columns:repeat(auto-fill,minmax(72px,1fr))">
       <div><b class="num">${ids.length}</b><span>soalan aktif</span></div>
       <div><b class="num">${kbat}</b><span>KBAT</span></div>
       <div><b class="num">${open.length}<span style="font-size:13px;font-weight:600">/28</span></b><span>pelajaran dibuka</span></div>
@@ -1725,9 +1751,9 @@ async function loadGD(force){
   try{
     const c=creds();
     const [pg,akt,sukar]=await Promise.all([
-      rpc('guru_penguasaan',{...c,p_kelas_tapis:GD.kelas,p_pel:GD.pel}),
+      rpc('guru_penguasaan',{...c,p_kelas_tapis:GD.kelas,p_pel:GD.pel||null}),
       rpc('guru_aktiviti',{...c,p_kelas_tapis:GD.kelas}),
-      rpc('guru_soalan_sukar',{...c,p_kelas_tapis:GD.kelas,p_pel:GD.pel})]);
+      rpc('guru_soalan_sukar',{...c,p_kelas_tapis:GD.kelas,p_pel:GD.pel||null})]);
     Object.assign(GD,{pg:Array.isArray(pg)?pg:[],akt:Array.isArray(akt)?akt:[],sukar:Array.isArray(sukar)?sukar:[],key,t:Date.now(),err:false});
   }catch(e){ GD.err=true; GD.t=Date.now(); }
   GD.loading=false;
@@ -1738,8 +1764,9 @@ function vGuruLive(){
   if(GD.pel==null){ const sd=PELAJARAN.find(p=>p.st==='sedang'); GD.pel=sd?sd.n:16; }
   const key=GD.kelas+'|'+GD.pel; if(GD.key!==key||Date.now()-GD.t>60000) setTimeout(()=>loadGD(),0);
   const ready=GD.key===key&&GD.akt;
-  const pel=pelOf(GD.pel)||{rumi:'',n:GD.pel};
-  const spList=[...(SPS[GD.pel]||[]).map(x=>x.k)]; if(ready) for(const r of GD.pg) if(!spList.includes(r.sp_kod)) spList.push(r.sp_kod);
+  const pel=GD.pel?(pelOf(GD.pel)||{rumi:'',n:GD.pel}):{rumi:'Semua pelajaran',n:0};
+  const pelLbl=GD.pel?'Pelajaran '+pel.n:'semua pelajaran', pelK=GD.pel?'P'+pel.n:'semua';
+  const spList=[...(GD.pel?(SPS[GD.pel]||[]).map(x=>x.k):[])]; if(ready) for(const r of GD.pg) if(!spList.includes(r.sp_kod)) spList.push(r.sp_kod); if(!GD.pel) spList.sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
   const murid=ready?GD.akt.map(a=>a.nama):[];
   const M={}; if(ready) for(const r of GD.pg){ (M[r.nama]||=(M[r.nama]={}))[r.sp_kod]=r; }
   const avgSp=spList.map(k=>{ const v=murid.map(n=>M[n]&&M[n][k]).filter(Boolean).map(x=>x.mastery); return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):null; });
@@ -1753,7 +1780,7 @@ function vGuruLive(){
   const qText=id=>{ const q=Q[id]; if(!q) return id; return q.q||q.ar||q.w||id; };
   const sukar=ready?(GD.sukar||[]).filter(x=>x.salah>0&&x.salah/x.cubaan>=0.3):[];
   const lemahSp=avgSp.map((v,i)=>({v,k:spList[i]})).filter(o=>o.v!=null&&o.v<70).sort((a,b)=>a.v-b.v);
-  const pelOpts=PELAJARAN.filter(p=>SETS['kuiz'+p.n]||(state.user&&state.user.guru)).map(p=>`<option value="${p.n}" ${p.n===GD.pel?'selected':''}>Pelajaran ${p.n} · ${esc(p.rumi)}</option>`).join('');
+  const pelOpts=`<option value="0" ${!GD.pel?'selected':''}>Semua pelajaran</option>`+PELAJARAN.filter(p=>SETS['kuiz'+p.n]||(state.user&&state.user.guru)).map(p=>`<option value="${p.n}" ${p.n===GD.pel?'selected':''}>Pelajaran ${p.n} · ${esc(p.rumi)}</option>`).join('');
   const fmtMs=ms=>ms==null?'—':(ms<1000?ms+' ms':Math.round(ms/1000)+' s');
   return `
   <header class="band"><div class="inner gut">
@@ -1763,14 +1790,14 @@ function vGuruLive(){
         <div class="grow">
           <span class="wordmark" style="font-size:34px;display:block">${UST.nama}</span>
           <div class="sub">Papan Pemuka Guru · ${esc(GD.kelas||'')}</div>
-          <div class="small" style="opacity:.8;margin-top:2px">Pelajaran ${pel.n} · ${esc(pel.rumi||'')}</div>
+          <div class="small" style="opacity:.8;margin-top:2px">${GD.pel?`Pelajaran ${pel.n} · ${esc(pel.rumi||'')}`:'Semua pelajaran'}</div>
         </div>
         <div class="hdr-acts">${themeBtn()}<span class="pill good">Sebenar</span></div>
       </div>
       <div class="stats">
         <div class="stat"><b class="num">${ready?aktif7:'…'}<span style="font-size:13px;opacity:.8">/${ready?murid.length:'…'}</span></b><span>aktif 7 hari</span></div>
-        <div class="stat"><b class="num">${ready?(pelAvg==null?'—':pelAvg+'%'):'…'}</b><span>purata P${pel.n}</span></div>
-        <div class="stat"><b class="num">${ready?dicuba:'…'}<span style="font-size:13px;opacity:.8">/${ready?murid.length:'…'}</span></b><span>sudah cuba P${pel.n}</span></div>
+        <div class="stat"><b class="num">${ready?(pelAvg==null?'—':pelAvg+'%'):'…'}</b><span>purata ${pelK}</span></div>
+        <div class="stat"><b class="num">${ready?dicuba:'…'}<span style="font-size:13px;opacity:.8">/${ready?murid.length:'…'}</span></b><span>sudah cuba ${pelK}</span></div>
       </div>
     </div>
     <img class="poster" src="${UST.pose.point}" alt="" loading="lazy">
@@ -1785,10 +1812,10 @@ function vGuruLive(){
       </div>
       <div class="card hi" style="margin-top:12px">
         <div class="eyebrow">Cerapan automatik</div>
-        <p class="small muted" style="margin-top:4px">Ringkasan yang dikira sendiri oleh aplikasi daripada jawapan murid ${esc(GD.kelas||'')} bagi Pelajaran ${pel.n}: SP yang paling perlu diulang dan soalan yang paling kerap disalah jawab.</p>
+        <p class="small muted" style="margin-top:4px">Ringkasan yang dikira sendiri oleh aplikasi daripada jawapan murid ${esc(GD.kelas||'')} bagi ${pelLbl}: SP yang paling perlu diulang dan soalan yang paling kerap disalah jawab.</p>
         ${!ready?'<p class="small muted" style="margin-top:6px">…</p>':!weakest?'<p class="small muted" style="margin-top:6px">Belum ada jawapan untuk pelajaran ini dalam kelas ini.</p>'
           :lemahSp.length?`<h3 style="font-size:16px;margin-top:8px">Paling perlu diulang: ${esc(SP_NAMA[lemahSp[0].k]||lemahSp[0].k)} (${esc(lemahSp[0].k)}), purata ${lemahSp[0].v}%</h3>${lemahSp.length>1?`<p class="small" style="margin-top:4px">SP lain di bawah 70%: ${lemahSp.slice(1).map(o=>`${esc(o.k)} (${o.v}%)`).join(', ')}</p>`:''}`
-          :`<h3 style="font-size:16px;margin-top:8px">Semua SP pelajaran ini dikuasai (purata kelas 70% ke atas).</h3><p class="small muted" style="margin-top:4px">Terendah: ${esc(SP_NAMA[weakest.k]||weakest.k)} (${esc(weakest.k)}), ${weakest.v}%.</p>`}
+          :`<h3 style="font-size:16px;margin-top:8px">Semua SP ${GD.pel?'pelajaran ini':'yang dicuba'} dikuasai (purata kelas 70% ke atas).</h3><p class="small muted" style="margin-top:4px">Terendah: ${esc(SP_NAMA[weakest.k]||weakest.k)} (${esc(weakest.k)}), ${weakest.v}%.</p>`}
         ${ready&&weakest?(sukar.length?`<p class="small" style="margin-top:10px;font-weight:700">Soalan paling kerap disalah jawab:</p>${sukar.slice(0,5).map(x=>`<div class="student"><div class="av" style="background:color-mix(in srgb,var(--bad) 18%,var(--surface));color:var(--bad);font-size:12px">${Math.round(x.salah/x.cubaan*100)}%</div><div class="grow"><div class="nm" style="font-weight:600;font-size:13.5px">${esc(String(qText(x.soalan_id)).slice(0,140))}</div><div class="why">${esc(x.soalan_id)} · SP ${esc(x.sp_kod||'')} · ${x.salah} daripada ${x.cubaan} cubaan salah</div></div></div>`).join('')}<p class="small muted" style="margin-top:6px">Cadangan: bincang 5 minit dalam PdP seterusnya; jika hampir semua murid salah, semak juga soalan atau kunci jawapan dalam Sheets.</p>`
           :'<p class="small muted" style="margin-top:8px">Tiada soalan yang kerap disalah jawab (30% atau lebih salah, sekurang-kurangnya 3 cubaan).</p>'):''}
       </div>
@@ -1798,7 +1825,7 @@ function vGuruLive(){
     </div>
 
     <div class="section g-heat">
-      <div class="head"><h2>Peta haba penguasaan</h2><span class="small muted">murid × SP · Pelajaran ${pel.n}</span></div>
+      <div class="head"><h2>Peta haba penguasaan</h2><span class="small muted">murid × SP · ${pelLbl}</span></div>
       ${!ready?'<p class="small muted">Memuat…</p>':`<div class="tablewrap"><table class="ht">
         <thead><tr><th>Murid</th>${spList.map(k=>`<th title="${esc(SP_NAMA[k]||'')}">${esc(k)}</th>`).join('')}<th>Aktif</th><th>Jawapan 7h</th></tr></thead>
         <tbody>
@@ -1997,6 +2024,87 @@ function sheetNota16(){
   </div>`);
 }
 
+// ---------- Kongsi Kad Laporan sebagai gambar (untuk ibu bapa / WhatsApp) ----------
+let KG={blob:null,url:null,file:null};
+function muatImej(src){ return new Promise(res=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>res(null); i.src=src; }); }
+function rrect(g,x,y,w,h,r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
+function balut(g,t,maxW){ const out=[]; let ln=''; for(const w of String(t).split(/\s+/)){ const c=ln?ln+' '+w:w; if(g.measureText(c).width>maxW&&ln){ out.push(ln); ln=w; } else ln=c; } if(ln) out.push(ln); return out; }
+async function binaKad(){
+  try{ await document.fonts.ready; }catch(e){}
+  const D='"Bricolage Grotesque","Plus Jakarta Sans",system-ui,sans-serif', B='"Plus Jakarta Sans",system-ui,sans-serif';
+  // Kira tinggi kanvas dahulu supaya ulasan tidak terpotong
+  const ul=state.ulasanGuru&&state.ulasanGuru.teks?{t:'Ulasan Ustazah',s:state.ulasanGuru.teks}:{t:'Ulasan automatik (aplikasi)',s:autoUlasan()};
+  const Lc=senaraiLencana(); const baris=Math.ceil(Lc.length/12);
+  const ukur=document.createElement('canvas').getContext('2d'); ukur.font=`500 29px ${B}`; const ulL=balut(ukur,ul.s,1080-192).slice(0,12);
+  const W=1080, yUl=1028+baris*78+18, H=yUl+92+ulL.length*40+40+90, c=document.createElement('canvas'); c.width=W; c.height=H; const g=c.getContext('2d');
+  const gr=g.createLinearGradient(0,0,W,460); gr.addColorStop(0,'#7b58d6'); gr.addColorStop(1,'#43307f'); g.fillStyle=gr; g.fillRect(0,0,W,470);
+  g.fillStyle='#f6f2fb'; g.fillRect(0,470,W,H-470);
+  const av=await muatImej(UST.pose.clap); if(av){ const h=430, w=av.width*h/av.height; g.drawImage(av,W-w-24,470-h,w,h); }
+  g.fillStyle='rgba(255,255,255,.8)'; g.font=`700 28px ${B}`; g.fillText('KAD LAPORAN · JEJAK ILMU',64,92);
+  g.fillStyle='#fff'; g.font=`800 66px ${D}`; let y=172; for(const ln of balut(g,state.nama,620).slice(0,2)){ g.fillText(ln,64,y); y+=74; }
+  g.font=`600 32px ${B}`; g.fillStyle='rgba(255,255,255,.92)'; g.fillText(`${state.kelas} · Pendidikan Islam Tingkatan 2`,64,y+6);
+  g.font=`500 26px ${B}`; g.fillStyle='rgba(255,255,255,.8)'; g.fillText(new Date().toLocaleDateString('ms-MY',{day:'numeric',month:'long',year:'numeric',...ZON}),64,y+48);
+  const chip=`Level ${lvl()} ${LEVELS[lvl()-1]} · ${state.xp} XP · 🔥 ${state.streak} hari`; g.font=`700 28px ${B}`; const cw=g.measureText(chip).width+44;
+  g.fillStyle='rgba(255,255,255,.18)'; rrect(g,64,y+80,cw,56,28); g.fill(); g.fillStyle='#fff'; g.fillText(chip,86,y+118);
+  // usaha tiles
+  const u=state.usaha||{}; const tiles=[[u.hariAktif||0,'hari aktif bulan ini'],[u.dicuba||0,'soalan dicuba'],[u.bangkit||0,'bangkit (salah → betul)'],[u.hafazan||0,'tasmik dihantar']];
+  const tw=(W-128-24)/2, th=128; tiles.forEach(([v,t],i)=>{ const x=64+(i%2)*(tw+24), yy=510+Math.floor(i/2)*(th+20); g.fillStyle='#fff'; rrect(g,x,yy,tw,th,26); g.fill(); g.fillStyle='#241b33'; g.font=`800 54px ${D}`; g.fillText(String(v),x+28,yy+66); g.fillStyle='#6c607d'; g.font=`600 25px ${B}`; g.fillText(t,x+28,yy+104); });
+  // hafazan + badges
+  const Hz=hafazanSaya(); let yy=510+2*(th+20)+10;
+  g.fillStyle='#fff'; rrect(g,64,yy,W-128,150,26); g.fill();
+  g.lineWidth=14; g.strokeStyle='#e9e1f8'; g.beginPath(); g.arc(150,yy+75,48,0,Math.PI*2); g.stroke(); g.strokeStyle='#6d4cc4'; g.beginPath(); g.arc(150,yy+75,48,-Math.PI/2,-Math.PI/2+Math.PI*2*Hz.pct/100); g.stroke();
+  g.fillStyle='#241b33'; g.font=`800 28px ${D}`; g.textAlign='center'; g.fillText(Hz.pct+'%',150,yy+85); g.textAlign='left';
+  g.font=`800 30px ${D}`; g.fillText('Ayat Hafazan Tingkatan 2',230,yy+60); g.font=`600 25px ${B}`; g.fillStyle='#6c607d';
+  g.fillText(HAFAZAN_BUKU.map(x=>`${({lulus:'✓',belum:'○',ulang:'↻'})[Hz.st[x.id].s]||'⏳'} ${x.label}`).join('    ')+`   ·  ${Hz.lulus}/4 lulus`,230,yy+104);
+  yy+=176; const got=Lc.filter(x=>x.ok);
+  g.fillStyle='#241b33'; g.font=`800 30px ${D}`; g.fillText(`Lencana · ${got.length}/${Lc.length}`,64,yy+10);
+  let x=64; yy+=36; Lc.slice().sort((a,b)=>b.ok-a.ok).forEach((l,i)=>{ if(i&&i%12===0){ x=64; yy+=78; } g.beginPath(); g.arc(x+30,yy+30,30,0,Math.PI*2); if(l.ok){ const rg=g.createRadialGradient(x+20,yy+20,4,x+30,yy+30,32); rg.addColorStop(0,'#ffeaa6'); rg.addColorStop(.6,'#e3b448'); rg.addColorStop(1,'#a8781c'); g.fillStyle=rg; g.fill(); } else { g.setLineDash([6,6]); g.lineWidth=3; g.strokeStyle='#cfc6e0'; g.stroke(); g.setLineDash([]); }
+    g.globalAlpha=l.ok?1:.3; g.font=`28px ${B}`; g.textAlign='center'; g.fillStyle='#3d2a05'; g.fillText(l.ic,x+30,yy+40); g.textAlign='left'; g.globalAlpha=1; x+=78; });
+  // ulasan
+  yy=yUl; g.fillStyle='#fff'; rrect(g,64,yy,W-128,92+ulL.length*40+10,26); g.fill();
+  g.fillStyle='#6d4cc4'; g.font=`800 24px ${B}`; g.fillText(ul.t.toUpperCase(),96,yy+48);
+  g.fillStyle='#241b33'; g.font=`500 29px ${B}`; let ly=yy+92; for(const ln of ulL){ g.fillText(ln,96,ly); ly+=40; }
+  g.fillStyle='#6c607d'; g.font=`600 23px ${B}`; g.fillText(`${UST.nama} · razinutm.github.io/jejak-ilmu`,64,H-46);
+  return await new Promise(r=>c.toBlob(r,'image/png'));
+}
+async function bukaKongsi(){
+  openSheet(`<div class="gut"><div class="row"><h2>Kongsi Kad Laporan</h2><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div><p class="small muted" style="margin-top:8px">Menyediakan gambar…</p></div>`);
+  let blob=null; try{ blob=await binaKad(); }catch(e){ console.error(e); }
+  if(!blob){ openSheet(`<div class="gut"><h2>Kongsi Kad Laporan</h2><p class="small" style="margin-top:8px">Gambar tidak dapat disediakan pada pelayar ini.</p></div>`); return; }
+  if(KG.url) URL.revokeObjectURL(KG.url); const nama=`Kad-Laporan-${String(state.nama).replace(/[^A-Za-z0-9]+/g,'-')}.png`;
+  KG={blob,url:URL.createObjectURL(blob),file:new File([blob],nama,{type:'image/png'})};
+  const boleh=!!(navigator.canShare&&navigator.canShare({files:[KG.file]}));
+  openSheet(`<div class="gut">
+    <div class="row"><h2>Kongsi Kad Laporan</h2><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div>
+    <p class="small muted" style="margin-top:6px">Gambar ini boleh dihantar kepada ibu bapa atau Ustazah melalui WhatsApp. Hanya nama dan kelas dipaparkan.</p>
+    <img src="${KG.url}" alt="Kad Laporan" style="width:100%;border-radius:14px;margin-top:10px;border:1px solid var(--line)">
+    <div class="row" style="gap:8px;margin-top:12px">${boleh?'<button class="btn gold grow" data-act="kongsi-hantar">Kongsi (WhatsApp, dll.)</button>':''}<button class="btn ${boleh?'ghost':'gold'} grow" data-act="kongsi-simpan">Simpan gambar</button></div>
+  </div>`);
+}
+async function kongsiHantar(){ if(!KG.file) return; try{ await navigator.share({files:[KG.file],title:'Kad Laporan Jejak Ilmu',text:`Kad Laporan ${state.nama} (${state.kelas}) · Jejak Ilmu`}); }catch(e){ if(e&&e.name!=='AbortError'){ kongsiSimpan(); } } }
+function kongsiSimpan(){ if(!KG.url) return; const a=document.createElement('a'); a.href=KG.url; a.download=KG.file.name; document.body.appendChild(a); a.click(); a.remove(); toast('Gambar disimpan. Hantar melalui WhatsApp dari galeri/Muat Turun.'); }
+function sheetLevel(){
+  const L=lvl(), xp=state.xp||0;
+  openSheet(`<div class="gut">
+    <div class="row"><h2>Tahap (Level)</h2><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div>
+    <p class="small muted" style="margin-top:6px">Level naik setiap <b>200 XP</b> terkumpul. XP ialah cermin <b>usaha</b> kamu: salah pun dapat XP.</p>
+    <div class="card" style="margin-top:10px"><div class="row" style="justify-content:space-between"><b>Kamu: Level ${L} · ${esc(LEVELS[L-1])}</b><span class="pill gold">${xp} XP</span></div>
+      <div class="bar gold" style="margin-top:8px"><i style="width:${lvlPct()}%"></i></div>
+      <p class="small muted" style="margin-top:6px">${L>=10?'Tahap tertinggi sudah dicapai. XP terus dikira untuk Liga kelas dan lencana.':`${L*200-xp} XP lagi ke Level ${L+1} (${esc(LEVELS[L])}).`}</p></div>
+    <div class="tablewrap" style="margin-top:10px"><table class="ht lvl-t" style="min-width:0"><thead><tr><th>Level</th><th>Nama</th><th>XP</th><th></th></tr></thead><tbody>
+      ${LEVELS.map((n,i)=>`<tr class="${i+1===L?'kini':''}"><td>${i+1}</td><td>${esc(n)}</td><td>${i*200}</td><td>${i+1<L?'✓':i+1===L?'kamu':''}</td></tr>`).join('')}
+    </tbody></table></div>
+    <div class="eyebrow" style="margin-top:14px">Cara dapat XP</div>
+    <div class="tiles4" style="grid-template-columns:repeat(auto-fill,minmax(96px,1fr))"><div><b>+10</b><span>jawapan betul</span></div><div><b>+3</b><span>jawapan salah (usaha)</span></div><div><b>+20</b><span>kuiz sempurna</span></div><div><b>+50</b><span>Cabaran Harian (sekali sehari)</span></div><div><b>+30</b><span>tasmik</span></div></div>
+    <div class="eyebrow" style="margin-top:14px">Beza Level, Liga, Lencana dan ≈TP</div>
+    <ul class="small" style="margin:6px 0 0;padding-left:18px;line-height:1.55">
+      <li><b>Level</b>: jumlah XP sejak mula; tidak pernah turun.</li>
+      <li><b>Liga kelas</b>: kedudukan XP <i>minggu ini</i> dalam kelas; bermula semula setiap Isnin.</li>
+      <li><b>Lencana</b>: pencapaian khusus dengan syarat tertentu (tab Cabaran).</li>
+      <li><b>≈TP</b>: anggaran penguasaan setiap Standard Pembelajaran daripada kuiz (tab Laporan).</li>
+    </ul>
+  </div>`);
+}
 function sheetSettings(){
   openSheet(`<div class="gut">
     <div class="row"><h2>Tetapan</h2><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div>
@@ -2326,6 +2434,8 @@ document.addEventListener('click',e=>{
   else if(act==='lesson'){ sheetLesson(+el.dataset.n); }
   else if(act==='nota'){ sheetNota16(); }
   else if(act==='settings'){ sheetSettings(); }
+  else if(act==='level'){ sheetLevel(); }
+  else if(act==='lc-info'){ const x=senaraiLencana().find(l=>l.id===v); if(x) toast(x.ok?`🏅 ${x.t}: sudah diperoleh!`:`${x.t}: ${x.cara}. Kemajuan ${x.unit?'terbaik '+Math.min(x.n,100)+'%':Math.min(x.n,x.max)+'/'+x.max}.`); }
   else if(act==='tugasan'){ sheetTugasan(); }
   else if(act==='liga'){ ligaTab='suria'; sheetLiga(); }
   else if(act==='liga-tab'){ ligaTab=v; sheetLiga(); }
@@ -2381,7 +2491,9 @@ document.addEventListener('click',e=>{
   else if(act==='gt-tp'){ gT.gred=v; document.querySelectorAll('[data-act="gt-tp"]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v)); }
   else if(act==='gt-komen'){ const t=$('#gt-komen'); if(t){ t.value=(t.value?t.value.trim()+' ':'')+el.dataset.v; } }
   else if(act==='gt-simpan'){ simpanGred(); }
-  else if(act==='gt-kemas'){ (async()=>{ let r; try{ r=await rpc('guru_tasmik_kemas',{...creds(),p_hari:30}); }catch(e){} toast(r&&r.ok?`${r.dikosongkan} audio lama dikosongkan. Audio tersimpan: ${r.mb_audio} MB.`:'Tidak berjaya.'); })(); }
+  else if(act==='gt-kemas'){ sheetKemas(30); }
+  else if(act==='gt-kemas-hari'){ sheetKemas(+v); }
+  else if(act==='gt-kemas-ya'){ (async()=>{ const hari=+v; const btn=el; btn.disabled=true; btn.textContent='Mengosongkan…'; let r; try{ r=await rpc('guru_tasmik_kemas',{...creds(),p_hari:hari}); }catch(e){} closeSheet(); toast(r&&r.ok?`${r.dikosongkan} audio dikosongkan. Gred dan komen kekal. Audio tersimpan kini: ${r.mb_audio} MB.`:'Tidak berjaya. Tiada apa-apa dipadam.'); refreshGT(true); })(); }
   else if(act==='import'){ imp={teks:'',ganti:false,res:null,err:''}; sheetImport(); }
   else if(act==='imp-run'){ runImport(); }
   else if(act==='rec-janji'){ rec.janji=el.checked; const b=$('[data-act="rec-start"]'); if(b) b.disabled=!rec.janji; }
@@ -2391,7 +2503,9 @@ document.addEventListener('click',e=>{
   else if(act==='rec-reset'){ stopRec(); const ctx=rec.ctx; rec={ctx,phase:'idle',t:0,timer:null,peeks:0,peeking:false,janji:ctx==='tasmik',cd:0}; if(ctx==='tasmik') renderTasmik(); else openSheet(renderPesananSheet()); }
   else if(act==='tasmik-hantar'){ state.tasmik.unshift({nama:state.nama,ayat:(hafazanHariIni()||{}).rujukan||'Hafazan',dur:fmt(rec.t),peeks:rec.peeks,at:Date.now()}); catatAyatTasmik(); state.usaha.hafazan++; state.xp+=30; logAktiviti(30); queueXP(30,'tasmik'); hari().tasmik++; save(); if(rec.url) URL.revokeObjectURL(rec.url); rec=null; $('#layer').hidden=true; document.body.style.overflow=''; render(); toast(SHEETS?'Tasmik direkod sebagai usaha (+30 XP).':'Tasmik dihantar kepada Ustazah. +30 XP usaha.'); }
   else if(act==='play-pesan'){ const bar=$('#pp'); if(!bar) return; if(playT){ clearInterval(playT); playT=null; el.textContent='▶'; return; } let p=0; el.textContent='❚❚'; toast('Demo: tiada audio. Versi penuh memainkan suara Ustazah.'); playT=setInterval(()=>{ p+=100/32; const b=$('#pp'); if(b) b.style.width=Math.min(100,p)+'%'; if(p>=100){ clearInterval(playT); playT=null; const pb=$('[data-act="play-pesan"]'); if(pb) pb.textContent='▶'; } },250); }
-  else if(act==='share'){ const txt=`Kad Laporan ${state.nama} (${state.kelas}): Level ${lvl()}, ${state.xp} XP, streak ${state.streak} hari, ${state.usaha.dicuba} soalan dicuba bulan ini.`; const done=()=>toast('Ringkasan disalin. Versi penuh: pautan kad laporan untuk ibu bapa.'); try{ navigator.clipboard.writeText(txt).then(done,done); }catch(err){ done(); } }
+  else if(act==='share'){ if(SHEETS) bukaKongsi(); else { const txt=`Kad Laporan ${state.nama} (${state.kelas}): Level ${lvl()}, ${state.xp} XP, streak ${state.streak} hari, ${state.usaha.dicuba} soalan dicuba bulan ini.`; const done=()=>toast('Ringkasan disalin.'); try{ navigator.clipboard.writeText(txt).then(done,done); }catch(err){ done(); } } }
+  else if(act==='kongsi-hantar'){ kongsiHantar(); }
+  else if(act==='kongsi-simpan'){ kongsiSimpan(); }
   else if(act==='toast'){ toast(el.dataset.msg); }
   else if(act==='g-kelas'){ gate.kelas=v; if(!SHEETS||ROSTER) gate.nama=null; renderGate(); }
   else if(act==='g-guru'){ const g=ROSTER.murid.filter(x=>x.g); if(!g.length){ toast('Tiada akaun guru dalam senarai.'); return; } gate.kelas=g[0].k; gate.nama=g[0].n; renderGate(); const pin=$('#g-pin'); if(pin) pin.focus(); }
