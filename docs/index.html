@@ -262,6 +262,14 @@ p{margin:0}
 .heat i.l2{background:color-mix(in srgb,var(--accent) 55%,var(--surface-2))}
 .heat i.l3{background:var(--accent)}
 .badges{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.bahu{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:12px;text-decoration:none}
+.bahu .m,.medali .m{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:15px;font-weight:800;background:radial-gradient(circle at 35% 30%,#ffeaa6,#e3b448 55%,#a8781c);color:#3d2a05;box-shadow:0 0 0 2px rgba(255,255,255,.75),0 2px 6px rgba(0,0,0,.25)}
+.bahu .m.jawi,.medali .m.jawi{font-family:var(--arab,serif);font-size:16px}
+.bahu .lbl{font-size:12.5px;font-weight:800;color:#fff;opacity:.95;margin-left:2px}
+.medali{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:10px;margin-top:12px}
+.medali>div{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.medali .m{width:46px;height:46px;font-size:21px}.medali b{font-size:11.5px;line-height:1.2}
+.lc-n{font-size:11.5px;font-weight:800;color:var(--gold-text);background:var(--gold-soft);border-radius:999px;padding:1px 6px;margin-left:4px;white-space:nowrap}
 .lc-kat{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
 .lc-grid{display:grid;grid-template-columns:1fr;gap:8px}
 @media (min-width:700px){ .lc-grid{grid-template-columns:1fr 1fr} }
@@ -702,10 +710,10 @@ async function loadBank(){
 function recomputePelajaran(){ for(const p of PELAJARAN){ const v=(SPS[p.n]||[]).map(x=>state.sp[x.k]).filter(x=>x!=null); p.m=v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):(p.m&&!SHEETS?p.m:null); }
   if(SHEETS){ for(const b of BIDANG){ const v=PELAJARAN.filter(p=>p.b===b.id&&p.m!=null).map(p=>p.m); state.bidangM[b.id]=v.length?Math.round(v.reduce((a,c)=>a+c,0)/v.length):0; } } }
 const HAFAZAN_BUKU=[
-  {id:'3-8',pel:1,img:'img/ayat/ali-imran-3-8.png',rujukan:'Surah Ali Imran 3:8',ms:'m.s. 2–3',label:'8'},
-  {id:'3-18',pel:2,img:'img/ayat/ali-imran-3-18.png',rujukan:'Surah Ali Imran 3:18',ms:'m.s. 5–6',label:'18'},
-  {id:'3-26',pel:3,img:'img/ayat/ali-imran-3-26.png',rujukan:'Surah Ali Imran 3:26',ms:'m.s. 9–12',label:'26'},
-  {id:'3-27',pel:3,img:'img/ayat/ali-imran-3-27.png',rujukan:'Surah Ali Imran 3:27',ms:'m.s. 9–12',label:'27'},
+  {id:'3-8',pel:1,img:'img/ayat/ali-imran-3-8.png?v=2',rujukan:'Surah Ali Imran 3:8',ms:'m.s. 2–3',label:'8'},
+  {id:'3-18',pel:2,img:'img/ayat/ali-imran-3-18.png?v=2',rujukan:'Surah Ali Imran 3:18',ms:'m.s. 5–6',label:'18'},
+  {id:'3-26',pel:3,img:'img/ayat/ali-imran-3-26.png?v=2',rujukan:'Surah Ali Imran 3:26',ms:'m.s. 9–12',label:'26'},
+  {id:'3-27',pel:3,img:'img/ayat/ali-imran-3-27.png?v=2',rujukan:'Surah Ali Imran 3:27',ms:'m.s. 9–12',label:'27'},
 ];
 // Lalai: ayat pertama (setakat pelajaran semasa) yang belum pernah dihantar tasmik; jika semua sudah, ayat terakhir.
 function hafazanBuku(){ const pick=HAFAZAN_BUKU.find(h=>h.id===state.hafazanPilih); if(pick) return pick; const cur=currentLesson(); const n=cur?cur.n:3; const c=HAFAZAN_BUKU.filter(h=>h.pel<=n); if(!c.length) return HAFAZAN_BUKU[0]; const done=state.tasmikAyat||{}; return c.find(h=>!done[h.id])||c[c.length-1]; }
@@ -839,12 +847,20 @@ function lcTile(x){
     ${x.ok?`<div class="lc-st ok">✓ Diperoleh${x.bila?' · '+new Date(x.bila+'T00:00:00').toLocaleDateString('ms-MY',{day:'numeric',month:'short'}):''}</div>`:`<div class="bar thin" style="margin-top:6px"><i style="width:${pc}%"></i></div><div class="lc-st">${x.unit?`terbaik ${Math.min(x.n,100)}% · sasaran ${x.max}%`:`${Math.min(x.n,x.max)}/${x.max} · ${lagi} lagi`}</div>`}
   </div>${!x.ok&&go?`<button class="btn sm ghost" ${go}>Cuba</button>`:''}</div>`;
 }
+function lencanaBahu(){
+  const L=senaraiLencana(); const got=L.filter(x=>x.ok);
+  return `<a class="bahu" href="#lencana" data-act="lc-lihat" aria-label="${got.length} lencana diperoleh">${got.length?got.slice(0,10).map(x=>`<span class="m ${/[\u0600-\u06FF]/.test(x.ic)?'jawi':''}" title="${esc(x.t)}">${x.ic}</span>`).join('')+(got.length>10?`<span class="lbl">+${got.length-10}</span>`:''):''}<span class="lbl">${got.length?`${got.length} lencana`:'Belum ada lencana: lihat cara dapat'}</span></a>`;
+}
 function lencanaCard(){
   const L=senaraiLencana(); const ok=L.filter(x=>x.ok).length;
-  return `<div class="card" id="lencana"><div class="row" style="justify-content:space-between"><div class="eyebrow">Lencana</div><span class="pill gold">${ok}/${L.length} diperoleh</span></div>
+  const hampir=L.filter(x=>!x.ok).sort((a,b)=>(b.n/b.max)-(a.n/a.max)).slice(0,3);
+  const buka=!!state.lcBuka;
+  return `<div class="card gold" id="lencana"><div class="row" style="justify-content:space-between"><div class="eyebrow">Lencana kamu</div><span class="pill gold">${ok}/${L.length} diperoleh</span></div>
     <div class="bar gold" style="margin-top:8px"><i style="width:${Math.round(ok/L.length*100)}%"></i></div>
-    <p class="small muted" style="margin-top:8px">Setiap lencana ada syarat yang jelas. Bar menunjukkan berapa dekat kamu; tekan <b>Cuba</b> untuk terus ke aktivitinya. Lencana yang sudah diperoleh kekal.</p>
-    ${['Usaha','Hafazan','Cabaran'].map(k=>`<div class="lc-kat">${k==='Usaha'?'Usaha · rajin mencuba':k==='Hafazan'?'Hafazan · Ayat Tingkatan 2':'Cabaran · mod permainan'}</div><div class="lc-grid">${L.filter(x=>x.kat===k).map(lcTile).join('')}</div>`).join('')}
+    ${ok?`<div class="medali">${L.filter(x=>x.ok).map(x=>`<div><span class="m ${/[\u0600-\u06FF]/.test(x.ic)?'jawi':''}">${x.ic}</span><b>${esc(x.t)}</b></div>`).join('')}</div>`:'<p class="small" style="margin-top:8px">Belum ada lencana lagi. Mulakan dengan yang paling dekat di bawah.</p>'}
+    ${buka?'':`${hampir.length?`<div class="lc-kat">Hampir dapat</div><div class="lc-grid">${hampir.map(lcTile).join('')}</div>`:''}`}
+    ${buka?['Usaha','Hafazan','Cabaran'].map(k=>`<div class="lc-kat">${k==='Usaha'?'Usaha · rajin mencuba':k==='Hafazan'?'Hafazan · Ayat Tingkatan 2':'Cabaran · mod permainan'}</div><div class="lc-grid">${L.filter(x=>x.kat===k).map(lcTile).join('')}</div>`).join(''):''}
+    <button class="btn sm ghost" data-act="lc-semua" style="margin-top:10px">${buka?'Tutup senarai':'Lihat semua '+L.length+' lencana dan syaratnya'}</button>
   </div>`;
 }
 const doneToday=()=>state.dailyDate?state.dailyDate===todayKey():!!(state.dailyDone&&!SHEETS);
@@ -869,7 +885,7 @@ const DEFAULT_STATE = {
 };
 let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
 const LS=SHEETS?'jejak-ilmu-v1':'jejak-ilmu-demo-v3';
-const PROG_KEYS=['lencana','hafazanPilih','tasmikAyat','ulasanGuru','drafUlasan','jbox','migrasiDihantar','outbox','progressVersion','xp','streak','dailyDone','dailyDate','lastSet','lastWrong','lastLesson','aktiviti','usaha','tasmik','sp','best','bidangM','hari'];
+const PROG_KEYS=['lcBuka','lencana','hafazanPilih','tasmikAyat','ulasanGuru','drafUlasan','jbox','migrasiDihantar','outbox','progressVersion','xp','streak','dailyDone','dailyDate','lastSet','lastWrong','lastLesson','aktiviti','usaha','tasmik','sp','best','bidangM','hari'];
 const userKey=u=>LS+':u:'+u.kelas+'|'+u.nama;
 function saveUserSnap(){ if(!SHEETS||!state.user) return; try{ const o={}; for(const k of PROG_KEYS) o[k]=state[k]; localStorage.setItem(userKey(state.user),JSON.stringify(o)); }catch(e){} }
 function loadUserSnap(u){ try{ const raw=localStorage.getItem(userKey(u)); if(!raw) return false; const o=JSON.parse(raw); if(CFG.progressVersion!=null&&o.progressVersion!==CFG.progressVersion) return false; Object.assign(state,o); recomputePelajaran(); return true; }catch(e){ return false; } }
@@ -998,7 +1014,7 @@ let ligaCache={kelas:null,rows:null,t:0,err:false}; let ligaMode='minggu';
 async function refreshLiga(force){
   if(!SB||!state.user||state.user.guru) return;
   const k=state.kelas; if(!force&&ligaCache.kelas===k&&Date.now()-ligaCache.t<60000) return;
-  try{ const rows=await rpc('liga_kelas',{p_kelas:k}); ligaCache={kelas:k,rows:Array.isArray(rows)?rows:[],t:Date.now(),err:false}; }catch(e){ ligaCache.err=true; ligaCache.t=Date.now(); }
+  try{ let rows=null; if(refreshLiga.v2!==false){ try{ rows=await rpc('liga_kelas_v2',{p_kelas:k}); }catch(e){ if(/HTTP 4/.test(e.message)) refreshLiga.v2=false; } } if(!rows) rows=await rpc('liga_kelas',{p_kelas:k}); ligaCache={kelas:k,rows:Array.isArray(rows)?rows:[],t:Date.now(),err:false}; }catch(e){ ligaCache.err=true; ligaCache.t=Date.now(); }
   const el=document.getElementById('liga'); if(el) el.outerHTML=ligaCard();
 }
 function ligaLive(){
@@ -1015,7 +1031,7 @@ function ligaLive(){
     <div class="liga-head"><div class="liga-glyph">☾</div><div class="grow"><div class="eyebrow">Liga kelas · hidup</div><h3 style="font-size:16px">${esc(state.kelas)}${rows?' · '+rows.length+' murid':''}</h3></div>${meIdx>=0?`<span class="pill acc">#${meIdx+1}</span>`:''}</div>
     <div class="segs" style="margin-bottom:8px"><button data-act="liga-mode" data-v="minggu" aria-pressed="${ligaMode==='minggu'}">Minggu ini</button><button data-act="liga-mode" data-v="semua" aria-pressed="${ligaMode==='semua'}">Keseluruhan</button></div>
     ${gap?`<p class="small" style="font-weight:700;margin:4px 0 8px">${esc(gap)}</p>`:''}
-    ${rows?rows.map((r,i)=>`<div class="lrow ${i===meIdx?'me':''}"><span class="pos num" style="${medal(i)};border-radius:50%;width:24px;height:24px;display:grid;place-items:center">${i+1}</span><span class="grow">${esc(r.nama)}${i===meIdx?' (kamu)':''}</span><span class="xp num">${+r[key]} XP</span></div>`).join(''):`<p class="small muted">${ligaCache.err?'Liga tidak dapat dimuat (semak internet). Cuba lagi sebentar.':'Memuat liga…'}</p>`}
+    ${rows?rows.map((r,i)=>`<div class="lrow ${i===meIdx?'me':''}"><span class="pos num" style="${medal(i)};border-radius:50%;width:24px;height:24px;display:grid;place-items:center">${i+1}</span><span class="grow">${esc(r.nama)}${i===meIdx?' (kamu)':''}${r.lencana?` <span class="lc-n" title="${r.lencana} lencana">🏅${r.lencana}</span>`:''}</span><span class="xp num">${+r[key]} XP</span></div>`).join(''):`<p class="small muted">${ligaCache.err?'Liga tidak dapat dimuat (semak internet). Cuba lagi sebentar.':'Memuat liga…'}</p>`}
     <p class="small muted" style="margin-top:10px">${ligaMode==='minggu'?'Kedudukan ikut XP usaha minggu ini; bermula semula setiap Isnin, jadi semua orang ada peluang.':'Jumlah XP sejak liga dibuka.'}${pend?` · ${pend} XP sedang dihantar…`:''}</p>
   </div>`;
 }
@@ -1228,10 +1244,11 @@ function vLaporan(){
   const cur=currentLesson(); const curSP=SPS[cur.n]||[];
   return `
   <header class="band"><div class="inner gut">
-    <div class="row"><div class="grow"><div class="eyebrow">Kad Laporan</div><h1>${esc(state.nama)} · ${esc(state.kelas)}</h1><div class="sub">${bolehSync()?'Disimpan dalam akaun kamu: sama di mana-mana telefon':'Dikemas kini secara automatik selepas setiap kuiz'}</div></div>
+    <div class="row"><div class="grow"><div class="eyebrow">Kad Laporan</div><h1>${esc(state.nama)} · ${esc(state.kelas)}</h1><div class="sub">${bolehSync()?'Disimpan dalam akaun kamu: sama di mana-mana telefon':'Dikemas kini secara automatik selepas setiap kuiz'}</div>${SHEETS&&state.user&&!state.user.guru?lencanaBahu():''}</div>
     <div class="hdr-acts">${themeBtn()}<button class="btn sm gold" data-act="share">Kongsi</button></div></div>
   </div></header>
   <div class="gut stack body" style="padding-top:16px">
+    ${SHEETS&&state.user&&!state.user.guru?lencanaCard():''}
     <div class="card hi">
       <div class="row" style="align-items:flex-start;gap:12px">
         ${pose('clap',92)}
@@ -1280,7 +1297,7 @@ function vLaporan(){
     </div>
 
     ${SHEETS?(()=>{ const H=hafazanSaya(); return `<div class="card"><div class="row" style="gap:14px;align-items:center">${cincin(H.pct,64)}<div class="grow"><div class="eyebrow">Ayat Hafazan Tingkatan 2</div><div class="hz-ringkas">${HAFAZAN_BUKU.map(x=>{ const o=H.st[x.id]; return `<span class="hz-${o.s}">${HZ_LABEL[o.s][0]} Ayat ${x.label}${o.gred&&o.s==='lulus'?' · '+esc(o.gred):''}</span>`; }).join('')}</div></div></div></div>`; })():''}
-    ${SHEETS?lencanaCard():`<div class="card">
+    ${SHEETS?'':`<div class="card">
       <div class="eyebrow" style="margin-bottom:10px">Lencana</div>
       <div class="badges">${badges.map(b=>`<div class="badge ${b.on?'':'lock'}"><div class="b">${b.ic}</div>${esc(b.t)}<div class="muted" style="font-weight:500;font-size:10.5px">${esc(b.s)}</div></div>`).join('')}</div>
     </div>`}
@@ -1473,6 +1490,7 @@ function aiRalat(m){ m=String(m||'');
   if(/HTTP 401|jwt|unauthor/i.test(m)) return 'Fungsi AI menolak panggilan: matikan "Verify JWT with legacy secret" pada fungsi ulasan-ai.';
   if(/tiada_kunci_api/.test(m)) return 'ANTHROPIC_API_KEY belum dimasukkan dalam Supabase → Edge Functions → Secrets.';
   if(/bukan_guru/.test(m)) return 'PIN guru tidak sah. Log keluar dan masuk semula.';
+  if(/format_ai|terpotong/.test(m)) return 'Jawapan AI tidak lengkap untuk beberapa murid. Tekan Draf AI pada murid itu untuk cuba semula.';
   if(/claude_401|authentication/i.test(m)) return 'Kunci Claude API tidak sah. Semak ANTHROPIC_API_KEY.';
   if(/credit|billing|claude_402|claude_400/i.test(m)) return 'Akaun Claude API: semak baki kredit (Plans & Billing) di console.anthropic.com.';
   if(/claude_429|claude_529|overloaded/i.test(m)) return 'Perkhidmatan AI sibuk. Cuba sebentar lagi.';
@@ -1514,10 +1532,13 @@ async function ulDrafAI(ids){
   if(!ids.length) return; UL.busy=true; UL.msg=`Menjana draf AI untuk ${ids.length} murid…`; sheetUlasan();
   const codes=new Set(); for(const r of UL.rows) if(ids.includes(r.akaun_id)) for(const x of [...(r.sp_kuat||[]),...(r.sp_lemah||[])]) codes.add(x.k);
   let ok=0, err='';
-  for(let i=0;i<ids.length;i+=10){
-    try{ const j=await aiPanggil({mod:'ulasan',kelas:UL.kelas,ids:ids.slice(i,i+10),sp_info:spInfo([...codes])});
-      for(const d of (j.draf||[])){ const r=UL.rows.find(x=>x.akaun_id==d.id); if(!r) continue; state.drafUlasan[d.id]={teks:d.ulasan.replace(/\{nama\}/g,namaPanggilan(r.nama)),ai:true}; ok++; } }
-    catch(e){ err=e.message; break; }
+  const terima=j=>{ for(const d of (j.draf||[])){ const r=UL.rows.find(x=>x.akaun_id==d.id); if(!r||!d.ulasan) continue; state.drafUlasan[d.id]={teks:d.ulasan.replace(/\{nama\}/g,namaPanggilan(r.nama)),ai:true}; ok++; } };
+  const tunggal=async id=>{ try{ terima(await aiPanggil({mod:'ulasan',kelas:UL.kelas,ids:[id],sp_info:spInfo([...codes])})); }catch(e){ err=e.message; } };
+  for(let i=0;i<ids.length;i+=6){
+    const kump=ids.slice(i,i+6);
+    try{ const j=await aiPanggil({mod:'ulasan',kelas:UL.kelas,ids:kump,sp_info:spInfo([...codes])}); terima(j);
+      const tiada=kump.filter(id=>!(j.draf||[]).some(d=>d.id==id)); for(const id of tiada) await tunggal(id); }   // draf yang tertinggal: cuba seorang-seorang
+    catch(e){ if(/format_ai|terpotong/.test(e.message)){ for(const id of kump) await tunggal(id); } else { err=e.message; break; } }
     UL.msg=`${ok}/${ids.length} draf siap…`; sheetUlasan();
   }
   save(); UL.busy=false; UL.msg=err?aiRalat(err):`${ok} draf AI siap. Baca dan sunting setiap draf sebelum Sahkan.`; sheetUlasan();
@@ -1679,7 +1700,8 @@ function vGuruLive(){
   const hariLalu=t=>t?Math.floor((now-new Date(t).getTime())/864e5):null;
   const perhatian=ready?GD.akt.map(a=>{ const d=hariLalu(a.terakhir); const why=[]; if(d==null) why.push('belum pernah menjawab'); else if(d>=5) why.push(`tidak aktif ${d} hari`); if(a.sp_lemah>=3) why.push(`${a.sp_lemah} SP di bawah 50%`); else if(a.jawapan_7h>=10&&a.betul_7h/a.jawapan_7h<0.4) why.push(`ketepatan ${Math.round(a.betul_7h/a.jawapan_7h*100)}% minggu ini`); return {n:a.nama,why,d}; }).filter(x=>x.why.length).sort((x,y)=>(y.d??999)-(x.d??999)):[];
   const qText=id=>{ const q=Q[id]; if(!q) return id; return q.q||q.ar||q.w||id; };
-  const sukar=ready?GD.sukar:[];
+  const sukar=ready?(GD.sukar||[]).filter(x=>x.salah>0&&x.salah/x.cubaan>=0.3):[];
+  const lemahSp=avgSp.map((v,i)=>({v,k:spList[i]})).filter(o=>o.v!=null&&o.v<70).sort((a,b)=>a.v-b.v);
   const pelOpts=PELAJARAN.filter(p=>SETS['kuiz'+p.n]||(state.user&&state.user.guru)).map(p=>`<option value="${p.n}" ${p.n===GD.pel?'selected':''}>Pelajaran ${p.n} · ${esc(p.rumi)}</option>`).join('');
   const fmtMs=ms=>ms==null?'—':(ms<1000?ms+' ms':Math.round(ms/1000)+' s');
   return `
@@ -1711,8 +1733,12 @@ function vGuruLive(){
       </div>
       <div class="card hi" style="margin-top:12px">
         <div class="eyebrow">Cerapan automatik</div>
-        ${!ready?'<p class="small muted" style="margin-top:6px">…</p>':weakest?`<h3 style="font-size:16px;margin-top:4px">${esc(SP_NAMA[weakest.k]||weakest.k)} (${esc(weakest.k)}) paling lemah: purata ${weakest.v}%</h3>`:'<p class="small muted" style="margin-top:6px">Belum ada jawapan untuk pelajaran ini dalam kelas ini.</p>'}
-        ${ready&&sukar.length?`<p class="small" style="margin-top:8px;font-weight:700">Soalan paling banyak salah:</p>${sukar.slice(0,5).map(x=>`<div class="student"><div class="av" style="background:color-mix(in srgb,var(--bad) 18%,var(--surface));color:var(--bad);font-size:12px">${Math.round(x.salah/x.cubaan*100)}%</div><div class="grow"><div class="nm" style="font-weight:600;font-size:13.5px">${esc(String(qText(x.soalan_id)).slice(0,140))}</div><div class="why">${esc(x.soalan_id)} · SP ${esc(x.sp_kod||'')} · ${x.salah}/${x.cubaan} salah</div></div></div>`).join('')}<p class="small muted" style="margin-top:6px">Cadangan: bincang 5 minit dalam PdP seterusnya; semak juga jika soalan atau kunci jawapan dalam Sheets betul.</p>`:''}
+        <p class="small muted" style="margin-top:4px">Ringkasan yang dikira sendiri oleh aplikasi daripada jawapan murid ${esc(GD.kelas||'')} bagi Pelajaran ${pel.n}: SP yang paling perlu diulang dan soalan yang paling kerap disalah jawab.</p>
+        ${!ready?'<p class="small muted" style="margin-top:6px">…</p>':!weakest?'<p class="small muted" style="margin-top:6px">Belum ada jawapan untuk pelajaran ini dalam kelas ini.</p>'
+          :lemahSp.length?`<h3 style="font-size:16px;margin-top:8px">Paling perlu diulang: ${esc(SP_NAMA[lemahSp[0].k]||lemahSp[0].k)} (${esc(lemahSp[0].k)}), purata ${lemahSp[0].v}%</h3>${lemahSp.length>1?`<p class="small" style="margin-top:4px">SP lain di bawah 70%: ${lemahSp.slice(1).map(o=>`${esc(o.k)} (${o.v}%)`).join(', ')}</p>`:''}`
+          :`<h3 style="font-size:16px;margin-top:8px">Semua SP pelajaran ini dikuasai (purata kelas 70% ke atas).</h3><p class="small muted" style="margin-top:4px">Terendah: ${esc(SP_NAMA[weakest.k]||weakest.k)} (${esc(weakest.k)}), ${weakest.v}%.</p>`}
+        ${ready&&weakest?(sukar.length?`<p class="small" style="margin-top:10px;font-weight:700">Soalan paling kerap disalah jawab:</p>${sukar.slice(0,5).map(x=>`<div class="student"><div class="av" style="background:color-mix(in srgb,var(--bad) 18%,var(--surface));color:var(--bad);font-size:12px">${Math.round(x.salah/x.cubaan*100)}%</div><div class="grow"><div class="nm" style="font-weight:600;font-size:13.5px">${esc(String(qText(x.soalan_id)).slice(0,140))}</div><div class="why">${esc(x.soalan_id)} · SP ${esc(x.sp_kod||'')} · ${x.salah} daripada ${x.cubaan} cubaan salah</div></div></div>`).join('')}<p class="small muted" style="margin-top:6px">Cadangan: bincang 5 minit dalam PdP seterusnya; jika hampir semua murid salah, semak juga soalan atau kunci jawapan dalam Sheets.</p>`
+          :'<p class="small muted" style="margin-top:8px">Tiada soalan yang kerap disalah jawab (30% atau lebih salah, sekurang-kurangnya 3 cubaan).</p>'):''}
       </div>
       ${gPesanCard()}
       ${gUlasanCard()}
@@ -2259,6 +2285,8 @@ document.addEventListener('click',e=>{
   else if(act==='quiz-close'){ closeQuiz(); }
   else if(act==='pick'){ answer(+el.dataset.k); }
   else if(act==='g-login'){ gateLogin(); }
+  else if(act==='lc-semua'){ state.lcBuka=!state.lcBuka; render(); if(state.lcBuka){ const el=document.getElementById('lencana'); if(el) el.scrollIntoView({block:'start',behavior:'smooth'}); } }
+  else if(act==='lc-lihat'){ e.preventDefault&&e.preventDefault(); const el=document.getElementById('lencana'); if(el) el.scrollIntoView({block:'start',behavior:'smooth'}); }
   else if(act==='ul-buka'){ bukaUlasan(); }
   else if(act==='ul-ai'){ ulDrafAI([+el.dataset.id]); }
   else if(act==='ul-ai-semua'){ const D=state.drafUlasan||{}; ulDrafAI((UL.rows||[]).filter(r=>!D[r.akaun_id]&&(!r.ulasan_at||Date.now()-new Date(r.ulasan_at)>6*864e5)).map(r=>r.akaun_id)); }

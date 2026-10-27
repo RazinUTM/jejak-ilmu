@@ -55,6 +55,43 @@ async function claude(system: string, user: string, maxTokens: number): Promise<
   return (j.content || []).filter((b: { type: string }) => b.type === 'text').map((b: { text: string }) => b.text).join('');
 }
 
+// Output berstruktur: model dipaksa memanggil alat ini, jadi hasilnya sentiasa JSON yang sah.
+const ALAT_DRAF = {
+  name: 'simpan_draf',
+  description: 'Simpan satu draf ulasan bagi setiap murid yang diberi.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      draf: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: { id: { type: 'integer', description: 'Nombor murid, contoh 113 bagi Murid #113' }, ulasan: { type: 'string', description: 'Draf ulasan, bermula dengan {nama}' } },
+          required: ['id', 'ulasan'],
+        },
+      },
+    },
+    required: ['draf'],
+  },
+};
+
+async function claudeAlat(system: string, user: string, maxTokens: number): Promise<{ draf: Array<{ id: number; ulasan: string }>; stop: string }> {
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+    body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, system, messages: [{ role: 'user', content: user }],
+      tools: [ALAT_DRAF], tool_choice: { type: 'tool', name: ALAT_DRAF.name } }),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(`claude_${r.status}: ${clean(j?.error?.message, 160)}`);
+  const blok = (j.content || []).find((b: { type: string; name?: string }) => b.type === 'tool_use' && b.name === ALAT_DRAF.name);
+  if (blok && blok.input && Array.isArray(blok.input.draf)) return { draf: blok.input.draf, stop: j.stop_reason };
+  // Sandaran: cuba baca JSON daripada teks biasa
+  const text = (j.content || []).filter((b: { type: string }) => b.type === 'text').map((b: { text: string }) => b.text).join('');
+  const a = text.indexOf('['), z = text.lastIndexOf(']');
+  try { return { draf: JSON.parse(text.slice(a, z + 1)), stop: j.stop_reason }; } catch (_) { throw new Error(j.stop_reason === 'max_tokens' ? 'terpotong' : 'format_ai'); }
+}
+
 type SpInfo = Record<string, { n?: string; p?: number | null }>;
 type SpRow = { k: string; m: number; c: number };
 
@@ -71,7 +108,7 @@ Peraturan:
 - Boleh akhiri dengan doa atau kata semangat pendek (contoh: "Semoga Allah mudahkan."). Jangan petik ayat al-Quran atau hadis.
 - Kod SP seperti 4.10.5 boleh disebut bersama huraiannya jika ada; jika tiada huraian, sebut "SP 4.10.5".
 
-Balas dengan JSON SAHAJA, tanpa teks lain: [{"id": <nombor murid>, "ulasan": "<teks>"}, ...] untuk setiap murid yang diberi.`;
+Hantar hasil melalui alat simpan_draf: satu item bagi setiap murid yang diberi, dengan id = nombor murid.`;
 
 function spText(arr: SpRow[] | null, info: SpInfo): string {
   if (!arr || !arr.length) return 'tiada';
@@ -85,7 +122,7 @@ async function ulasan(key: string, cred: Record<string, string>, b: Record<strin
   const rows = await rpc(key, 'guru_ulasan_senarai', { ...cred, p_kelas_tapis: clean(b.kelas, 40) });
   if (!Array.isArray(rows)) return { ok: false, ralat: 'data' };
   const want = new Set((Array.isArray(b.ids) ? b.ids : []).map(Number));
-  const pick = rows.filter((r: { akaun_id: number }) => want.has(Number(r.akaun_id))).slice(0, 12);
+  const pick = rows.filter((r: { akaun_id: number }) => want.has(Number(r.akaun_id))).slice(0, 8);
   if (!pick.length) return { ok: true, draf: [] };
   const info = (b.sp_info && typeof b.sp_info === 'object' ? b.sp_info : {}) as SpInfo;
   const data = pick.map((r: Record<string, any>) => {
@@ -95,14 +132,11 @@ async function ulasan(key: string, cred: Record<string, string>, b: Record<strin
       `SP kuat: ${spText(r.sp_kuat, info)}. SP perlu ulang: ${spText(r.sp_lemah, info)}.`;
   }).join('\n');
   const user = `Ayat hafazan buku teks: Surah Ali Imran ayat 8, 18, 26 dan 27.\n\nData murid:\n${data}\n\nTulis satu draf ulasan bagi setiap murid di atas.`;
-  const text = await claude(SISTEM_ULASAN, user, 1800);
-  const a = text.indexOf('['), z = text.lastIndexOf(']');
-  let arr: Array<{ id: number; ulasan: string }> = [];
-  try { arr = JSON.parse(text.slice(a, z + 1)); } catch (_) { return { ok: false, ralat: 'format_ai' }; }
+  const { draf: arr, stop } = await claudeAlat(SISTEM_ULASAN, user, 600 + 350 * pick.length);
   const ids = new Set(pick.map((r: { akaun_id: number }) => Number(r.akaun_id)));
   const draf = arr.filter((x) => x && ids.has(Number(x.id)) && typeof x.ulasan === 'string')
     .map((x) => ({ id: Number(x.id), ulasan: x.ulasan.trim().slice(0, 700) }));
-  return { ok: true, draf, model: MODEL };
+  return { ok: true, draf, model: MODEL, lengkap: stop !== 'max_tokens' };
 }
 
 const SISTEM_REFLEKSI = `Anda membantu seorang guru Pendidikan Islam Tingkatan 2 di Malaysia menulis DRAF refleksi PdP (seperti ruangan refleksi dalam Rancangan Pengajaran Harian) berdasarkan data aktiviti murid dalam aplikasi Jejak Ilmu. Guru akan menyemak dan menyunting.
