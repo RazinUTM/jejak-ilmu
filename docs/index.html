@@ -262,14 +262,21 @@ p{margin:0}
 .heat i.l2{background:color-mix(in srgb,var(--accent) 55%,var(--surface-2))}
 .heat i.l3{background:var(--accent)}
 .badges{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.bahu-kad{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.bahu-kad .m{width:38px;height:38px;font-size:18px}
 .bahu{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:12px;text-decoration:none}
-.bahu .m,.medali .m{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:15px;font-weight:800;background:radial-gradient(circle at 35% 30%,#ffeaa6,#e3b448 55%,#a8781c);color:#3d2a05;box-shadow:0 0 0 2px rgba(255,255,255,.75),0 2px 6px rgba(0,0,0,.25)}
-.bahu .m.jawi,.medali .m.jawi{font-family:var(--arab,serif);font-size:16px}
+.bahu .m,.medali .m,.bahu-kad .m{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:15px;font-weight:800;background:radial-gradient(circle at 35% 30%,#ffeaa6,#e3b448 55%,#a8781c);color:#3d2a05;box-shadow:0 0 0 2px rgba(255,255,255,.75),0 2px 6px rgba(0,0,0,.25)}
+.bahu .m.jawi,.medali .m.jawi,.bahu-kad .m.jawi{font-family:var(--arab,serif);font-size:16px}
 .bahu .lbl{font-size:12.5px;font-weight:800;color:#fff;opacity:.95;margin-left:2px}
 .medali{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:10px;margin-top:12px}
 .medali>div{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
 .medali .m{width:46px;height:46px;font-size:21px}.medali b{font-size:11.5px;line-height:1.2}
 .lc-n{font-size:11.5px;font-weight:800;color:var(--gold-text);background:var(--gold-soft);border-radius:999px;padding:1px 6px;margin-left:4px;white-space:nowrap}
+.kemaskini{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;gap:10px;align-items:center;background:var(--fg);color:var(--bg);padding:10px 12px 10px 16px;border-radius:999px;box-shadow:var(--shadow);font-size:13.5px;font-weight:700;max-width:calc(100% - 32px)}
+.kemaskini button{background:var(--gold);color:#2a1d05;border:0;border-radius:999px;padding:7px 12px;font-weight:800;font-size:13px}
+@media (min-width:900px){ .kemaskini{bottom:24px} }
+.cb-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:14px 2px 0}.cb-h h2{font-size:17px}
+.cb-status{border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}.cb-status.ok{border-color:color-mix(in srgb,var(--good) 50%,var(--line));color:var(--good)}
 .lc-kat{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
 .lc-grid{display:grid;grid-template-columns:1fr;gap:8px}
 @media (min-width:700px){ .lc-grid{grid-template-columns:1fr 1fr} }
@@ -331,8 +338,8 @@ table.ht td.c{font-weight:800;min-width:44px}
 .field textarea{min-height:88px;resize:vertical}
 .g-side{display:flex;flex-direction:column}
 @media (min-width:900px){
-  .view-guru .body{display:grid;grid-template-columns:minmax(0,1fr) 360px;grid-template-areas:"cerapan side" "heat side" "tindak side";gap:0 20px;align-items:start}
-  .g-cerapan{grid-area:cerapan}.g-heat{grid-area:heat}.g-side{grid-area:side}.g-tindak{grid-area:tindak}
+  .view-guru .body{display:grid;grid-template-columns:minmax(0,1fr) 360px;grid-template-areas:"tasmik tasmik" "cerapan side" "heat side" "tindak side";gap:0 20px;align-items:start}
+  .g-tasmik{grid-area:tasmik}.g-cerapan{grid-area:cerapan}.g-heat{grid-area:heat}.g-side{grid-area:side}.g-tindak{grid-area:tindak}
   .g-tindak .stack{flex-direction:row;flex-wrap:wrap}
   .g-tindak .btn.block{width:auto;flex:1}
 }
@@ -851,6 +858,14 @@ function lencanaBahu(){
   const L=senaraiLencana(); const got=L.filter(x=>x.ok);
   return `<a class="bahu" href="#lencana" data-act="lc-lihat" aria-label="${got.length} lencana diperoleh">${got.length?got.slice(0,10).map(x=>`<span class="m ${/[\u0600-\u06FF]/.test(x.ic)?'jawi':''}" title="${esc(x.t)}">${x.ic}</span>`).join('')+(got.length>10?`<span class="lbl">+${got.length-10}</span>`:''):''}<span class="lbl">${got.length?`${got.length} lencana`:'Belum ada lencana: lihat cara dapat'}</span></a>`;
 }
+function lencanaRingkas(){
+  const L=senaraiLencana(); const got=L.filter(x=>x.ok); const seterus=L.filter(x=>!x.ok).sort((a,b)=>(b.n/b.max)-(a.n/a.max))[0];
+  return `<div class="card gold" id="lencana"><div class="row" style="justify-content:space-between"><div class="eyebrow">Lencana kamu</div><span class="pill gold">${got.length}/${L.length}</span></div>
+    ${got.length?`<div class="bahu-kad">${got.map(x=>`<span class="m ${/[\u0600-\u06FF]/.test(x.ic)?'jawi':''}" title="${esc(x.t)}">${x.ic}</span>`).join('')}</div>`:'<p class="small" style="margin-top:8px">Belum ada lencana lagi.</p>'}
+    ${seterus?`<p class="small" style="margin-top:8px">Seterusnya: <b>${esc(seterus.t)}</b> · ${esc(seterus.cara)} (${seterus.unit?`terbaik ${Math.min(seterus.n,100)}%`:`${Math.min(seterus.n,seterus.max)}/${seterus.max}`})</p>`:'<p class="small" style="margin-top:8px">Masya-Allah, semua lencana sudah diperoleh!</p>'}
+    <button class="btn sm ghost" data-act="nav" data-v="cabaran" style="margin-top:10px">Semua lencana dan cara dapat: tab Cabaran →</button>
+  </div>`;
+}
 function lencanaCard(){
   const L=senaraiLencana(); const ok=L.filter(x=>x.ok).length;
   const hampir=L.filter(x=>!x.ok).sort((a,b)=>(b.n/b.max)-(a.n/a.max)).slice(0,3);
@@ -867,6 +882,7 @@ const doneToday=()=>state.dailyDate?state.dailyDate===todayKey():!!(state.dailyD
 const todayKey=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 function logAktiviti(xp){ if(!state.aktiviti) state.aktiviti={}; const k=todayKey(); const had=!!state.aktiviti[k]; state.aktiviti[k]=(state.aktiviti[k]||0)+xp; if(!had){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); state.streak=state.aktiviti[yk]?(state.streak||0)+1:1; state.usaha.hariAktif=Object.keys(state.aktiviti).filter(d=>d.slice(0,7)===k.slice(0,7)).length; } }
 let ULASAN=[]; let HAFAZAN=[];
+const APP_VERSION='2026-10-27c';
 const ZON={timeZone:'Asia/Kuala_Lumpur'};
 const jamAMPM=t=>new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true,...ZON});
 const tarikhJam=t=>new Date(t).toLocaleDateString('ms-MY',{day:'numeric',month:'short',...ZON})+', '+jamAMPM(t);
@@ -1177,33 +1193,63 @@ function vCabaran(){
     {set:'sirah',ic:'622',hue:'#2a9d8f',t:'Garis Masa Sirah',d:'Faktor dan kronologi Hijrah (Pelajaran 21). Pratonton.'},
     {set:'dilema',ic:'?',hue:'#e07a3a',t:'Dilema Akhlak',d:'Soalan KBAT berbentuk situasi. Fikir, pilih, baca justifikasi.'},
   ];
+  const murid=SHEETS&&state.user&&!state.user.guru;
+  const L=murid?senaraiLencana():[]; const lc=k=>L.find(x=>x.id===k||x.set===k);
+  const okN=L.filter(x=>x.ok).length;
+  const badgeLine=x=>!x?'':`<div class="lc-line ${x.ok?'on':''}">🏅 <b>${esc(x.t)}</b> · ${x.ok?'diperoleh ✓':`sasaran ${x.max}${x.unit||''} · ${x.unit?'terbaik '+Math.min(x.n,100)+'%':Math.min(x.n,x.max)+'/'+x.max}`}</div>${x.ok?'':`<div class="bar thin" style="margin-top:4px"><i style="width:${Math.min(100,Math.round(x.n/x.max*100))}%"></i></div>`}`;
+  const items=murid?misiItems():[]; const wajibOk=items.filter(x=>x.ok).length; const semuaOk=items.length&&wajibOk===items.length;
+  const H=murid?hafazanSaya():null;
   return `
   <header class="band"><div class="inner gut">
-    <div class="row"><div class="grow"><div class="eyebrow">Cabaran</div><h1>Pilih mod permainan</h1><div class="sub">Setiap mod melatih kemahiran berbeza. Skor terbaik disimpan untuk lencana.</div></div><div class="hdr-acts">${themeBtn()}</div></div>
+    <div class="row"><div class="grow"><div class="eyebrow">Cabaran · pilihan</div><h1>Latihan tambahan &amp; lencana</h1><div class="sub">${SHEETS?'Untuk yang sudah siap misi wajib dan mahu mencuba lagi. Semua di sini pilihan; setiap usaha dikira untuk lencana.':'Setiap mod melatih kemahiran berbeza. Skor terbaik disimpan untuk lencana.'}</div>${murid?lencanaBahu():''}</div><div class="hdr-acts">${themeBtn()}</div></div>
   </div></header>
   <div class="gut stack body" style="padding-top:16px">
-    ${SHEETS&&state.user&&!state.user.guru?(()=>{ const L=senaraiLencana().filter(x=>x.kat==='Cabaran'); const ok=L.filter(x=>x.ok).length; return `<div class="card gold"><div class="row" style="justify-content:space-between"><div class="eyebrow">Lencana Cabaran</div><span class="pill gold">${ok}/${L.length}</span></div>
-      <p class="small" style="margin-top:6px">Setiap mod ada satu lencana. Capai sasaran sekali sahaja, lencana kekal milik kamu.</p>
-      <div class="lc-mini" style="margin-top:8px">${L.map(x=>`<span class="${x.ok?'on':''}">${x.ic} ${esc(x.t)} <i>${x.ok?'✓':x.unit?x.n+'%/'+x.max+'%':x.n+'/'+x.max}</i></span>`).join('')}</div></div>`; })():''}
+    ${murid?(semuaOk?`<div class="card cb-status ok"><b>✓ Misi wajib hari ini selesai.</b> Pilih mana-mana cabaran di bawah untuk XP dan lencana tambahan.</div>`
+      :`<div class="card cb-status"><div class="row" style="gap:10px;align-items:center"><div class="grow"><b>Misi wajib hari ini: ${wajibOk}/${items.length} siap.</b><div class="small muted" style="margin-top:2px">Siapkan misi wajib di Utama dahulu. Cabaran di sini ialah tambahan.</div></div><button class="btn sm" data-act="nav" data-v="utama">Ke misi wajib</button></div></div>`):''}
+
+    <div class="cb-h"><h2>1 · Mod permainan</h2><span class="small muted">${murid?'Setiap mod ada satu lencana':'Skor terbaik disimpan'}</span></div>
+    ${modes.filter(m=>SETS[m.set]).map(m=>`<button class="mode" data-act="quiz" data-set="${m.set}">
+      <div class="ic ${m.cls||''}" style="background:color-mix(in srgb,${m.hue} 18%,var(--surface));color:${m.hue}">${m.ic}</div>
+      <div class="grow"><h3>${esc(m.t)}</h3><div class="d">${esc(m.d)}</div>${murid?badgeLine(lc(m.set)):''}</div>
+      <div class="best">${state.best[m.set]?('Terbaik '+esc(state.best[m.set])):'Baharu'}</div>
+    </button>`).join('')}
+    ${murid?`<button class="mode" data-act="quiz" data-set="harian">
+      <div class="ic" style="background:color-mix(in srgb,#7b58d6 18%,var(--surface));color:#7b58d6">⚡</div>
+      <div class="grow"><h3>Ulang Cabaran Harian</h3><div class="d">Soalan campuran baharu setiap kali. Cuba dapatkan 100%.</div>${badgeLine(lc('juara'))}</div>
+      <div class="best">${state.best.harian?'Terbaik '+esc(state.best.harian):'Baharu'}</div>
+    </button>
+    <button class="mode" data-act="nav" data-v="peta">
+      <div class="ic" style="background:color-mix(in srgb,#2a9d8f 18%,var(--surface));color:#2a9d8f">★</div>
+      <div class="grow"><h3>Ulang kaji Kuiz Pelajaran</h3><div class="d">Tab Peta: pilih pelajaran yang sudah dibuka dan ulang kuiznya.</div>${badgeLine(lc('sempurna'))}</div>
+      <div class="best">Peta →</div>
+    </button>`:''}
+
+    ${murid?`<div class="cb-h"><h2>2 · Hafazan</h2><span class="small muted">4 ayat Tingkatan 2 · ${H.pct}%</span></div>
     <button class="mode" data-act="tasmik" style="border-color:color-mix(in srgb,var(--gold) 50%,var(--line))">
+      <div class="ic" style="background:var(--gold-soft);color:var(--gold-text)">🎙</div>
+      <div class="grow"><h3>Rakam Tasmik</h3><div class="d">Pilih ayat, rakam tanpa melihat teks, hantar kepada Ustazah. ${H.lulus}/4 ayat lulus.</div></div>
+      <div class="best">${Math.max(state.usaha.hafazan||0,(tSaya.rows||[]).length)} dihantar</div>
+    </button>
+    <div class="lc-grid">${L.filter(x=>x.kat==='Hafazan').map(lcTile).join('')}</div>
+
+    <div class="cb-h"><h2>3 · Lencana usaha</h2><span class="small muted">Dapat sendiri bila kamu rajin</span></div>
+    <div class="lc-grid">${L.filter(x=>x.kat==='Usaha').map(lcTile).join('')}</div>
+    <p class="small muted" style="margin-top:4px">Lencana yang sudah diperoleh kekal walaupun streak terputus. Jumlah lencana kamu (${okN}/${L.length}) dipaparkan di Kad Laporan dan Liga kelas.</p>`
+    :`<button class="mode" data-act="tasmik" style="border-color:color-mix(in srgb,var(--gold) 50%,var(--line))">
       <div class="ic" style="background:var(--gold-soft);color:var(--gold-text)">🎙</div>
       <div class="grow"><h3>Rakam Tasmik</h3><div class="d">Rakam hafazan dengan suara sendiri, hantar kepada Ustazah. Teks disembunyikan semasa rakaman.</div></div>
       <div class="best">${state.usaha.hafazan} dihantar</div>
-    </button>
-    ${modes.filter(m=>SETS[m.set]).map(m=>`<button class="mode" data-act="quiz" data-set="${m.set}">
-      <div class="ic ${m.cls||''}" style="background:color-mix(in srgb,${m.hue} 18%,var(--surface));color:${m.hue}">${m.ic}</div>
-      <div class="grow"><h3>${esc(m.t)}</h3><div class="d">${esc(m.d)}</div>${(()=>{ if(!SHEETS||!state.user||state.user.guru) return ''; const x=senaraiLencana().find(l=>l.set===m.set); if(!x) return ''; return `<div class="lc-line ${x.ok?'on':''}">🏅 <b>${esc(x.t)}</b> · ${x.ok?'diperoleh ✓':`sasaran ${x.max}% · terbaik ${Math.min(x.n,100)}%`}</div>${x.ok?'':`<div class="bar thin" style="margin-top:4px"><i style="width:${Math.min(100,Math.round(x.n/x.max*100))}%"></i></div>`}`; })()}</div>
-      <div class="best">${state.best[m.set]?('Terbaik '+esc(state.best[m.set])):'Baharu'}</div>
-    </button>`).join('')}
-    <div class="card" style="margin-top:4px">
+    </button>`}
+    ${SHEETS?'':`<div class="card" style="margin-top:4px">
       <div class="eyebrow">Boss Battle · Bidang Fiqah</div>
       <h3 style="font-size:16px;margin-top:4px">20 soalan campuran Pelajaran 14–19</h3>
       <p class="small muted" style="margin-top:4px">Dibuka selepas Pelajaran 19 siap. Lulus 80% untuk lencana <b>Faqih Muda</b>.</p>
       <div class="bar" style="margin-top:10px"><i style="width:50%"></i></div>
       <p class="small muted" style="margin-top:6px">3 daripada 6 pelajaran siap</p>
-    </div>
+    </div>`}
   </div>`;
 }
+
 
 function radarSVG(){
   const vals=BIDANG.map(b=>state.bidangM[b.id]||0);
@@ -1248,7 +1294,6 @@ function vLaporan(){
     <div class="hdr-acts">${themeBtn()}<button class="btn sm gold" data-act="share">Kongsi</button></div></div>
   </div></header>
   <div class="gut stack body" style="padding-top:16px">
-    ${SHEETS&&state.user&&!state.user.guru?lencanaCard():''}
     <div class="card hi">
       <div class="row" style="align-items:flex-start;gap:12px">
         ${pose('clap',92)}
@@ -1266,16 +1311,22 @@ function vLaporan(){
       <p class="small muted" style="margin-top:10px">${u.kuizUlang?`${u.kuizUlang} kali kamu ulang kuiz yang sama sampai faham. Itu tabiat pelajar yang akan berjaya.`:'Setiap soalan yang kamu cuba dikira di sini, betul atau salah.'}</p>
     </div>
 
+    ${SHEETS&&state.user&&!state.user.guru?lencanaRingkas():''}
+
     ${ulasan?`<div class="card">
       <div class="ulasan">${ust('m')}<div class="grow"><div class="eyebrow">Ulasan Ustazah${ulasan.tarikh?' · '+esc(ulasan.tarikh):' · minggu ini'}</div><p class="q" style="margin-top:4px">${esc(ulasan.teks)}</p><span class="wordmark sig">${UST.nama}</span></div></div>
     </div>`:auto?`<div class="card">
       <div class="ulasan">${pose('think',64)}<div class="grow"><div class="eyebrow">Ulasan automatik · daripada aktiviti kamu</div><p class="q" style="margin-top:4px">${esc(auto)}</p><p class="small muted" style="margin-top:6px">Dijana oleh aplikasi, bukan ditulis Ustazah. Ulasan Ustazah sendiri akan menggantikannya bila ada.</p></div></div>
     </div>`:''}
 
+    ${SHEETS?(()=>{ const H=hafazanSaya(); return `<div class="card"><div class="row" style="gap:14px;align-items:center">${cincin(H.pct,64)}<div class="grow"><div class="eyebrow">Ayat Hafazan Tingkatan 2</div><div class="hz-ringkas">${HAFAZAN_BUKU.map(x=>{ const o=H.st[x.id]; return `<span class="hz-${o.s}">${HZ_LABEL[o.s][0]} Ayat ${x.label}${o.gred&&o.s==='lulus'?' · '+esc(o.gred):''}</span>`; }).join('')}</div></div></div></div>`; })():''}
+
+    ${SB&&creds()&&!state.user.guru?tasmikSayaCard():''}
+
     <div class="card">
-      <div class="eyebrow">Penguasaan mengikut bidang</div>
-      ${radarSVG()}
-      <p class="small muted">${SHEETS?'Dikira daripada kuiz yang kamu jawab. "belum" bermaksud belum ada kuiz dicuba dalam bidang itu.':'Sirah dan Akhlak belum dibuka. Fiqah paling rendah (61%) kerana Pelajaran 16 masih berjalan.'}</p>
+      <div class="row" style="justify-content:space-between;margin-bottom:6px"><div class="eyebrow">Pelajaran ${cur.n} · Standard Pembelajaran</div><span class="pill acc">${cur.m==null?'belum':cur.m+'%'}</span></div>
+      ${SHEETS?(curSP.length?curSP.map(sp=>{ const m=state.sp[sp.k]; const t=tp(m); return `<div class="sprow"><code>${sp.k}</code><div class="n">${esc(sp.n)}<small>${m==null?'Belum dicuba':m+'% · '+(m<55?'perlu ulang kaji':m<70?'sederhana':'baik')}</small><div class="bar thin" style="margin-top:6px"><i style="width:${m||0}%"></i></div></div><span class="pill ${t.c}">${t.k}</span></div>`; }).join(''):'<p class="small muted">Tiada kod SP untuk pelajaran ini dalam helaian SP.</p>'):rows}
+      <p class="small muted" style="margin-top:10px">≈TP ialah <b>cadangan</b> daripada kuiz, maksimum TP3 (tahu, faham, boleh buat). TP4–TP6 memerlukan pemerhatian adab dan amali oleh guru, bukan skor kuiz. Peperiksaan sebenar tetap bertulis.</p>
     </div>
 
     ${weak.length?`<div class="card"><div class="row" style="align-items:flex-start;gap:12px">${pose('think',84)}<div class="grow"><div class="eyebrow">Fokus minggu ini</div>
@@ -1284,19 +1335,17 @@ function vLaporan(){
       <div class="row" style="margin-top:10px">${SHEETS?(()=>{ const pn=(Object.keys(SPS).find(n=>(SPS[n]||[]).some(x=>x.k===weak[0].k))||cur.n); return SETS['kuiz'+pn]?`<button class="btn sm" data-act="quiz" data-set="kuiz${pn}">Kuiz Pelajaran ${pn}</button>`:''; })():`<button class="btn sm" data-act="quiz" data-set="kuiz16">Kuiz Pelajaran 16</button><button class="btn sm ghost" data-act="nota" data-n="16">Nota Ustazah</button>`}</div></div>`:''}
 
     <div class="card">
-      <div class="row" style="justify-content:space-between;margin-bottom:6px"><div class="eyebrow">Pelajaran ${cur.n} · Standard Pembelajaran</div><span class="pill acc">${cur.m==null?'belum':cur.m+'%'}</span></div>
-      ${SHEETS?(curSP.length?curSP.map(sp=>{ const m=state.sp[sp.k]; const t=tp(m); return `<div class="sprow"><code>${sp.k}</code><div class="n">${esc(sp.n)}<small>${m==null?'Belum dicuba':m+'% · '+(m<55?'perlu ulang kaji':m<70?'sederhana':'baik')}</small><div class="bar thin" style="margin-top:6px"><i style="width:${m||0}%"></i></div></div><span class="pill ${t.c}">${t.k}</span></div>`; }).join(''):'<p class="small muted">Tiada kod SP untuk pelajaran ini dalam helaian SP.</p>'):rows}
-      <p class="small muted" style="margin-top:10px">≈TP ialah <b>cadangan</b> daripada kuiz, maksimum TP3 (tahu, faham, boleh buat). TP4–TP6 memerlukan pemerhatian adab dan amali oleh guru, bukan skor kuiz. Peperiksaan sebenar tetap bertulis.</p>
+      <div class="eyebrow">Penguasaan mengikut bidang</div>
+      ${radarSVG()}
+      <p class="small muted">${SHEETS?'Dikira daripada kuiz yang kamu jawab. "belum" bermaksud belum ada kuiz dicuba dalam bidang itu.':'Sirah dan Akhlak belum dibuka. Fiqah paling rendah (61%) kerana Pelajaran 16 masih berjalan.'}</p>
     </div>
 
-    ${SB&&creds()&&!state.user.guru?tasmikSayaCard():''}
     <div class="card">
       <div class="row" style="justify-content:space-between;margin-bottom:10px"><div class="eyebrow">Konsistensi · 8 minggu</div><span class="pill gold">🔥 ${state.streak} hari</span></div>
       <div class="heat" aria-label="Aktiviti harian 8 minggu">${SHEETS?heatReal():heatCells()}</div>
       <p class="small muted" style="margin-top:8px">Setiap petak = satu hari (56 hari terakhir). Lebih gelap, lebih banyak XP.${SHEETS?'':' Streak boleh dibekukan sekali seminggu (cuti, sakit) supaya tidak jadi tekanan.'}</p>
     </div>
 
-    ${SHEETS?(()=>{ const H=hafazanSaya(); return `<div class="card"><div class="row" style="gap:14px;align-items:center">${cincin(H.pct,64)}<div class="grow"><div class="eyebrow">Ayat Hafazan Tingkatan 2</div><div class="hz-ringkas">${HAFAZAN_BUKU.map(x=>{ const o=H.st[x.id]; return `<span class="hz-${o.s}">${HZ_LABEL[o.s][0]} Ayat ${x.label}${o.gred&&o.s==='lulus'?' · '+esc(o.gred):''}</span>`; }).join('')}</div></div></div></div>`; })():''}
     ${SHEETS?'':`<div class="card">
       <div class="eyebrow" style="margin-bottom:10px">Lencana</div>
       <div class="badges">${badges.map(b=>`<div class="badge ${b.on?'':'lock'}"><div class="b">${b.ic}</div>${esc(b.t)}<div class="muted" style="font-weight:500;font-size:10.5px">${esc(b.s)}</div></div>`).join('')}</div>
@@ -1354,20 +1403,22 @@ function tasmikSayaCard(){
   const rows=tSaya.rows;
   return `<div class="card" id="tsaya">
     <div class="row" style="justify-content:space-between"><div class="eyebrow">Tasmik saya · maklum balas Ustazah</div><button class="btn sm gold" data-act="tasmik">Rakam</button></div>
-    ${!rows?`<p class="small muted" style="margin-top:8px">${tSaya.err?'Tidak dapat dimuat.':'Memuat…'}</p>`:rows.length?rows.slice(0,8).map(t=>`<div class="student"><div class="av" style="${t.gred?'background:var(--good);color:#fff':'background:var(--gold-soft);color:var(--gold-text)'}">${t.gred?esc(String(t.gred).replace(/^TP/,'')):'…'}</div><div class="grow"><div class="nm">${esc(t.rujukan||'Hafazan')} <span class="small muted" style="font-weight:600">· ${new Date(t.created_at).toLocaleDateString('ms-MY',{day:'numeric',month:'short'})} · ${fmt(t.durasi_s||0)}${t.intai?` · intai ${t.intai}×`:''}</span></div><div class="why">${t.disemak_at?(t.gred?`<b>${esc(t.gred)}</b> · `:'')+esc(t.komen||'Sudah didengar oleh Ustazah.'):'Menunggu Ustazah mendengar.'}</div></div></div>`).join(''):'<p class="small muted" style="margin-top:8px">Belum ada tasmik dihantar. Tekan Rakam.</p>'}
+    ${!rows?`<p class="small muted" style="margin-top:8px">${tSaya.err?'Tidak dapat dimuat.':'Memuat…'}</p>`:rows.length?rows.slice(0,4).map(t=>`<div class="student"><div class="av" style="${t.gred?'background:var(--good);color:#fff':'background:var(--gold-soft);color:var(--gold-text)'}">${t.gred?esc(String(t.gred).replace(/^TP/,'')):'…'}</div><div class="grow"><div class="nm">${esc(t.rujukan||'Hafazan')} <span class="small muted" style="font-weight:600">· ${new Date(t.created_at).toLocaleDateString('ms-MY',{day:'numeric',month:'short'})} · ${fmt(t.durasi_s||0)}${t.intai?` · intai ${t.intai}×`:''}</span></div><div class="why">${t.disemak_at?(t.gred?`<b>${esc(t.gred)}</b> · `:'')+esc(t.komen||'Sudah didengar oleh Ustazah.'):'Menunggu Ustazah mendengar.'}</div></div></div>`).join(''):'<p class="small muted" style="margin-top:8px">Belum ada tasmik dihantar. Tekan Rakam.</p>'}
   </div>`;
 }
-let gT={tapis:'belum',rows:null,t:0,err:false,cur:null,gred:null};
+let gT={tapis:'belum',rows:null,t:0,err:false,cur:null,gred:null,penuh:false};
 async function refreshGT(force){ if(!force&&gT.rows&&Date.now()-gT.t<30000) return; try{ const r=await rpc('guru_tasmik',{...creds(),p_kelas_tapis:(gT.tapis==='belum'||gT.tapis==='semua')?null:gT.tapis}); gT.rows=Array.isArray(r)?r:[]; gT.t=Date.now(); gT.err=false; }catch(e){ gT.err=true; gT.t=Date.now(); } const el=document.getElementById('gtasmik'); if(el) el.outerHTML=gTasmikCard(); }
 function gTasmikCard(){
   setTimeout(()=>refreshGT(),0);
   const all=gT.rows; const rows=all?(gT.tapis==='belum'?all.filter(t=>!t.disemak_at):all):null; const belum=all?all.filter(t=>!t.disemak_at).length:0;
   const kls=KELAS_CFG.filter(k=>!/lain/i.test(k));
+  const tunjuk=rows?(gT.penuh?rows.slice(0,40):rows.slice(0,4)):null;
   return `<div class="section" id="gtasmik">
-    <div class="head"><h2>Peti Tasmik</h2><span class="pill ${belum?'warn':'good'}">${all?belum+' belum didengar':'…'}</span></div>
-    <div class="card tight">
+    <div class="head"><h2>Peti Tasmik</h2><span class="pill ${belum?'warn':'good'}">${all?(belum?belum+' belum didengar':'semua sudah didengar ✓'):'…'}</span></div>
+    <div class="card tight ${belum?'hi':''}">
       <div class="chips" style="margin-bottom:6px">${[['belum','Belum'],['semua','Semua'],...kls.map(k=>[k,k])].map(([k,t])=>`<button data-act="gt-tapis" data-v="${esc(k)}" aria-pressed="${gT.tapis===k}" style="padding:6px 10px;font-size:12px">${esc(t)}</button>`).join('')}</div>
-      ${!rows?`<p class="small muted">${gT.err?'Tidak dapat dimuat.':'Memuat…'}</p>`:rows.length?rows.slice(0,40).map(t=>`<div class="student"><div class="av" style="${t.disemak_at?'background:var(--good);color:#fff':'background:var(--gold-soft);color:var(--gold-text)'}">${t.disemak_at?(t.gred?esc(String(t.gred).replace(/^TP/,'')):'✓'):'▶'}</div><div class="grow"><div class="nm">${esc(t.nama)} <span class="small muted" style="font-weight:600">· ${esc(t.kelas)}</span></div><div class="why">${esc(t.rujukan||'')} · ${fmt(t.durasi_s||0)} · ${t.intai?`<span class="tag warn">intai ${t.intai}×</span>`:'<span class="tag good">tanpa intai</span>'} · ${tarikhJam(t.created_at)}</div></div><button class="btn sm ${t.disemak_at?'ghost':''}" data-act="gt-buka" data-id="${t.id}" ${t.ada_audio?'':'disabled'}>${t.disemak_at?'Lihat':'Dengar'}</button></div>`).join(''):`<p class="small muted">${gT.tapis==='belum'?'Semua rakaman sudah didengar.':'Tiada rakaman.'}</p>`}
+      ${!rows?`<p class="small muted">${gT.err?'Tidak dapat dimuat.':'Memuat…'}</p>`:rows.length?tunjuk.map(t=>`<div class="student"><div class="av" style="${t.disemak_at?'background:var(--good);color:#fff':'background:var(--gold-soft);color:var(--gold-text)'}">${t.disemak_at?(t.gred?esc(String(t.gred).replace(/^TP/,'')):'✓'):'▶'}</div><div class="grow"><div class="nm">${esc(t.nama)} <span class="small muted" style="font-weight:600">· ${esc(t.kelas)}</span></div><div class="why">${esc(t.rujukan||'')} · ${fmt(t.durasi_s||0)} · ${t.intai?`<span class="tag warn">intai ${t.intai}×</span>`:'<span class="tag good">tanpa intai</span>'} · ${tarikhJam(t.created_at)}</div></div><button class="btn sm ${t.disemak_at?'ghost':''}" data-act="gt-buka" data-id="${t.id}" ${t.ada_audio?'':'disabled'}>${t.disemak_at?'Lihat':'Dengar'}</button></div>`).join(''):`<p class="small muted">${gT.tapis==='belum'?'Semua rakaman sudah didengar.':'Tiada rakaman.'}</p>`}
+      ${rows&&rows.length>4?`<button class="btn sm ghost" data-act="gt-penuh" style="margin-top:6px">${gT.penuh?'Ringkaskan':`Lihat semua (${rows.length})`}</button>`:''}
       <div class="row wrap" style="margin-top:8px;gap:8px;justify-content:space-between"><p class="small muted" style="flex:1;min-width:200px">"Intai" ialah bilangan kali murid membuka teks semasa merakam. Dicatat secara telus, bukan dihukum.</p><button class="btn sm ghost" data-act="gt-kemas">Kosongkan audio lama</button></div>
     </div>
   </div>`;
@@ -1725,6 +1776,7 @@ function vGuruLive(){
     <img class="poster" src="${UST.pose.point}" alt="" loading="lazy">
   </div></header>
   <div class="gut body">
+    <div class="g-tasmik">${gTasmikCard()}</div>
     <div class="g-cerapan">
       <div class="card" style="margin-top:16px">
         <div class="chips">${kls.map(k=>`<button data-act="gd-kelas" data-v="${esc(k)}" aria-pressed="${GD.kelas===k}">${esc(k)}</button>`).join('')}</div>
@@ -1765,7 +1817,6 @@ function vGuruLive(){
           <p class="small muted" style="margin-top:8px">Dikesan automatik: belum pernah menjawab, tidak aktif ≥5 hari, ≥3 SP di bawah 50%, atau ketepatan di bawah 40% minggu ini.</p>
         </div>
       </div>
-      ${gTasmikCard()}
       ${ready?`<div class="section"><div class="head"><h2>Masa menjawab</h2><span class="small muted">median 7 hari</span></div><div class="card tight">${GD.akt.filter(a=>a.jawapan_7h>=5).sort((x,y)=>(x.masa_median_ms??1e9)-(y.masa_median_ms??1e9)).slice(0,5).map(a=>`<div class="student"><div class="av">${esc(a.nama[0])}</div><div class="grow"><div class="nm">${esc(a.nama)}</div><div class="why">${fmtMs(a.masa_median_ms)} setiap soalan · ${a.jawapan_7h} jawapan</div></div></div>`).join('')||'<p class="small muted">Belum cukup data.</p>'}<p class="small muted" style="margin-top:8px">Paling pantas di atas. Di bawah 2–3 saat setiap soalan dengan ketepatan tinggi mungkin bermaksud meneka atau dibantu; semak secara lisan.</p></div></div>`:''}
     </div>
 
@@ -2286,7 +2337,7 @@ document.addEventListener('click',e=>{
   else if(act==='pick'){ answer(+el.dataset.k); }
   else if(act==='g-login'){ gateLogin(); }
   else if(act==='lc-semua'){ state.lcBuka=!state.lcBuka; render(); if(state.lcBuka){ const el=document.getElementById('lencana'); if(el) el.scrollIntoView({block:'start',behavior:'smooth'}); } }
-  else if(act==='lc-lihat'){ e.preventDefault&&e.preventDefault(); const el=document.getElementById('lencana'); if(el) el.scrollIntoView({block:'start',behavior:'smooth'}); }
+  else if(act==='lc-lihat'){ e.preventDefault&&e.preventDefault(); if(state.view!=='cabaran'){ state.view='cabaran'; save(); render(); window.scrollTo({top:0}); } }
   else if(act==='ul-buka'){ bukaUlasan(); }
   else if(act==='ul-ai'){ ulDrafAI([+el.dataset.id]); }
   else if(act==='ul-ai-semua'){ const D=state.drafUlasan||{}; ulDrafAI((UL.rows||[]).filter(r=>!D[r.akaun_id]&&(!r.ulasan_at||Date.now()-new Date(r.ulasan_at)>6*864e5)).map(r=>r.akaun_id)); }
@@ -2323,6 +2374,8 @@ document.addEventListener('click',e=>{
   else if(act==='tasmik'){ openTasmik(); }
   else if(act==='rec-share'){ shareRec(); }
   else if(act==='tasmik-kirim'){ kirimTasmik(); }
+  else if(act==='muat-semula'){ try{ save(); }catch(e){} location.replace(location.pathname+'?v='+encodeURIComponent(versiBaru||Date.now())+location.hash); }
+  else if(act==='gt-penuh'){ gT.penuh=!gT.penuh; const el=document.getElementById('gtasmik'); if(el) el.outerHTML=gTasmikCard(); }
   else if(act==='gt-tapis'){ gT.tapis=v; gT.rows=null; const el=document.getElementById('gtasmik'); if(el) el.outerHTML=gTasmikCard(); }
   else if(act==='gt-buka'){ bukaTasmik(+el.dataset.id); }
   else if(act==='gt-tp'){ gT.gred=v; document.querySelectorAll('[data-act="gt-tp"]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v)); }
@@ -2383,7 +2436,13 @@ async function boot(saved){
   else if(SB&&SHEETS&&!state.user.pin){ gate={kelas:state.user.kelas,nama:state.user.nama,pin:'',sahkan:true}; showGate(); }
   else if(SB){ flushXP(); flushJawapan(); tarikKemajuan(true); }
   if(SB) window.addEventListener('online',()=>{ flushXP(); flushJawapan(); });
+  setTimeout(semakVersi,15000); setInterval(semakVersi,5*60*1000);
+  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') semakVersi(); });
 }
+// Bila versi baharu diterbitkan, murid yang sedang membuka app dimaklumkan (tidak dimuat semula secara paksa).
+let versiBaru=null;
+async function semakVersi(){ try{ const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'}); if(!r.ok) return; const j=await r.json(); if(j&&j.v&&j.v!==APP_VERSION){ versiBaru=j.v; tunjukKemasKini(); } }catch(e){} }
+function tunjukKemasKini(){ if(document.getElementById('kemaskini')) return; const d=document.createElement('div'); d.id='kemaskini'; d.className='kemaskini'; d.setAttribute('role','status'); d.innerHTML='<span>Versi baharu Jejak Ilmu tersedia.</span><button data-act="muat-semula">Muat semula</button>'; document.body.appendChild(d); }
 try{ if(window.claude&&window.claude.hot&&typeof window.claude.hot.snapshot==='function') window.claude.hot.snapshot(()=>state); }catch(e){}
 (window.claude&&window.claude.hot&&typeof window.claude.hot.ready==='function') ? window.claude.hot.ready(boot) : boot((window.claude&&window.claude.hot&&window.claude.hot.data)||{});
 </script>
