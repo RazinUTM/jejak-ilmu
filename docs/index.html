@@ -282,6 +282,16 @@ p{margin:0}
 .lvl-t tr.kini td{background:var(--gold-soft)!important;font-weight:800}
 .lvl-t{width:100%;min-width:0!important;table-layout:fixed}.lvl-t th,.lvl-t td{white-space:normal!important;text-align:left!important;vertical-align:top;padding:8px 6px!important}.lvl-t th:nth-child(1),.lvl-t td:nth-child(1){width:64px}.lvl-t th:nth-child(3),.lvl-t td:nth-child(3){width:58px;text-align:right!important}.lvl-t th:nth-child(4),.lvl-t td:nth-child(4){width:44px}.lvl-t .peranan{font-size:11.5px;font-weight:500;color:var(--muted);margin-top:2px;line-height:1.35}
 .lvl-t tr.mentor td:first-child{color:var(--gold-text);font-weight:800}
+.rx{margin-top:10px}
+.rx-btns{display:flex;flex-wrap:wrap;gap:5px}
+.rx-btns button{display:inline-flex;align-items:center;gap:3px;padding:4px 8px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-size:16px;line-height:1;min-height:34px;transition:transform .15s}
+.rx-btns button b{font-size:12px;font-weight:800;color:var(--muted)}
+.rx-btns button.on{border-color:var(--accent);background:var(--accent-soft)}.rx-btns button.on b{color:var(--accent)}
+.rx-btns button:disabled{opacity:1;cursor:default}
+.rx-btns button.pop span{display:inline-block;animation:rxpop .45s ease}
+@keyframes rxpop{0%{transform:scale(1)}40%{transform:scale(1.6) rotate(-8deg)}100%{transform:scale(1)}}
+.rx-n{font-size:12px;color:var(--muted);margin-top:6px;font-weight:600}
+@media (prefers-reduced-motion:reduce){ .rx-btns button.pop span{animation:none} }
 .cb-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:14px 2px 0}.cb-h h2{font-size:17px}
 .cb-status{border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}.cb-status.ok{border-color:color-mix(in srgb,var(--good) 50%,var(--line));color:var(--good)}
 .lc-kat{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
@@ -906,7 +916,7 @@ const doneToday=()=>state.dailyDate?state.dailyDate===todayKey():!!(state.dailyD
 const todayKey=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 function logAktiviti(xp){ if(!state.aktiviti) state.aktiviti={}; const k=todayKey(); const had=!!state.aktiviti[k]; state.aktiviti[k]=(state.aktiviti[k]||0)+xp; if(!had){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); state.streak=state.aktiviti[yk]?(state.streak||0)+1:1; state.usaha.hariAktif=Object.keys(state.aktiviti).filter(d=>d.slice(0,7)===k.slice(0,7)).length; } }
 let ULASAN=[]; let HAFAZAN=[];
-const APP_VERSION='2026-10-28a';
+const APP_VERSION='2026-10-28b';
 const ZON={timeZone:'Asia/Kuala_Lumpur'};
 const jamAMPM=t=>new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true,...ZON});
 const tarikhJam=t=>new Date(t).toLocaleDateString('ms-MY',{day:'numeric',month:'short',...ZON})+', '+jamAMPM(t);
@@ -1125,6 +1135,7 @@ function vUtama(){
         <div class="who"><span class="wordmark">${UST.nama}</span><span class="small muted">· pesanan hari ini</span></div>
         <p class="txt">${esc(SB&&pS.m&&pS.m.ada?(pS.m.teks||'Pesanan suara daripada Ustazah.'):pesan)}</p>
         ${SB&&pS.m&&pS.m.ada&&pS.m.ada_audio?`<div class="player"><button class="pb" data-act="pg-dengar" aria-label="Dengar pesanan suara">${pS.playing?'❚❚':'▶'}</button><div class="bar thin"><i id="pgp" style="width:0%"></i></div><span class="t">${fmt(pS.m.durasi_s||0)} · suara Ustazah${pS.m.didengar?' · didengar':''}</span></div>`:''}
+        ${SB&&creds()?rxBar(kunciPesanan(pesan)):''}
         ${SHEETS?'':'<div class="player" id="player"><button class="pb" data-act="play-pesan" aria-label="Main pesanan suara">▶</button><div class="bar thin"><i id="pp" style="width:0%"></i></div><span class="t">0:32 · suara</span></div>'}
         <div class="acts"><button class="btn sm" data-act="quiz" data-set="harian">${doneToday()?'Ulang Cabaran Harian':'Mula Cabaran Harian'}</button><button class="btn sm ghost" data-act="lesson" data-n="${p16.n}">${p16.m!=null?'Sambung':'Mula'} Pelajaran ${p16.n}</button></div>
       </div>
@@ -1522,6 +1533,44 @@ async function runImport(){
 }
 const b64Blob=(b64,mime)=>new Blob([Uint8Array.from(atob(b64),c=>c.charCodeAt(0))],{type:mime||'audio/webm'});
 let pS={m:null,t:0,audio:null,playing:false};
+// ---------- Reaksi emoji positif pada Pesanan hari ini ----------
+const REAKSI=[['suka','👍','Suka'],['sayang','❤️','Sayang'],['senyum','😊','Senyum'],['bunga','🌹','Bunga'],['aamiin','🤲','Aamiin'],['semangat','💪','Semangat']];
+const REAKSI_EMO=Object.fromEntries(REAKSI.map(([k,e])=>[k,e]));
+const hashTeks=t=>{ let h=5381; for(const c of String(t||'')) h=((h*33)^c.codePointAt(0))>>>0; return h.toString(36); };
+let RX={kunci:null,d:null,t:0,sibuk:false,bunyi:null};
+function kunciPesanan(teksSheet){ return SB&&pS.m&&pS.m.ada?'p:'+pS.m.id:'sheet:'+hashTeks(teksSheet); }
+async function refreshRX(kunci,paksa){
+  if(!SB||!creds()) return; if(!paksa&&RX.kunci===kunci&&Date.now()-RX.t<60000) return;
+  if(RX.kunci!==kunci) RX={kunci,d:null,t:0,sibuk:false};
+  RX.t=Date.now(); try{ const r=await rpc('reaksi_kiraan',{...creds(),p_kunci:kunci}); if(r&&r.ok&&RX.kunci===kunci){ RX.d=r; lukisRX(); } }catch(e){}
+}
+function rxBar(kunci){
+  if(!SB||!creds()) return ''; setTimeout(()=>refreshRX(kunci),0);
+  const d=RX.kunci===kunci?RX.d:null; const k=(d&&d.kiraan)||{}; const saya=d&&d.saya; const guru=state.user&&state.user.guru; const n=d?d.jumlah:0;
+  return `<div class="rx" id="rx" data-kunci="${esc(kunci)}">
+    <div class="rx-btns" role="group" aria-label="Beri reaksi kepada pesanan">${REAKSI.map(([id,e,t])=>`<button class="${saya===id?'on':''} ${RX.bunyi===id?'pop':''}" data-act="rx" data-v="${id}" aria-pressed="${saya===id}" aria-label="${t}${k[id]?' ('+k[id]+')':''}" ${guru?'disabled':''}><span>${e}</span>${k[id]?`<b>${k[id]}</b>`:''}</button>`).join('')}</div>
+    <div class="rx-n">${d?(n?`${n} murid sudah memberi respon${saya&&!guru?' · termasuk kamu':''}`:(guru?'Belum ada respon murid.':'Jadilah yang pertama memberi respon!')):'…'}${guru&&n?' · <button class="link" data-act="rx-siapa">Siapa respon?</button>':''}</div>
+  </div>`;
+}
+function lukisRX(){ const el=document.getElementById('rx'); if(el){ el.outerHTML=rxBar(el.dataset.kunci); } RX.bunyi=null; }
+async function tekanRX(id){
+  if(RX.sibuk||!RX.kunci) return; RX.sibuk=true; const kunci=RX.kunci;
+  const d=RX.d||{jumlah:0,kiraan:{},saya:null}; const lama=d.saya; const baru=lama===id?'':id;
+  const k={...(d.kiraan||{})}; if(lama){ k[lama]=Math.max(0,(k[lama]||1)-1); if(!k[lama]) delete k[lama]; } if(baru) k[baru]=(k[baru]||0)+1;
+  RX.d={...d,kiraan:k,saya:baru||null,jumlah:d.jumlah+(lama?0:1)-(baru?0:1)}; RX.bunyi=baru||null; buzz(baru?[12]:[6]); lukisRX();
+  let r=null; try{ r=await rpc('reaksi_pesanan',{...creds(),p_kunci:kunci,p_reaksi:baru}); }catch(e){}
+  if(r&&r.ok&&RX.kunci===kunci){ RX.d=r; RX.t=Date.now(); lukisRX(); } else if(!(r&&r.ok)){ RX.d=d; lukisRX(); toast('Reaksi tidak dihantar. Semak internet.'); }
+  RX.sibuk=false;
+}
+async function siapaRX(kunci){
+  openSheet(`<div class="gut"><div class="row"><h2>Respon murid</h2><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div><p class="small muted" style="margin-top:8px">Memuat…</p></div>`);
+  let r=null; try{ r=await rpc('guru_reaksi',{...creds(),p_kunci:[kunci]}); }catch(e){}
+  const v=r&&r.ok&&r.data&&r.data[kunci]; const murid=v?v.murid:[];
+  openSheet(`<div class="gut"><div class="row"><h2>Respon murid</h2><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div>
+    <p class="small muted" style="margin-top:6px">${v?`${v.jumlah} murid memberi respon kepada pesanan ini.`:'Belum ada respon.'}</p>
+    ${REAKSI.filter(([id])=>murid.some(m=>m.reaksi===id)).map(([id,e,t])=>{ const ms=murid.filter(m=>m.reaksi===id); return `<div class="card" style="margin-top:10px"><b>${e} ${t} · ${ms.length}</b><p class="small" style="margin-top:4px">${ms.map(m=>`${esc(m.nama)} <span class="muted">(${esc(m.kelas)})</span>`).join(', ')}</p></div>`; }).join('')}
+  </div>`);
+}
 async function refreshPS(){ const u=state.user?state.user.kelas+'|'+state.user.nama:''; if(pS.u!==u){ if(pS.audio) pS.audio.pause(); pS={m:null,t:0,audio:null,playing:false,u}; } if(Date.now()-pS.t<60000) return; pS.t=Date.now(); try{ const r=await rpc('pesanan_terkini',creds()); if(r&&r.ok){ const changed=JSON.stringify(r)!==JSON.stringify(pS.m); pS.m=r; if(changed&&state.view==='utama'&&$('#layer').hidden) render(); } }catch(e){} }
 async function dengarPesanan(){
   if(pS.audio&&pS.playing){ pS.audio.pause(); pS.playing=false; render(); return; }
@@ -1532,14 +1581,14 @@ async function dengarPesanan(){
 }
 // ---------- teacher: record and send voice messages ----------
 let pv={phase:'idle',t:0,blob:null,url:null,real:null,timer:null,err:'',kelas:''};
-let gP={rows:null,t:0,err:false};
-async function refreshGP(){ if(Date.now()-gP.t<30000) return; gP.t=Date.now(); try{ const r=await rpc('guru_pesanan_senarai',creds()); gP={rows:Array.isArray(r)?r:[],t:Date.now(),err:false}; }catch(e){ gP.err=true; gP.t=Date.now(); } const el=document.getElementById('gpesan'); if(el) el.outerHTML=gPesanCard(); }
+let gP={rows:null,t:0,err:false,rx:{}};
+async function refreshGP(){ if(Date.now()-gP.t<30000) return; gP.t=Date.now(); try{ const r=await rpc('guru_pesanan_senarai',creds()); gP={rows:Array.isArray(r)?r:[],t:Date.now(),err:false,rx:gP.rx||{}}; if(gP.rows.length){ try{ const x=await rpc('guru_reaksi',{...creds(),p_kunci:gP.rows.slice(0,5).map(m=>'p:'+m.id)}); if(x&&x.ok) gP.rx=x.data||{}; }catch(e){} } }catch(e){ gP.err=true; gP.t=Date.now(); } const el=document.getElementById('gpesan'); if(el) el.outerHTML=gPesanCard(); }
 function gPesanCard(){
   setTimeout(()=>refreshGP(),0); const rows=gP.rows;
   return `<div class="card" id="gpesan" style="margin-top:12px">
     <div class="row" style="gap:12px;align-items:flex-start">${pose('point',64)}<div class="grow"><div class="eyebrow">Pesanan suara kepada murid</div><p class="small muted" style="margin-top:4px">Murid dengar di skrin Utama. Pesanan terkini (14 hari) dipaparkan; teks Sheets digunakan bila tiada.</p></div></div>
     <button class="btn sm gold" data-act="pv-baru" style="margin-top:10px">Rakam pesanan baharu</button>
-    ${!rows?`<p class="small muted" style="margin-top:8px">${gP.err?'Tidak dapat dimuat.':'Memuat…'}</p>`:rows.slice(0,5).map(m=>`<div class="student"><div class="av" style="background:var(--gold-soft);color:var(--gold-text)">${m.ada_audio?'▶':'✉'}</div><div class="grow"><div class="nm" style="font-weight:600;font-size:13.5px">${esc((m.teks||'(suara sahaja)').slice(0,90))}</div><div class="why">${esc(m.kelas||'Semua kelas')} · ${tarikhJam(m.created_at)}${m.ada_audio?` · ${fmt(m.durasi_s||0)} · didengar ${m.didengar}/${m.sasaran}`:''}</div></div>${m.ada_audio?`<button class="btn sm ghost" data-act="pv-ulang" data-id="${m.id}">▶</button>`:''}<button class="btn sm ghost" data-act="pv-padam" data-id="${m.id}" aria-label="Padam">✕</button></div>`).join('')}
+    ${!rows?`<p class="small muted" style="margin-top:8px">${gP.err?'Tidak dapat dimuat.':'Memuat…'}</p>`:rows.slice(0,5).map(m=>`<div class="student"><div class="av" style="background:var(--gold-soft);color:var(--gold-text)">${m.ada_audio?'▶':'✉'}</div><div class="grow"><div class="nm" style="font-weight:600;font-size:13.5px">${esc((m.teks||'(suara sahaja)').slice(0,90))}</div><div class="why">${esc(m.kelas||'Semua kelas')} · ${tarikhJam(m.created_at)}${m.ada_audio?` · ${fmt(m.durasi_s||0)} · didengar ${m.didengar}/${m.sasaran}`:''}${(()=>{ const x=(gP.rx||{})['p:'+m.id]; return x?` · <button class="link" data-act="gp-siapa" data-v="p:${m.id}">${Object.entries(x.kiraan||{}).map(([k,n])=>(REAKSI_EMO[k]||'')+n).join(' ')} (${x.jumlah} murid)</button>`:''; })()}</div></div>${m.ada_audio?`<button class="btn sm ghost" data-act="pv-ulang" data-id="${m.id}">▶</button>`:''}<button class="btn sm ghost" data-act="pv-padam" data-id="${m.id}" aria-label="Padam">✕</button></div>`).join('')}
   </div>`;
 }
 function sheetPesananLive(){
@@ -2484,6 +2533,9 @@ document.addEventListener('click',e=>{
   else if(act==='lh-pdf'){ const ta=$('#lh-ref'); if(ta) LH.refleksi=ta.value; lhPDF(); }
   else if(act==='hz-pilih'){ state.hafazanPilih=v; save(); if(!$('#layer').hidden&&rec&&rec.ctx==='tasmik') renderTasmik(); else render(); }
   else if(act==='pg-dengar'){ dengarPesanan(); }
+  else if(act==='rx'){ tekanRX(v); }
+  else if(act==='rx-siapa'){ const el2=document.getElementById('rx'); if(el2) siapaRX(el2.dataset.kunci); }
+  else if(act==='gp-siapa'){ siapaRX(v); }
   else if(act==='pv-baru'){ pv={phase:'idle',t:0,blob:null,url:null,real:null,timer:null,err:'',kelas:pv.kelas||''}; sheetPesananLive(); }
   else if(act==='pv-rakam'){ pvRakam(); }
   else if(act==='pv-henti'){ pvHenti(); }
