@@ -51,43 +51,51 @@ async function claude(system: string, user: string, maxTokens: number): Promise<
     body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, system, messages: [{ role: 'user', content: user }] }),
   });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(`claude_${r.status}: ${clean(j?.error?.message, 160)}`);
+  if (!r.ok) { console.error('Claude API', r.status, j?.error?.type, j?.error?.message); throw new Error(`claude_${r.status}: ${clean(j?.error?.message, 200)}`); }
   return (j.content || []).filter((b: { type: string }) => b.type === 'text').map((b: { text: string }) => b.text).join('');
 }
 
-// Output berstruktur: model dipaksa memanggil alat ini, jadi hasilnya sentiasa JSON yang sah.
-const ALAT_DRAF = {
-  name: 'simpan_draf',
-  description: 'Simpan satu draf ulasan bagi setiap murid yang diberi.',
-  input_schema: {
-    type: 'object',
-    properties: {
-      draf: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: { id: { type: 'integer', description: 'Nombor murid, contoh 113 bagi Murid #113' }, ulasan: { type: 'string', description: 'Draf ulasan, bermula dengan {nama}' } },
-          required: ['id', 'ulasan'],
-        },
+// Output berstruktur (structured outputs): jawapan sentiasa JSON yang sah mengikut skema ini.
+// Nota: Sonnet 5.5 / Opus 5.5 menolak "forced tool use" dengan ralat 400, jadi kita guna output_config.format.
+const SKEMA_DRAF = {
+  type: 'object',
+  properties: {
+    draf: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: { id: { type: 'integer' }, ulasan: { type: 'string' } },
+        required: ['id', 'ulasan'],
+        additionalProperties: false,
       },
     },
-    required: ['draf'],
   },
+  required: ['draf'],
+  additionalProperties: false,
 };
 
-async function claudeAlat(system: string, user: string, maxTokens: number): Promise<{ draf: Array<{ id: number; ulasan: string }>; stop: string }> {
+async function panggilClaude(body: Record<string, unknown>) {
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-    body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, system, messages: [{ role: 'user', content: user }],
-      tools: [ALAT_DRAF], tool_choice: { type: 'tool', name: ALAT_DRAF.name } }),
+    body: JSON.stringify(body),
   });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(`claude_${r.status}: ${clean(j?.error?.message, 160)}`);
-  const blok = (j.content || []).find((b: { type: string; name?: string }) => b.type === 'tool_use' && b.name === ALAT_DRAF.name);
-  if (blok && blok.input && Array.isArray(blok.input.draf)) return { draf: blok.input.draf, stop: j.stop_reason };
-  // Sandaran: cuba baca JSON daripada teks biasa
+  if (!r.ok) console.error('Claude API', r.status, j?.error?.type, j?.error?.message);
+  return { r, j };
+}
+
+async function claudeJSON(system: string, user: string, maxTokens: number): Promise<{ draf: Array<{ id: number; ulasan: string }>; stop: string }> {
+  const asas = { model: MODEL, max_tokens: maxTokens, system, messages: [{ role: 'user', content: user }] };
+  let { r, j } = await panggilClaude({ ...asas, output_config: { format: { type: 'json_schema', schema: SKEMA_DRAF } } });
+  // Sandaran: model lama yang tidak menyokong structured outputs -> minta JSON biasa
+  if (!r.ok && r.status === 400 && /output_config|json_schema|structured/i.test(String(j?.error?.message || ''))) {
+    ({ r, j } = await panggilClaude(asas));
+  }
+  if (!r.ok) throw new Error(`claude_${r.status}: ${clean(j?.error?.message, 200)}`);
+  if (j.stop_reason === 'refusal') throw new Error('ditolak_ai');
   const text = (j.content || []).filter((b: { type: string }) => b.type === 'text').map((b: { text: string }) => b.text).join('');
+  try { const o = JSON.parse(text); return { draf: Array.isArray(o) ? o : o.draf, stop: j.stop_reason }; } catch (_) { /* cuba ekstrak */ }
   const a = text.indexOf('['), z = text.lastIndexOf(']');
   try { return { draf: JSON.parse(text.slice(a, z + 1)), stop: j.stop_reason }; } catch (_) { throw new Error(j.stop_reason === 'max_tokens' ? 'terpotong' : 'format_ai'); }
 }
@@ -108,7 +116,7 @@ Peraturan:
 - Boleh akhiri dengan doa atau kata semangat pendek (contoh: "Semoga Allah mudahkan."). Jangan petik ayat al-Quran atau hadis.
 - Kod SP seperti 4.10.5 boleh disebut bersama huraiannya jika ada; jika tiada huraian, sebut "SP 4.10.5".
 
-Hantar hasil melalui alat simpan_draf: satu item bagi setiap murid yang diberi, dengan id = nombor murid.`;
+Balas dalam JSON: {"draf": [{"id": <nombor murid>, "ulasan": "<teks>"}, ...]}, satu item bagi setiap murid yang diberi.`;
 
 function spText(arr: SpRow[] | null, info: SpInfo): string {
   if (!arr || !arr.length) return 'tiada';
@@ -132,7 +140,7 @@ async function ulasan(key: string, cred: Record<string, string>, b: Record<strin
       `SP kuat: ${spText(r.sp_kuat, info)}. SP perlu ulang: ${spText(r.sp_lemah, info)}.`;
   }).join('\n');
   const user = `Ayat hafazan buku teks: Surah Ali Imran ayat 8, 18, 26 dan 27.\n\nData murid:\n${data}\n\nTulis satu draf ulasan bagi setiap murid di atas.`;
-  const { draf: arr, stop } = await claudeAlat(SISTEM_ULASAN, user, 600 + 350 * pick.length);
+  const { draf: arr, stop } = await claudeJSON(SISTEM_ULASAN, user, 600 + 350 * pick.length);
   const ids = new Set(pick.map((r: { akaun_id: number }) => Number(r.akaun_id)));
   const draf = arr.filter((x) => x && ids.has(Number(x.id)) && typeof x.ulasan === 'string')
     .map((x) => ({ id: Number(x.id), ulasan: x.ulasan.trim().slice(0, 700) }));
@@ -195,6 +203,7 @@ Deno.serve(async (req: Request) => {
     if (b.mod === 'refleksi') return reply(await refleksi(key, cred, b));
     return reply({ ok: false, ralat: 'mod' }, 400);
   } catch (e) {
-    return reply({ ok: false, ralat: clean((e as Error).message || e, 200) }, 502);
+    console.error('ulasan-ai', (e as Error).message || e);
+    return reply({ ok: false, ralat: clean((e as Error).message || e, 240) }, 502);
   }
 });

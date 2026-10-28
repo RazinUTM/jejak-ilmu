@@ -279,7 +279,9 @@ p{margin:0}
 .kemaskini button{background:var(--gold);color:#2a1d05;border:0;border-radius:999px;padding:7px 12px;font-weight:800;font-size:13px}
 @media (min-width:900px){ .kemaskini{bottom:24px} }
 .link-w{background:none;border:0;padding:0;color:inherit;font:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
-.lvl-t tr.kini td{background:var(--gold-soft);font-weight:800}
+.lvl-t tr.kini td{background:var(--gold-soft)!important;font-weight:800}
+.lvl-t{width:100%;min-width:0!important;table-layout:fixed}.lvl-t th,.lvl-t td{white-space:normal!important;text-align:left!important;vertical-align:top;padding:8px 6px!important}.lvl-t th:nth-child(1),.lvl-t td:nth-child(1){width:64px}.lvl-t th:nth-child(3),.lvl-t td:nth-child(3){width:58px;text-align:right!important}.lvl-t th:nth-child(4),.lvl-t td:nth-child(4){width:44px}.lvl-t .peranan{font-size:11.5px;font-weight:500;color:var(--muted);margin-top:2px;line-height:1.35}
+.lvl-t tr.mentor td:first-child{color:var(--gold-text);font-weight:800}
 .cb-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:14px 2px 0}.cb-h h2{font-size:17px}
 .cb-status{border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}.cb-status.ok{border-color:color-mix(in srgb,var(--good) 50%,var(--line));color:var(--good)}
 .lc-kat{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
@@ -619,7 +621,12 @@ let SETS = {
   sirah:{t:'Garis Masa Sirah',ids:['s1','s2']},
   dilema:{t:'Dilema Akhlak (KBAT)',ids:['t8','a1','t10']},
 };
-const LEVELS=['Pemula','Pencari','Pelajar','Penjelajah','Pengembara','Pembimbing','Perintis','Pendakwah Muda','Cendekia','Hikmah'];
+const LEVELS=['Pemula','Pencari','Pelajar','Penjelajah','Pengembara','Pembimbing','Perintis','Pendakwah Muda','Cendekia','Hikmah',
+  'Sahabat Pembimbing','Mentor Rakan','Ketua Halaqah','Murabbi Muda','Qudwah Hasanah'];
+// Level 1–10: setiap 200 XP. Level 11–15: tahap mentor (XP lebih tinggi + peranan membantu rakan). Level 15 ialah maksimum.
+const LEVEL_XP=[0,200,400,600,800,1000,1200,1400,1600,1800,2500,4000,6000,8500,12000];
+const LEVEL_MAX=LEVEL_XP.length;
+const PERANAN={11:'Bimbing seorang rakan yang belum bermula: bantu dia log masuk dan siapkan Cabaran Harian pertamanya.',12:'Bila rakan salah, terangkan SEBAB jawapan yang betul, bukan beri huruf jawapan.',13:'Ajak 2–3 rakan buat Cabaran Harian bersama setiap hari.',14:'Dengar bacaan hafazan rakan dan bantu betulkan sebelum mereka rakam tasmik.',15:'Jadi contoh: istiqamah, jujur (tanpa intai), dan pastikan seluruh kelas naik bersama.'};
 
 const LIGA=[
   {id:'pelita', nama:'Liga Pelita',  glyph:'✦', tag:'Setiap cahaya bermula kecil'},
@@ -784,7 +791,9 @@ function misiItems(){
   for(const w of MISI.wajib){
     if(w==='harian') out.push({k:w,t:`Cabaran Harian (${SETS.harian?(SETS.harian.pick||5):5} soalan)`,ok:H.harian,act:'quiz',set:'harian',btn:'Mula'});
     if(w==='kuiz'&&mp) out.push({k:w,t:`Kuiz Pelajaran ${mp.n}: capai ${MISI.kuizSasaran}%`,sub:best?`terbaik hari ini ${best}%`:esc(mp.rumi),ok:best>=MISI.kuizSasaran,act:'quiz',set:'kuiz'+mp.n,btn:best?'Cuba lagi':'Mula'});
-    if(w==='tasmik') out.push({k:w,t:'Rakam tasmik Hafazan hari ini',ok:H.tasmik>0,act:'tasmik',btn:'Rakam'});
+    if(w==='tasmik'){ const Hz=hafazanSaya(); const ulang=HAFAZAN_BUKU.filter(x=>Hz.st[x.id].s==='ulang'); const siap4=HAFAZAN_BUKU.every(x=>!['belum','ulang'].includes(Hz.st[x.id].s));
+      if(siap4) out.push({k:w,t:'Tasmik 4 ayat hafazan Tingkatan 2',sub:'Selesai. Boleh rakam lagi bila-bila untuk perbaiki bacaan.',ok:true,act:'tasmik',btn:'Rakam'});
+      else out.push({k:w,t:ulang.length&&!H.tasmik?`Rakam semula Ayat ${ulang.map(x=>x.label).join(', ')}`:'Rakam tasmik Hafazan hari ini',sub:ulang.length&&!H.tasmik?'Ustazah minta ulang (TP1–2)':(H.tasmik?'':`${HAFAZAN_BUKU.filter(x=>Hz.st[x.id].s!=='belum').length}/4 ayat sudah dirakam`),ok:H.tasmik>0,act:'tasmik',btn:'Rakam'}); }
     if(w==='laporan') out.push({k:w,t:'Buka Kad Laporan dan baca ulasan',ok:H.laporan,act:'nav',v:'laporan',btn:'Buka'});
   }
   return out;
@@ -885,11 +894,19 @@ function lencanaCard(){
     <button class="btn sm ghost" data-act="lc-semua" style="margin-top:10px">${buka?'Tutup senarai':'Lihat semua '+L.length+' lencana dan syaratnya'}</button>
   </div>`;
 }
+function mentorCard(){
+  if(!SHEETS||!state.user||state.user.guru) return ''; const L=lvl(); if(L<11) return '';
+  const rows=ligaCache.kelas===state.kelas&&ligaCache.rows?ligaCache.rows:null; const aktif=rows?rows.filter(r=>+r.xp_minggu>0).length:null;
+  return `<div class="card gold" id="mentor"><div class="row" style="justify-content:space-between"><div class="eyebrow">Misi mentor · ${esc(LEVELS[L-1])}</div><span class="pill gold">${lvlNama(L)}</span></div>
+    <p class="small" style="margin-top:6px"><b>Peranan kamu:</b> ${esc(PERANAN[L])}</p>
+    ${rows?`<div class="bar gold" style="margin-top:10px"><i style="width:${Math.round(aktif/Math.max(1,rows.length)*100)}%"></i></div><p class="small muted" style="margin-top:6px">${aktif}/${rows.length} rakan sekelas aktif minggu ini. Sasaran mentor: seluruh ${esc(state.kelas)} aktif.</p>`:''}
+  </div>`;
+}
 const doneToday=()=>state.dailyDate?state.dailyDate===todayKey():!!(state.dailyDone&&!SHEETS);
 const todayKey=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 function logAktiviti(xp){ if(!state.aktiviti) state.aktiviti={}; const k=todayKey(); const had=!!state.aktiviti[k]; state.aktiviti[k]=(state.aktiviti[k]||0)+xp; if(!had){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); state.streak=state.aktiviti[yk]?(state.streak||0)+1:1; state.usaha.hariAktif=Object.keys(state.aktiviti).filter(d=>d.slice(0,7)===k.slice(0,7)).length; } }
 let ULASAN=[]; let HAFAZAN=[];
-const APP_VERSION='2026-10-27d';
+const APP_VERSION='2026-10-28a';
 const ZON={timeZone:'Asia/Kuala_Lumpur'};
 const jamAMPM=t=>new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true,...ZON});
 const tarikhJam=t=>new Date(t).toLocaleDateString('ms-MY',{day:'numeric',month:'short',...ZON})+', '+jamAMPM(t);
@@ -918,8 +935,9 @@ function load(){ try{ const s=localStorage.getItem(LS); if(s){ const o=JSON.pars
 /* ---------- HELPERS ---------- */
 const $=(s,el=document)=>el.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const lvl=()=>Math.min(10,Math.floor(state.xp/200)+1);
-const lvlPct=()=>lvl()>=10?100:Math.round(((state.xp-(lvl()-1)*200)/200)*100);
+const lvl=()=>{ const x=state.xp||0; let n=1; for(let i=1;i<LEVEL_XP.length;i++) if(x>=LEVEL_XP[i]) n=i+1; return n; };
+const lvlPct=()=>{ const L=lvl(); if(L>=LEVEL_MAX) return 100; const a=LEVEL_XP[L-1], b=LEVEL_XP[L]; return Math.max(0,Math.min(100,Math.round(((state.xp||0)-a)/(b-a)*100))); };
+const lvlNama=(L=lvl())=>`Level ${L}${L>=LEVEL_MAX?' (maks)':''}`;
 const pelOf=n=>PELAJARAN.find(p=>p.n===n);
 const bidOf=id=>BIDANG.find(b=>b.id===id);
 const ust=(size='s',extra='')=>`<img class="ust ${size} ${extra}" src="${UST.bust}" alt="${UST.nama}" width="56" height="56">`;
@@ -1089,14 +1107,14 @@ function vUtama(){
       <div class="grow">
         <div class="date">${esc(todayStr())}</div>
         <h1>Assalamualaikum, ${esc(state.nama)}</h1>
-        <div class="sub">${esc(state.kelas)} · <button class="link-w" data-act="level">Level ${lvl()} <b>${LEVELS[lvl()-1]}</b> ⓘ</button></div>
+        <div class="sub">${esc(state.kelas)} · <button class="link-w" data-act="level">${lvlNama()} <b>${LEVELS[lvl()-1]}</b> ⓘ</button></div>
       </div>
       <div class="hdr-acts">${themeBtn()}<button class="tbtn" data-act="settings" aria-label="Tetapan">${GEAR}</button></div>
     </div>
     <div class="stats">
       <div class="stat"><b class="num">${state.streak}</b><span>hari berturut</span></div>
       <div class="stat"><b class="num">${state.xp.toLocaleString('ms-MY')}</b><span>XP terkumpul</span></div>
-      <button class="stat" data-act="level" style="text-align:left;color:inherit"><b class="num">${lvl()>=10?'Maks':pct+'%'}</b><span>${lvl()>=10?'tahap tertinggi':'ke Level '+(lvl()+1)} ⓘ</span><div class="lvlbar"><i style="width:${pct}%"></i></div></button>
+      <button class="stat" data-act="level" style="text-align:left;color:inherit"><b class="num">${lvl()>=LEVEL_MAX?'Maks':pct+'%'}</b><span>${lvl()>=LEVEL_MAX?'Level 15 (maks)':'ke Level '+(lvl()+1)} ⓘ</span><div class="lvlbar"><i style="width:${pct}%"></i></div></button>
     </div>
   </div></header>
 
@@ -1113,6 +1131,7 @@ function vUtama(){
     </div>
 
     ${misiCard()}
+    ${mentorCard()}
 
     <div class="card ${doneToday()?'':'hi'}">
       <div class="eyebrow">Cabaran Harian</div>
@@ -1569,7 +1588,11 @@ function aiRalat(m){ m=String(m||'');
   if(/bukan_guru/.test(m)) return 'PIN guru tidak sah. Log keluar dan masuk semula.';
   if(/format_ai|terpotong/.test(m)) return 'Jawapan AI tidak lengkap untuk beberapa murid. Tekan Draf AI pada murid itu untuk cuba semula.';
   if(/claude_401|authentication/i.test(m)) return 'Kunci Claude API tidak sah. Semak ANTHROPIC_API_KEY.';
-  if(/credit|billing|claude_402|claude_400/i.test(m)) return 'Akaun Claude API: semak baki kredit (Plans & Billing) di console.anthropic.com.';
+  if(/credit balance|too low/i.test(m)) return 'Kredit Claude API tidak mencukupi untuk kunci ini (semak Plans & Billing di platform.claude.com dan pastikan kunci API dibuat dalam organisasi yang sama).';
+  if(/spend|usage limit|workspace.*limit/i.test(m)) return 'Had perbelanjaan Claude Console telah dicapai. Naikkan di platform.claude.com → Spending → Spend limits.';
+  if(/forced tool|tool_choice/i.test(m)) return 'Fungsi AI di Supabase masih versi lama: deploy semula kod ulasan-ai yang terkini.';
+  if(/ditolak_ai/.test(m)) return 'AI tidak menulis draf untuk permintaan ini. Tulis ulasan sendiri untuk murid tersebut.';
+  if(/claude_(\d+)/.test(m)) return `AI tidak berjaya (kod ${m.match(/claude_(\d+)/)[1]}): ${m.replace(/^.*?claude_\d+:\s*/,'').slice(0,160)}`;
   if(/claude_429|claude_529|overloaded/i.test(m)) return 'Perkhidmatan AI sibuk. Cuba sebentar lagi.';
   return 'AI tidak berjaya: '+m.slice(0,120); }
 function spInfo(rows){ const o={}; for(const k of rows){ const n=Object.keys(SPS).find(p=>(SPS[p]||[]).some(x=>x.k===k)); o[k]={n:SP_NAMA[k]||'',p:n?+n:null}; } return o; }
@@ -2044,7 +2067,7 @@ async function binaKad(){
   g.fillStyle='#fff'; g.font=`800 66px ${D}`; let y=172; for(const ln of balut(g,state.nama,620).slice(0,2)){ g.fillText(ln,64,y); y+=74; }
   g.font=`600 32px ${B}`; g.fillStyle='rgba(255,255,255,.92)'; g.fillText(`${state.kelas} · Pendidikan Islam Tingkatan 2`,64,y+6);
   g.font=`500 26px ${B}`; g.fillStyle='rgba(255,255,255,.8)'; g.fillText(new Date().toLocaleDateString('ms-MY',{day:'numeric',month:'long',year:'numeric',...ZON}),64,y+48);
-  const chip=`Level ${lvl()} ${LEVELS[lvl()-1]} · ${state.xp} XP · 🔥 ${state.streak} hari`; g.font=`700 28px ${B}`; const cw=g.measureText(chip).width+44;
+  const chip=`${lvlNama()} ${LEVELS[lvl()-1]} · ${state.xp} XP · 🔥 ${state.streak} hari`; g.font=`700 28px ${B}`; const cw=g.measureText(chip).width+44;
   g.fillStyle='rgba(255,255,255,.18)'; rrect(g,64,y+80,cw,56,28); g.fill(); g.fillStyle='#fff'; g.fillText(chip,86,y+118);
   // usaha tiles
   const u=state.usaha||{}; const tiles=[[u.hariAktif||0,'hari aktif bulan ini'],[u.dicuba||0,'soalan dicuba'],[u.bangkit||0,'bangkit (salah → betul)'],[u.hafazan||0,'tasmik dihantar']];
@@ -2087,12 +2110,13 @@ function sheetLevel(){
   const L=lvl(), xp=state.xp||0;
   openSheet(`<div class="gut">
     <div class="row"><h2>Tahap (Level)</h2><button class="icon" data-act="close-sheet" aria-label="Tutup" style="margin-left:auto">✕</button></div>
-    <p class="small muted" style="margin-top:6px">Level naik setiap <b>200 XP</b> terkumpul. XP ialah cermin <b>usaha</b> kamu: salah pun dapat XP.</p>
-    <div class="card" style="margin-top:10px"><div class="row" style="justify-content:space-between"><b>Kamu: Level ${L} · ${esc(LEVELS[L-1])}</b><span class="pill gold">${xp} XP</span></div>
+    <p class="small muted" style="margin-top:6px">Level 1–10 naik setiap <b>200 XP</b>. Level 11–15 ialah <b>tahap mentor</b>: XP lebih tinggi, dan setiap tahap ada <b>peranan membantu rakan</b>. Juara sebenar ialah yang membawa kawan naik bersama. Level 15 ialah maksimum.</p>
+    <div class="card" style="margin-top:10px"><div class="row" style="justify-content:space-between"><b>Kamu: ${lvlNama(L)} · ${esc(LEVELS[L-1])}</b><span class="pill gold">${xp} XP</span></div>
       <div class="bar gold" style="margin-top:8px"><i style="width:${lvlPct()}%"></i></div>
-      <p class="small muted" style="margin-top:6px">${L>=10?'Tahap tertinggi sudah dicapai. XP terus dikira untuk Liga kelas dan lencana.':`${L*200-xp} XP lagi ke Level ${L+1} (${esc(LEVELS[L])}).`}</p></div>
+      <p class="small muted" style="margin-top:6px">${L>=LEVEL_MAX?'Tahap tertinggi sudah dicapai. XP terus dikira untuk Liga kelas dan lencana.':`${LEVEL_XP[L]-xp} XP lagi ke Level ${L+1} (${esc(LEVELS[L])}).`}</p>
+      ${PERANAN[L]?`<p class="small" style="margin-top:6px"><b>Peranan kamu sekarang:</b> ${esc(PERANAN[L])}</p>`:''}</div>
     <div class="tablewrap" style="margin-top:10px"><table class="ht lvl-t" style="min-width:0"><thead><tr><th>Level</th><th>Nama</th><th>XP</th><th></th></tr></thead><tbody>
-      ${LEVELS.map((n,i)=>`<tr class="${i+1===L?'kini':''}"><td>${i+1}</td><td>${esc(n)}</td><td>${i*200}</td><td>${i+1<L?'✓':i+1===L?'kamu':''}</td></tr>`).join('')}
+      ${LEVELS.map((n,i)=>`<tr class="${i+1===L?'kini':''} ${i>=10?'mentor':''}"><td>${i+1}${i+1===LEVEL_MAX?' (maks)':''}</td><td>${esc(n)}${PERANAN[i+1]?`<div class="peranan">${esc(PERANAN[i+1])}</div>`:''}</td><td>${LEVEL_XP[i]}</td><td>${i+1<L?'✓':i+1===L?'kamu':''}</td></tr>`).join('')}
     </tbody></table></div>
     <div class="eyebrow" style="margin-top:14px">Cara dapat XP</div>
     <div class="tiles4" style="grid-template-columns:repeat(auto-fill,minmax(96px,1fr))"><div><b>+10</b><span>jawapan betul</span></div><div><b>+3</b><span>jawapan salah (usaha)</span></div><div><b>+20</b><span>kuiz sempurna</span></div><div><b>+50</b><span>Cabaran Harian (sekali sehari)</span></div><div><b>+30</b><span>tasmik</span></div></div>
