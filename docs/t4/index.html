@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#6d4cc4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="../img/icon-192.png">
+<link rel="icon" href="../img/icon-192.png">
+<title>Jejak Ilmu T4 · Ustazah Nafisah</title>
+<!-- Folder tingkatan: hanya js/config.js, img/ayat/ dan fail ini yang khusus. Kod app dikongsi dalam ../app/. -->
+<script src="js/config.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Naskh+Arabic:wght@400;600;700&family=Amiri+Quran&family=Great+Vibes&display=swap">
+<link rel="stylesheet" href="../app/jejak.css?v=2026-10-30b">
+</head>
+<body>
+<div class="app" id="app">
+  <main id="screen" class="screen" aria-live="polite"></main>
+  <nav class="tabbar" id="tabbar" aria-label="Navigasi utama"></nav>
+</div>
+<div id="gate" class="layer gate" hidden></div>
+<div id="sheet" class="sheet" hidden></div>
+<div id="layer" class="layer" hidden></div>
+<div id="toast" class="toast" hidden role="status"></div>
+<canvas id="conf" class="conf" hidden></canvas>
+
+<script src="../app/jejak.js?v=2026-10-30b"></script>
+</body>
+</html>

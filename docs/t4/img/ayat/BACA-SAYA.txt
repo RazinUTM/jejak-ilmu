@@ -1,0 +1,2 @@
+Letak imej ayat hafazan (PNG, dipotong daripada buku teks) di sini, cth. al-baqarah-2-255.png,
+kemudian senaraikan dalam js/config.js → hafazan.

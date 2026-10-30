@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#6d4cc4">
 <title>Panduan Murid · Jejak Ilmu</title>
-<link rel="icon" href="img/icon-192.png">
+<script src="js/config.js"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Great+Vibes&display=swap">
 <style>
 /* One readable column; prints cleanly; projected in class at laptop width. */
@@ -46,7 +46,8 @@ p{margin:0 0 8px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media (max-width:560px){ .grid2{grid-template-columns:1fr} .hero img{height:150px} .hero h1{font-size:25px} }
 .qr{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
-.qr img{width:150px;height:150px;border-radius:12px;border:1px solid var(--line);background:#fff;padding:6px}
+.qr #qr{width:150px;height:150px;border-radius:12px;border:1px solid var(--line);background:#fff;padding:6px;flex:none}
+.qr #qr img,.qr #qr svg{width:100%;height:100%;display:block}
 .url{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;font-size:15px;word-break:break-all;color:var(--accent)}
 .steps{display:flex;flex-direction:column;gap:10px;counter-reset:s}
 .step{display:flex;gap:14px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px}
@@ -78,11 +79,11 @@ footer{padding-block:28px 40px;color:var(--muted);font-size:13px}
 <body>
 <header class="hero"><div class="wrap">
   <div class="t">
-    <div class="script">Ustazah Nafisah</div>
+    <div class="script" data-k="guru">Ustazah Nafisah</div>
     <h1>Panduan Murid · Jejak Ilmu</h1>
-    <p>Pendidikan Islam Tingkatan 2. Hari pertama: siapkan 4 misi wajib, kemudian pilih misi pilihan yang kamu suka.</p>
+    <p><span data-k="tajuk">Pendidikan Islam Tingkatan 2</span>. Hari pertama: siapkan 4 misi wajib, kemudian pilih misi pilihan yang kamu suka.</p>
   </div>
-  <img src="img/pose-point.webp" alt="">
+  <img data-src="img/pose-point.webp" alt="">
 </div></header>
 
 <main class="wrap">
@@ -90,22 +91,22 @@ footer{padding-block:28px 40px;color:var(--muted);font-size:13px}
 <h2>Langkah 0 · Buka aplikasi</h2>
 <div class="card">
   <div class="qr">
-    <img src="img/qr-app.png" alt="Kod QR ke aplikasi Jejak Ilmu">
+    <div id="qr" role="img" aria-label="Kod QR ke aplikasi Jejak Ilmu"></div>
     <div style="flex:1;min-width:220px">
       <p>Imbas kod QR dengan kamera telefon, atau taip:</p>
-      <p class="url">razinutm.github.io/jejak-ilmu</p>
+      <p class="url" id="url">razinutm.github.io/jejak-ilmu</p>
       <p class="small muted">Jangan guna tab <b>Incognito / Private</b>: kemajuan kamu akan hilang bila tab ditutup.</p>
     </div>
   </div>
   <div class="grid2" style="margin-top:12px">
-    <div><b>Android (Chrome)</b><br><span class="small">Menu ⋮ → <span class="ui">Add to Home screen</span> / <span class="ui">Tambah ke skrin utama</span>. Ikon Ustazah Nafisah akan muncul seperti app.</span></div>
+    <div><b>Android (Chrome)</b><br><span class="small">Menu ⋮ → <span class="ui">Add to Home screen</span> / <span class="ui">Tambah ke skrin utama</span>. Ikon <span data-k="guru">Ustazah Nafisah</span> akan muncul seperti app.</span></div>
     <div><b>iPhone (Safari)</b><br><span class="small">Butang Kongsi ⬆ → <span class="ui">Add to Home Screen</span>. Guna Safari, bukan pelayar lain, supaya mikrofon berfungsi.</span></div>
   </div>
 </div>
 
 <h2>Langkah 1 · Log masuk</h2>
 <div class="steps">
-  <div class="step"><div class="n">1</div><div><h3>Pilih kelas kamu</h3><p class="small">Contoh: <span class="ui">2 Amanah</span>.</p></div></div>
+  <div class="step"><div class="n">1</div><div><h3>Pilih kelas kamu</h3><p class="small">Contoh: <span class="ui" data-k="contohKelas">2 Amanah</span>.</p></div></div>
   <div class="step"><div class="n">2</div><div><h3>Tekan nama kamu sendiri</h3><p class="small">Semua nama kelas sudah ada. Pastikan nama itu <b>nama kamu</b>.</p></div></div>
   <div class="step"><div class="n">3</div><div><h3>Masukkan PIN daripada Ustazah → Masuk</h3><p class="small">PIN salah? Cuba sekali lagi dengan perlahan. Masih salah, angkat tangan dan tanya Ustazah. Jangan beritahu PIN kamu kepada kawan.</p></div></div>
 </div>
@@ -124,7 +125,7 @@ footer{padding-block:28px 40px;color:var(--muted);font-size:13px}
     <li>Buku teks boleh dibuka. Muka surat rujukan ada di bawah setiap soalan.</li></ul></div></div>
   <div class="step"><div class="n">3</div><div>
     <h3>Rakam tasmik (hafazan)</h3><div class="time">± 10 minit · +30 XP</div>
-    <ul><li>Baca ayat dalam kad <b>Hafazan hari ini</b> sebanyak 3 kali dahulu.</li>
+    <ul><li>Baca ayat dalam kad <b data-k="hzKad">Ayat Hafazan Tingkatan 2</b> sebanyak 3 kali dahulu.</li>
     <li>Tekan <span class="ui">Rakam</span>, tanda janji, kemudian baca tanpa melihat (teks akan kabur). Benarkan mikrofon bila diminta.</li>
     <li>Tersekat? Butang <span class="ui">Intai teks</span> dibenarkan, tetapi dicatat. Jujur lebih bernilai daripada sempurna.</li>
     <li>Jika Ustazah minta, tekan <span class="ui">Kongsi rakaman</span> dan hantar ke WhatsApp Ustazah. Kemudian tekan <span class="ui">Selesai</span>.</li></ul></div></div>
@@ -148,15 +149,17 @@ footer{padding-block:28px 40px;color:var(--muted);font-size:13px}
   <ul style="margin:6px 0 0;padding-left:20px"><li>Dapatkan 100% dalam satu kuiz pelajaran.</li><li>Kumpul 300 XP hari ini.</li><li>Ulang kuiz sehingga soalan yang salah tadi menjadi betul: kad Laporan mengira <b>"bangkit"</b>.</li><li>Sudah selesai semua? Bantu kawan sebelah yang masih tersangkut log masuk atau mikrofon.</li></ul>
 </div>
 
-<h2>Ayat Hafazan Tingkatan 2</h2>
+<section id="hz">
+<h2 data-k="hzKad">Ayat Hafazan Tingkatan 2</h2>
 <div class="card">
-  <p>Sepanjang Tingkatan 2 kamu perlu menghafaz <b>4 ayat</b> daripada Surah Ali Imran: ayat <b>8</b>, <b>18</b>, <b>26</b> dan <b>27</b> (buku teks m.s. 2–12).</p>
+  <p id="hz-ayat">Sepanjang Tingkatan 2 kamu perlu menghafaz <b>4 ayat</b> daripada Surah Ali Imran: ayat <b>8</b>, <b>18</b>, <b>26</b> dan <b>27</b> (buku teks m.s. 2–12).</p>
   <ul style="margin:6px 0 0;padding-left:20px">
-    <li>Di skrin <span class="ui">Utama</span>, kad <span class="ui">Ayat Hafazan Tingkatan 2</span> menunjukkan <b>% hafazan</b> kamu dan status setiap ayat.</li>
+    <li>Di skrin <span class="ui">Utama</span>, kad <span class="ui" data-k="hzKad">Ayat Hafazan Tingkatan 2</span> menunjukkan <b>% hafazan</b> kamu dan status setiap ayat.</li>
     <li>Pilih ayat → <span class="ui">Rakam tasmik</span> → hantar kepada Ustazah. Status jadi ⏳ <i>Menunggu semakan</i> (dikira separuh).</li>
     <li>Bila Ustazah beri <b>TP3 ke atas</b>, ayat itu ✓ <b>Lulus</b>. TP1–TP2 bermaksud ↻ <i>Ulang</i>: rakam sekali lagi.</li>
   </ul>
 </div>
+</section>
 
 <h2>Cara dapat lencana</h2>
 <p>Tab <span class="ui">Cabaran</span> ialah zon <b>pilihan</b> untuk yang sudah siap misi wajib. Di situ setiap lencana ditunjukkan bersama syarat dan bar kemajuan; butang <span class="ui">Cuba</span> membawa kamu terus ke aktivitinya. Lencana yang diperoleh dipaparkan sebagai pingat di <span class="ui">Laporan</span> dan bilangannya (🏅) di Liga kelas. Lencana <b>kekal</b>, walaupun streak terputus.</p>
@@ -169,8 +172,8 @@ footer{padding-block:28px 40px;color:var(--muted);font-size:13px}
   <tr><td>Usaha</td><td><b>↻ Bangkit ×20</b></td><td>Betulkan 20 soalan yang pernah salah (ulang kuiz)</td></tr>
   <tr><td>Hafazan</td><td><b>🎙 Suara Pertama</b></td><td>Hantar tasmik pertama kepada Ustazah</td></tr>
   <tr><td>Hafazan</td><td><b>🤲 Suara Amanah</b></td><td>3 tasmik tanpa tekan "Intai teks"</td></tr>
-  <tr><td>Hafazan</td><td><b>🌓 Separuh Jalan</b></td><td>2 ayat hafazan lulus (Ustazah beri TP3 ke atas)</td></tr>
-  <tr><td>Hafazan</td><td><b>📖 Hafiz Ali Imran</b></td><td>Keempat-empat ayat hafazan Tingkatan 2 lulus</td></tr>
+  <tr data-hz="2"><td>Hafazan</td><td><b>🌓 Separuh Jalan</b></td><td id="lc-separuh">2 ayat hafazan lulus (Ustazah beri TP3 ke atas)</td></tr>
+  <tr data-hz="1"><td>Hafazan</td><td><b id="lc-hafiz-t">📖 Hafiz Ali Imran</b></td><td id="lc-hafiz">Keempat-empat ayat hafazan Tingkatan 2 lulus</td></tr>
   <tr><td>Cabaran</td><td><b>⚡ Juara Harian</b></td><td>100% dalam Cabaran Harian</td></tr>
   <tr><td>Cabaran</td><td><b>★ Kuiz Sempurna</b></td><td>100% dalam mana-mana Kuiz Pelajaran</td></tr>
   <tr><td>Cabaran</td><td><b>نْ Ahli Tajwid</b></td><td>90% dalam Tajwid Tap</td></tr>
@@ -196,7 +199,7 @@ footer{padding-block:28px 40px;color:var(--muted);font-size:13px}
 
 <h2>Amanah</h2>
 <div class="amanah">
-  <img src="img/pose-think.webp" alt="">
+  <img data-src="img/pose-think.webp" alt="">
   <div><b>Ustazah percaya kamu.</b>
     <ul><li>Log masuk dengan nama kamu sendiri sahaja. Jangan main untuk kawan.</li>
     <li>Jangan kongsi PIN.</li>
@@ -218,6 +221,42 @@ footer{padding-block:28px 40px;color:var(--muted);font-size:13px}
 
 <p style="margin-top:20px"><a class="cta" href="./">Buka Jejak Ilmu</a></p>
 </main>
-<footer class="wrap">Jejak Ilmu · Kelas Pendidikan Islam Tingkatan 2 · Ustazah Nafisah. Hanya nama dan kelas murid disimpan.</footer>
+<footer class="wrap">Jejak Ilmu · Kelas <span data-k="tajukPendek">Pendidikan Islam Tingkatan 2</span> · <span data-k="guru">Ustazah Nafisah</span>. Hanya nama dan kelas murid disimpan.</footer>
+<script>
+// Panduan ini dikongsi oleh semua tingkatan: teks khusus diambil daripada js/config.js folder ini.
+(function(){
+  var C=window.JEJAK_CONFIG||{}, A=C.asas||'', T=+(C.tingkatan||2), S=C.subjek||'Pendidikan Islam';
+  var pendek=S+' Tingkatan '+T, aw=(C.kelasAwalan!=null?String(C.kelasAwalan):T+' ');
+  var ADA=Array.isArray(C.hafazan), H=ADA?C.hafazan:[], N=H.length;   // tiada senarai + Tingkatan 2: kekalkan teks asal di bawah
+  var surah=[]; H.forEach(function(h){ if(h.surah&&surah.indexOf(h.surah)<0) surah.push(h.surah); });
+  var bil={2:'Kedua-dua',3:'Ketiga-tiga',4:'Keempat-empat',5:'Kelima-lima',6:'Keenam-enam'}[N]||('Kesemua '+N);
+  var esc=function(x){ return String(x==null?'':x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); };
+  var V={guru:C.guruNama||'Ustazah Nafisah', tajuk:pendek, tajukPendek:pendek, contohKelas:aw+'Amanah', hzKad:'Ayat Hafazan Tingkatan '+T};
+  document.querySelectorAll('[data-k]').forEach(function(e){ var v=V[e.getAttribute('data-k')]; if(v!=null) e.textContent=v; });
+  document.querySelectorAll('img[data-src]').forEach(function(e){ e.src=A+e.getAttribute('data-src'); });
+  var ic=document.createElement('link'); ic.rel='icon'; ic.href=A+'img/icon-192.png'; document.head.appendChild(ic);
+  document.title='Panduan Murid · Jejak Ilmu T'+T;
+  // Ayat hafazan
+  if(!ADA&&T===2){ /* teks statik Tingkatan 2 */ }
+  else if(!N){ document.getElementById('hz').hidden=true; document.querySelectorAll('tr[data-hz]').forEach(function(r){ r.hidden=true; }); }
+  else {
+    var ayat=H.map(function(h){ return '<b>'+esc(h.surah&&surah.length>1?h.surah+' '+(h.label||h.ayat):(h.label||h.ayat))+'</b>'; });
+    var senarai=ayat.length>1?ayat.slice(0,-1).join(', ')+' dan '+ayat[ayat.length-1]:ayat[0];
+    var ms=[]; H.forEach(function(h){ (String(h.ms||'').match(/\d+/g)||[]).forEach(function(n){ ms.push(+n); }); });
+    document.getElementById('hz-ayat').innerHTML='Sepanjang Tingkatan '+T+' kamu perlu menghafaz <b>'+N+' ayat</b>'+(surah.length===1?' daripada Surah '+esc(surah[0])+': ayat ':': ')+senarai+(ms.length?' (buku teks m.s. '+Math.min.apply(null,ms)+(Math.max.apply(null,ms)>Math.min.apply(null,ms)?'–'+Math.max.apply(null,ms):'')+')':'')+'.';
+    var hafiz=C.hafazanLencana||(surah.length===1?'Hafiz '+surah[0]:'Hafiz Tingkatan '+T);
+    document.getElementById('lc-hafiz-t').textContent='📖 '+hafiz;
+    document.getElementById('lc-hafiz').textContent=bil+' ayat hafazan Tingkatan '+T+' lulus';
+    if(N<2) document.querySelector('tr[data-hz="2"]').hidden=true;
+    else document.getElementById('lc-separuh').textContent=Math.ceil(N/2)+' ayat hafazan lulus (Ustazah beri TP3 ke atas)';
+  }
+  // Pautan dan kod QR untuk folder ini (dijana dalam pelayar; tiada fail QR perlu disediakan)
+  var app=location.href.split('#')[0].split('?')[0].replace(/panduan\.html$/,'');
+  document.getElementById('url').textContent=app.replace(/^https?:\/\//,'').replace(/\/$/,'');
+  var s=document.createElement('script'); s.src=A+'js/vendor/qrcode.js';
+  s.onload=function(){ try{ var q=qrcode(0,'M'); q.addData(app); q.make(); document.getElementById('qr').innerHTML=q.createSvgTag({cellSize:4,margin:0,scalable:true}); }catch(e){} };
+  document.head.appendChild(s);
+})();
+</script>
 </body>
 </html>

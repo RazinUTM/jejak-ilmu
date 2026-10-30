@@ -4,7 +4,21 @@ Aplikasi e-pembelajaran Pendidikan Islam Tingkatan 2 (KSSM) untuk kelas Ustazah 
 
 **Aplikasi (GitHub Pages):** https://razinutm.github.io/jejak-ilmu/
 
-## Fasa 1 — sekarang (tiada backend)
+## Berbilang tingkatan (satu kod, satu folder setiap tingkatan)
+
+| URL | Folder | Tetapan |
+|---|---|---|
+| `.../jejak-ilmu/` | `docs/` | Tingkatan 2 (asal; kunci storan telefon tidak berubah) |
+| `.../jejak-ilmu/t4/` | `docs/t4/` | Tingkatan 4 |
+
+- Kod app dikongsi: `docs/app/jejak.js`, `docs/app/jejak.css`, `docs/js/laporan-pdf.js`, `docs/img/`. Satu pembetulan = semua tingkatan.
+- Setiap folder tingkatan hanya ada `index.html` (shell), `js/config.js` (Sheet, kelas, ayat hafazan), `img/ayat/`, `manifest.webmanifest`, `panduan.html` (salinan; teks ikut config).
+- Supabase dikongsi. Kelas dibezakan dengan awalan nama (`4 Adil`); "Semua kelas" dari app T4 = skop `T4` (perlu `supabase/tingkatan.sql`).
+- Tingkatan baharu: `node tools/tingkatan-baru.mjs 4` → isi `docs/t4/js/config.js` → `node tools/terbit.mjs` → commit/push.
+- Setiap keluaran: `node tools/terbit.mjs` (naikkan versi untuk banner "Versi baharu", salin panduan, semak semua config).
+- Templat folder: `templat/tingkatan/` (tidak diterbitkan).
+
+## Fasa 1 — asal (tiada backend)
 
 Semua kandungan datang daripada **Google Sheets**; kemajuan murid disimpan dalam telefon masing-masing (localStorage). Tiada PIN; murid pilih kelas dan taip nama.
 

@@ -100,13 +100,15 @@ async function claudeJSON(system: string, user: string, maxTokens: number): Prom
   try { return { draf: JSON.parse(text.slice(a, z + 1)), stop: j.stop_reason }; } catch (_) { throw new Error(j.stop_reason === 'max_tokens' ? 'terpotong' : 'format_ai'); }
 }
 
+const tingkatan = (b: Record<string, unknown>) => Math.min(6, Math.max(1, Number(b.tingkatan) || 2));
+
 type SpInfo = Record<string, { n?: string; p?: number | null }>;
 type SpRow = { k: string; m: number; c: number };
 
-const SISTEM_ULASAN = `Anda membantu Ustazah Nafisah, guru Pendidikan Islam Tingkatan 2 (KSSM) di Malaysia, menulis DRAF ulasan ringkas untuk kad laporan murid dalam aplikasi pembelajaran Jejak Ilmu. Ustazah akan membaca, menyunting dan mengesahkan setiap draf.
+const sistemUlasan = (tkt: number) => `Anda membantu Ustazah Nafisah, guru Pendidikan Islam Tingkatan ${tkt} (KSSM) di Malaysia, menulis DRAF ulasan ringkas untuk kad laporan murid dalam aplikasi pembelajaran Jejak Ilmu. Ustazah akan membaca, menyunting dan mengesahkan setiap draf.
 
 Peraturan:
-- Bahasa Melayu yang mesra, hangat dan jujur, seperti seorang ustazah bercakap kepada murid berumur 14 tahun. Gunakan "kamu".
+- Bahasa Melayu yang mesra, hangat dan jujur, seperti seorang ustazah bercakap kepada murid berumur ${12 + tkt} tahun. Gunakan "kamu".
 - 2 hingga 3 ayat, maksimum 55 patah perkataan. Mulakan dengan {nama}, (tulis tepat "{nama}" sebagai pemegang tempat; jangan reka nama).
 - Hargai USAHA dahulu (hari aktif, bilangan soalan dicuba, tasmik), bukan markah semata-mata.
 - Sebut satu kekuatan (SP kuat) jika ada, dan satu fokus seterusnya (SP perlu ulang) dengan tindakan konkrit dalam aplikasi: contohnya ulang Kuiz Pelajaran N, Cabaran Harian 5 minit, atau rakam tasmik hafazan.
@@ -139,15 +141,15 @@ async function ulasan(key: string, cred: Record<string, string>, b: Record<strin
       `${r.tasmik} tasmik dihantar${r.tasmik ? ` (jumlah intai teks ${r.tasmik_intai})` : ''}. ` +
       `SP kuat: ${spText(r.sp_kuat, info)}. SP perlu ulang: ${spText(r.sp_lemah, info)}.`;
   }).join('\n');
-  const user = `Ayat hafazan buku teks: Surah Ali Imran ayat 8, 18, 26 dan 27.\n\nData murid:\n${data}\n\nTulis satu draf ulasan bagi setiap murid di atas.`;
-  const { draf: arr, stop } = await claudeJSON(SISTEM_ULASAN, user, 600 + 350 * pick.length);
+  const user = `Ayat hafazan buku teks: ${clean(b.hafazan, 300) || 'Surah Ali Imran ayat 8, 18, 26 dan 27'}.\n\nData murid:\n${data}\n\nTulis satu draf ulasan bagi setiap murid di atas.`;
+  const { draf: arr, stop } = await claudeJSON(sistemUlasan(tingkatan(b)), user, 600 + 350 * pick.length);
   const ids = new Set(pick.map((r: { akaun_id: number }) => Number(r.akaun_id)));
   const draf = arr.filter((x) => x && ids.has(Number(x.id)) && typeof x.ulasan === 'string')
     .map((x) => ({ id: Number(x.id), ulasan: x.ulasan.trim().slice(0, 700) }));
   return { ok: true, draf, model: MODEL, lengkap: stop !== 'max_tokens' };
 }
 
-const SISTEM_REFLEKSI = `Anda membantu seorang guru Pendidikan Islam Tingkatan 2 di Malaysia menulis DRAF refleksi PdP (seperti ruangan refleksi dalam Rancangan Pengajaran Harian) berdasarkan data aktiviti murid dalam aplikasi Jejak Ilmu. Guru akan menyemak dan menyunting.
+const sistemRefleksi = (tkt: number) => `Anda membantu seorang guru Pendidikan Islam Tingkatan ${tkt} di Malaysia menulis DRAF refleksi PdP (seperti ruangan refleksi dalam Rancangan Pengajaran Harian) berdasarkan data aktiviti murid dalam aplikasi Jejak Ilmu. Guru akan menyemak dan menyunting.
 
 Peraturan:
 - Bahasa Melayu formal dan ringkas, 3 hingga 5 ayat, tanpa tajuk dan tanpa senarai.
@@ -160,11 +162,15 @@ Balas dengan teks refleksi sahaja.`;
 async function refleksi(key: string, cred: Record<string, string>, b: Record<string, unknown>) {
   const dari = clean(b.dari, 10), hingga = clean(b.hingga || b.dari, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dari) || !/^\d{4}-\d{2}-\d{2}$/.test(hingga)) return { ok: false, ralat: 'tarikh' };
-  const kelas = clean(b.kelas, 40); const semua = kelas === '*';
-  const d = await rpc(key, 'guru_laporan_harian', { ...cred, p_kelas_tapis: kelas, p_dari: dari, p_hingga: hingga });
+  const kelas = clean(b.kelas, 40); const semua = kelas === '*' || /^T\d+$/.test(kelas);
+  let d = await rpc(key, 'guru_laporan_harian', { ...cred, p_kelas_tapis: kelas, p_dari: dari, p_hingga: hingga });
+  // SQL 12 belum dijalankan: 'T4' tidak dikenali, jadi ambil semua kelas dan tapis ikut awalan tingkatan di sini.
+  if (d && d.ok && /^T\d+$/.test(kelas) && !d.semua) d = await rpc(key, 'guru_laporan_harian', { ...cred, p_kelas_tapis: '*', p_dari: dari, p_hingga: hingga });
   if (!d || !d.ok) return { ok: false, ralat: d?.ralat || 'data' };
+  const awalan = /^T\d+$/.test(kelas) ? kelas.slice(1) + ' ' : '';
+  const dlmSkop = (k: unknown) => !semua || (!/lain/i.test(String(k || '')) && (!awalan || String(k || '').startsWith(awalan)));
   const info = (b.sp_info && typeof b.sp_info === 'object' ? b.sp_info : {}) as SpInfo;
-  const murid = (d.murid as Array<Record<string, any>>).filter((m) => !semua || !/lain/i.test(String(m.kelas || '')));
+  const murid = (d.murid as Array<Record<string, any>>).filter((m) => dlmSkop(m.kelas));
   const isAktif = (m: Record<string, any>) => m.jawapan > 0 || (m.tasmik || []).length > 0;
   const perKelas = semua ? [...new Set(murid.map((m) => String(m.kelas)))].sort().map((k) => {
     const ms = murid.filter((m) => m.kelas === k); const j = ms.reduce((s, m) => s + m.jawapan, 0), bt = ms.reduce((s, m) => s + m.betul, 0);
@@ -176,15 +182,15 @@ async function refleksi(key: string, cred: Record<string, string>, b: Record<str
   const tas = murid.reduce((s, m) => s + (m.tasmik || []).length, 0);
   const rendah = murid.filter((m) => m.jawapan >= 5 && m.betul / m.jawapan < 0.5).length;
   const spAgg: Record<string, { cubaan: number; betul: number; murid: number }> = {};
-  for (const r of d.sp as Array<Record<string, any>>) { if (semua && /lain/i.test(String(r.kelas || ''))) continue; const o = spAgg[r.sp_kod] = spAgg[r.sp_kod] || { cubaan: 0, betul: 0, murid: 0 }; o.cubaan += r.cubaan; o.betul += r.betul; o.murid += r.murid; }
+  for (const r of d.sp as Array<Record<string, any>>) { if (!dlmSkop(r.kelas)) continue; const o = spAgg[r.sp_kod] = spAgg[r.sp_kod] || { cubaan: 0, betul: 0, murid: 0 }; o.cubaan += r.cubaan; o.betul += r.betul; o.murid += r.murid; }
   const sp = Object.entries(spAgg).map(([k, s]) =>
     `${clean(k, 20)}${info[k]?.n ? ' ' + clean(info[k].n) : ''}: ${s.murid} murid, ${s.cubaan} cubaan, ${Math.round((s.betul / Math.max(1, s.cubaan)) * 100)}% betul`).join('\n') || 'tiada';
-  const user = `Skop: ${semua ? 'semua kelas' : 'kelas ' + kelas}. Tarikh: ${dari}${hingga !== dari ? ' hingga ' + hingga : ''}. Pelajaran semasa: ${clean(b.pelajaran, 160) || '-'}.
+  const user = `Skop: ${semua ? 'semua kelas Tingkatan ' + tingkatan(b) : 'kelas ' + kelas}. Tarikh: ${dari}${hingga !== dari ? ' hingga ' + hingga : ''}. Pelajaran semasa: ${clean(b.pelajaran, 160) || '-'}.
 Murid aktif: ${aktif} daripada ${n}. Soalan dijawab: ${jaw}, ketepatan purata ${jaw ? Math.round((bet / jaw) * 100) : 0}%.
 Tasmik hafazan diterima: ${tas}. Murid dengan ketepatan bawah 50% (sekurang-kurangnya 5 soalan): ${rendah}. Murid tidak aktif: ${n - aktif}.
 Pencapaian mengikut SP:
 ${sp}${semua ? `\nMengikut kelas:\n${perKelas}` : ''}`;
-  const text = await claude(SISTEM_REFLEKSI, user, semua ? 900 : 600);
+  const text = await claude(sistemRefleksi(tingkatan(b)), user, semua ? 900 : 600);
   return { ok: true, refleksi: text.trim().slice(0, 1500), model: MODEL };
 }
 

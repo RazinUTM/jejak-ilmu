@@ -61,8 +61,8 @@
     const para = (txt, o = {}) => { doc.setFont('helvetica', o.b ? 'bold' : 'normal'); doc.setFontSize(o.s || 8.6); doc.setTextColor(...(o.c || C.ink)); for (const ln of doc.splitTextToSize(asc(txt), o.w || CW)) { ensure(5); doc.text(ln, o.x || L, y); y += (o.lh || 4.3); } };
 
     // ---------- data ----------
-    const semua = !!d.semua;
-    const M = (d.murid || []).filter(m => !semua || !/lain/i.test(m.kelas)).map(m => {
+    const semua = !!d.semua; const TK = ctx.tkt || 2; const milik = ctx.milik || (() => true);
+    const M = (d.murid || []).filter(m => !semua || (!/lain/i.test(m.kelas) && milik(m.kelas))).map(m => {
       const akt = m.jawapan > 0 || (m.tasmik || []).length > 0; const acc = m.jawapan >= 5 ? m.betul / m.jawapan * 100 : null;
       const H = ctx.hafazan(m.hafazan || []);
       return { ...m, akt, acc, tp: acc == null ? null : acc < 40 ? 1 : acc < 55 ? 2 : 3, hz: H };
@@ -79,7 +79,7 @@
     });
     const all = { n: M.length, aktif: M.filter(m => m.akt).length, jaw: M.reduce((s, m) => s + m.jawapan, 0), bet: M.reduce((s, m) => s + m.betul, 0), tas: M.reduce((s, m) => s + (m.tasmik || []).length, 0) };
     const accs = M.filter(m => m.acc != null).map(m => m.acc);
-    const sp = {}; for (const r of (d.sp || [])) { if (semua && /lain/i.test(r.kelas)) continue; const o = sp[r.sp_kod] = sp[r.sp_kod] || { kod: r.sp_kod, cubaan: 0, betul: 0, murid: 0, k: {} }; o.cubaan += r.cubaan; o.betul += r.betul; o.murid += r.murid; o.k[r.kelas] = r; }
+    const sp = {}; for (const r of (d.sp || [])) { if (semua && (/lain/i.test(r.kelas) || !milik(r.kelas))) continue; const o = sp[r.sp_kod] = sp[r.sp_kod] || { kod: r.sp_kod, cubaan: 0, betul: 0, murid: 0, k: {} }; o.cubaan += r.cubaan; o.betul += r.betul; o.murid += r.murid; o.k[r.kelas] = r; }
     const SP = Object.values(sp).sort((a, b) => a.kod.localeCompare(b.kod, undefined, { numeric: true }));
     const satuHari = ctx.dari === ctx.hingga;
     const tajukSkop = semua ? `Semua kelas (${kelasList.length} kelas)` : d.kelas;
@@ -126,7 +126,7 @@
     // ---------- halaman 1: kepala ----------
     doc.setFillColor(...C.brand); doc.rect(0, 0, W, 24, 'F');
     T(semua ? 'LAPORAN PdP KESELURUHAN' : (satuHari ? 'LAPORAN HARIAN PdP' : 'LAPORAN PdP'), L, 11, { b: 1, s: 14, c: [255, 255, 255] });
-    T('Pendidikan Islam Tingkatan 2 (KSSM) · Jejak Ilmu', L, 17, { s: 9.5, c: [255, 255, 255] });
+    T(`${ctx.tajuk || 'Pendidikan Islam Tingkatan 2 (KSSM)'} · Jejak Ilmu`, L, 17, { s: 9.5, c: [255, 255, 255] });
     T(ctx.ust, W - R, 11, { s: 9, c: [255, 255, 255], opt: { align: 'right' } });
     T('Dijana: ' + ctx.sekarang, W - R, 17, { s: 9, c: [255, 255, 255], opt: { align: 'right' } });
     AT({ startY: 29, theme: 'plain', styles: { fontSize: 9, cellPadding: 1.1, textColor: C.ink }, columnStyles: { 0: { fontStyle: 'bold', cellWidth: 36 } }, margin: { left: L, right: R },
@@ -137,7 +137,7 @@
     // KPI
     const hzAll = M.length ? Math.round(ST.mean(M.map(m => m.hz.pct))) : 0;
     const kpi = [[`${all.aktif}/${all.n}`, `murid aktif (${pct(all.aktif, all.n)}%)`], [String(all.jaw), 'soalan dijawab'], [all.aktif ? f1(all.jaw / all.aktif) : '-', 'soalan / murid aktif'],
-      [accs.length ? Math.round(ST.q(accs, 0.5)) + '%' : '-', 'ketepatan median'], [String(all.tas), 'tasmik diterima'], [hzAll + '%', 'kemajuan hafazan T2']];
+      [accs.length ? Math.round(ST.q(accs, 0.5)) + '%' : '-', 'ketepatan median'], [String(all.tas), 'tasmik diterima'], [hzAll + '%', 'kemajuan hafazan T' + TK]];
     const bw = (CW - 5 * 2.4) / 6;
     kpi.forEach(([v, t], i) => { const x = L + i * (bw + 2.4); doc.setDrawColor(...C.brandLine); doc.setFillColor(...C.brandSoft); doc.roundedRect(x, y, bw, 15.5, 1.8, 1.8, 'FD'); T(v, x + bw / 2, y + 7.2, { b: 1, s: 12.5, c: C.brand, opt: { align: 'center' } }); T(t, x + bw / 2, y + 12.3, { s: 6.3, c: C.muted, opt: { align: 'center' } }); });
     y += 21;
@@ -146,9 +146,9 @@
     const hzRows = rows => ayat.map(a => { const c = { lulus: 0, proses: 0, belum: 0 }; for (const m of rows) { const s = m.hz.st[a.id].s; if (s === 'lulus') c.lulus++; else if (s === 'belum') c.belum++; else c.proses++; } return { label: 'Ayat ' + a.label, parts: [c.lulus, c.proses, c.belum] }; });
     const HZC = [C.ord[2], C.ord[0], C.neutral], HZL = ['Lulus (TP' + ctx.lulusTP + '+)', 'Dalam proses', 'Belum'];
     const aktivitiChart = (a, kelasFilter) => {
-      if (satuHari) { const by = {}; for (const r of (d.jam || [])) { if (kelasFilter && r.kelas !== kelasFilter) continue; if (semua && /lain/i.test(r.kelas)) continue; by[r.jam] = (by[r.jam] || 0) + r.jawapan; }
+      if (satuHari) { const by = {}; for (const r of (d.jam || [])) { if (kelasFilter && r.kelas !== kelasFilter) continue; if (semua && (/lain/i.test(r.kelas) || !milik(r.kelas))) continue; by[r.jam] = (by[r.jam] || 0) + r.jawapan; }
         const items = []; for (let h = 6; h <= 23; h++) items.push({ v: by[h] || 0, lbl: h % 3 === 0 ? (h === 12 ? '12PM' : h > 12 ? (h - 12) + 'PM' : h + 'AM') : '' }); vbar(a, items, { yLabel: 'soalan' }); }
-      else { const by = {}; for (const r of (d.harian || [])) { if (kelasFilter && r.kelas !== kelasFilter) continue; if (semua && /lain/i.test(r.kelas)) continue; by[r.hari] = (by[r.hari] || 0) + r.murid; }
+      else { const by = {}; for (const r of (d.harian || [])) { if (kelasFilter && r.kelas !== kelasFilter) continue; if (semua && (/lain/i.test(r.kelas) || !milik(r.kelas))) continue; by[r.hari] = (by[r.hari] || 0) + r.murid; }
         const items = []; const d0 = new Date(ctx.dari + 'T00:00:00'), d1 = new Date(ctx.hingga + 'T00:00:00'); const nd = Math.round((d1 - d0) / 864e5) + 1; const step = Math.ceil(nd / 10);
         for (let i = 0; i < nd; i++) { const dt = new Date(d0); dt.setDate(dt.getDate() + i); const k = dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0'); items.push({ v: by[k] || 0, lbl: i % step === 0 ? String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') : '' }); }
         vbar(a, items, { yLabel: 'murid aktif', valueLabels: nd <= 10 }); }
@@ -164,7 +164,7 @@
       const K0 = K[0] || { tp: [0, 0, 0] };
       const tpPanel = panel(L + PW + 8, y, PW, PH * 0.42, 'Taburan ~TP (cadangan daripada kuiz)', '~TP1 < 40% · ~TP2 40-54% · ~TP3 >= 55% ketepatan');
       stack100(tpPanel, [{ label: d.kelas, parts: K0.tp }], C.ord, ['~TP1', '~TP2', '~TP3'], { labelW: 14, inkOn: [C.ink] });
-      const hzP = panel(L + PW + 8, y + PH * 0.46, PW, PH * 0.54, 'Ayat Hafazan T2 (kumulatif)', '% murid mengikut status setiap ayat');
+      const hzP = panel(L + PW + 8, y + PH * 0.46, PW, PH * 0.54, 'Ayat Hafazan T' + TK + ' (kumulatif)', '% murid mengikut status setiap ayat');
       stack100(hzP, hzRows(M), HZC, HZL, { labelW: 16, inkOn: [null, C.ink, C.ink] });
       y += PH + 6;
       aktivitiChart(panel(L, y, CW, PH - 4, satuHari ? 'Aktiviti mengikut jam' : 'Murid aktif setiap hari', satuHari ? 'Bilangan soalan dijawab mengikut jam (waktu Malaysia): bukti PdPr di luar waktu kelas' : 'Bilangan murid yang menjawab sekurang-kurangnya satu soalan'), null);
@@ -174,7 +174,7 @@
       tajuk('A. Perbandingan kelas', 'Ketepatan: murid dengan sekurang-kurangnya 5 jawapan. CI 95% = selang keyakinan min (taburan t).');
       AT({ startY: y, margin: { left: L, right: R }, theme: 'grid', styles: { fontSize: 7.4, cellPadding: 1.3, lineColor: [225, 225, 232], halign: 'right' }, headStyles: { fillColor: C.brand, textColor: 255, halign: 'center' },
         columnStyles: { 0: { halign: 'left', fontStyle: 'bold' } },
-        head: [['Kelas', 'Murid', 'Aktif', 'Soalan', 'Soalan/ aktif', 'Ketepatan min ± SD', 'Median (IQR)', '>= 70%', 'Tasmik', 'Hafazan T2']],
+        head: [['Kelas', 'Murid', 'Aktif', 'Soalan', 'Soalan/ aktif', 'Ketepatan min ± SD', 'Median (IQR)', '>= 70%', 'Tasmik', 'Hafazan T' + TK]],
         body: K.map(k => [k.k, k.n, `${k.aktif} (${pct(k.aktif, k.n)}%)`, k.jaw, f1(k.spa), k.mean != null ? `${Math.round(k.mean)} ± ${Math.round(k.sd || 0)}%` : '-', k.med != null ? `${Math.round(k.med)}% (${Math.round(k.q1)}-${Math.round(k.q3)})` : '-', k.p70 != null ? k.p70 + '%' : '-', k.tas, Math.round(k.hz) + '%'])
           .concat([['Keseluruhan', all.n, `${all.aktif} (${pct(all.aktif, all.n)}%)`, all.jaw, all.aktif ? f1(all.jaw / all.aktif) : '-', accs.length ? `${Math.round(ST.mean(accs))} ± ${Math.round(ST.sd(accs))}%` : '-', accs.length ? `${Math.round(ST.q(accs, .5))}% (${Math.round(ST.q(accs, .25))}-${Math.round(ST.q(accs, .75))})` : '-', accs.length ? pct(accs.filter(a => a >= 70).length, accs.length) + '%' : '-', all.tas, hzAll + '%']]),
         didParseCell: h => { if (h.section === 'body' && h.row.index === K.length) { h.cell.styles.fontStyle = 'bold'; h.cell.styles.fillColor = C.brandSoft; } } });
@@ -186,7 +186,7 @@
       hbar(panel(L + PW + 8, y, PW, rowsH, 'Ketepatan purata mengikut kelas', 'Min dengan CI 95% · garis putus = sasaran 70%'), K.map(k => ({ label: k.k, v: k.mean || 0, lo: k.ci ? k.ci[0] : null, hi: k.ci ? k.ci[1] : null, txt: k.mean != null ? Math.round(k.mean) + '%' : '-' })), { unit: '%', target: 70, valW: 10 });
       y += rowsH + 4;
       stack100(panel(L, y, PW, rowsH, 'Taburan ~TP mengikut kelas', '~TP1 < 40% · ~TP2 40-54% · ~TP3 >= 55% ketepatan'), K.map(k => ({ label: k.k, parts: k.tp })), C.ord, ['~TP1', '~TP2', '~TP3'], { inkOn: [C.ink] });
-      hbar(panel(L + PW + 8, y, PW, rowsH, 'Kemajuan Ayat Hafazan T2', 'Purata % hafazan murid (lulus = 1, dalam proses = 0.5)'), K.map(k => ({ label: k.k, v: k.hz, txt: Math.round(k.hz) + '%' })), { unit: '%', color: C.ord[2] });
+      hbar(panel(L + PW + 8, y, PW, rowsH, 'Kemajuan Ayat Hafazan T' + TK, 'Purata % hafazan murid (lulus = 1, dalam proses = 0.5)'), K.map(k => ({ label: k.k, v: k.hz, txt: Math.round(k.hz) + '%' })), { unit: '%', color: C.ord[2] });
       y += rowsH + 4;
       ensure(PH);
       aktivitiChart(panel(L, y, CW, PH - 6, satuHari ? 'Aktiviti mengikut jam (semua kelas)' : 'Murid aktif setiap hari (semua kelas)', satuHari ? 'Bilangan soalan dijawab mengikut jam (waktu Malaysia)' : 'Jumlah murid yang menjawab sekurang-kurangnya satu soalan'), null);
@@ -204,7 +204,7 @@
       head: [['Pemboleh ubah', 'n', 'Terendah', 'Q1', 'Median', 'Q3', 'Tertinggi', 'Min (purata)', 'SD', 'CI 95% bagi min']],
       body: [['Ketepatan murid (%)', ...desc(accs)],
         ['Soalan / murid aktif', spa.length, ...(spa.length ? [Math.min(...spa), f1(ST.q(spa, .25)), f1(ST.q(spa, .5)), f1(ST.q(spa, .75)), Math.max(...spa), f1(ST.mean(spa)), f1(ST.sd(spa)), ST.ci(spa) ? `${f1(ST.ci(spa)[0])}-${f1(ST.ci(spa)[1])}` : '-'] : ['-', '-', '-', '-', '-', '-', '-', '-'])],
-        ['Kemajuan hafazan T2 (%)', M.length, ...(M.length ? (a => [Math.min(...a) + '%', Math.round(ST.q(a, .25)) + '%', Math.round(ST.q(a, .5)) + '%', Math.round(ST.q(a, .75)) + '%', Math.max(...a) + '%', f1(ST.mean(a)) + '%', f1(ST.sd(a)), ST.ci(a) ? `${Math.round(ST.ci(a)[0])}-${Math.round(ST.ci(a)[1])}%` : '-'])(M.map(m => m.hz.pct)) : ['-', '-', '-', '-', '-', '-', '-', '-'])]] });
+        ['Kemajuan hafazan T' + TK + ' (%)', M.length, ...(M.length ? (a => [Math.min(...a) + '%', Math.round(ST.q(a, .25)) + '%', Math.round(ST.q(a, .5)) + '%', Math.round(ST.q(a, .75)) + '%', Math.max(...a) + '%', f1(ST.mean(a)) + '%', f1(ST.sd(a)), ST.ci(a) ? `${Math.round(ST.ci(a)[0])}-${Math.round(ST.ci(a)[1])}%` : '-'])(M.map(m => m.hz.pct)) : ['-', '-', '-', '-', '-', '-', '-', '-'])]] });
     y = doc.lastAutoTable.finalY + 5;
     const ayatSt = [];
     if (sp1) ayatSt.push(`Hubungan usaha dan ketepatan: korelasi Spearman antara bilangan soalan dijawab dan ketepatan, rho = ${sp1.r.toFixed(2)} (${kuatRho(sp1.r)}, ${sp1.r >= 0 ? 'positif' : 'negatif'}), ${pTxt(sp1.p)}, n = ${sp1.n}. ${sp1.p < 0.05 ? 'Hubungan ini signifikan secara statistik pada aras 0.05' : 'Hubungan ini tidak signifikan pada aras 0.05'}; korelasi tidak membuktikan sebab-akibat.`);
@@ -269,14 +269,14 @@
       for (const k of K) {
         doc.addPage(); y = 20;
         T(`Lampiran · Keputusan individu: ${k.k}`, L, y, { b: 1, s: 11.5, c: C.brand }); y += 5;
-        T(`${k.aktif}/${k.n} murid aktif · ${k.jaw} soalan · ketepatan median ${k.med != null ? Math.round(k.med) + '%' : '-'} · tasmik ${k.tas} · hafazan T2 ${Math.round(k.hz)}%`, L, y, { s: 8, c: C.ink2 }); y += 4;
+        T(`${k.aktif}/${k.n} murid aktif · ${k.jaw} soalan · ketepatan median ${k.med != null ? Math.round(k.med) + '%' : '-'} · tasmik ${k.tas} · hafazan T${TK} ${Math.round(k.hz)}%`, L, y, { s: 8, c: C.ink2 }); y += 4;
         individu(k.ms);
       }
     }
 
     function individu(rows) {
       const head = ['Bil', 'Nama murid', satuHari ? 'Masa' : 'Terakhir', ...(satuHari ? [] : ['Hari']), 'Aktiviti', 'Soalan', 'Betul', '~TP', 'XP', 'Hafazan', 'Tasmik (tempoh ini)'];
-      const body = rows.map((m, i) => { const t = (m.tasmik || []).map(x => `${String(x.rujukan || '').replace(/^Surah Ali Imran /, '').split(' · ')[0]}${x.gred ? ' [' + x.gred + ']' : ''}${x.intai ? ' intai ' + x.intai : ''}`).join('; ');
+      const body = rows.map((m, i) => { const t = (m.tasmik || []).map(x => `${String(x.rujukan || '').replace(/^Surah /, '').split(' · ')[0]}${x.gred ? ' [' + x.gred + ']' : ''}${x.intai ? ' intai ' + x.intai : ''}`).join('; ');
         return [i + 1, asc(m.nama), m.akt && m.mula ? (satuHari ? `${ctx.jam(m.mula)}-${ctx.jam(m.akhir)}` : ctx.tarikhJam(m.akhir)) : '-', ...(satuHari ? [] : [m.hari_aktif || 0]), asc((m.set_kod || []).map(ctx.setNama).join(', ')) || '-', m.jawapan, m.jawapan ? Math.round(m.betul / m.jawapan * 100) + '%' : '-', m.tp ? 'TP' + m.tp : '-', m.xp || 0, m.hz.pct + '%', asc(t) || '-']; });
       const cs = satuHari ? { 0: { cellWidth: 7, halign: 'right' }, 1: { cellWidth: 33 }, 2: { cellWidth: 25 }, 3: { cellWidth: 25 }, 4: { cellWidth: 11, halign: 'right' }, 5: { cellWidth: 11, halign: 'right' }, 6: { cellWidth: 9 }, 7: { cellWidth: 9, halign: 'right' }, 8: { cellWidth: 13, halign: 'right' } }
         : { 0: { cellWidth: 7, halign: 'right' }, 1: { cellWidth: 32 }, 2: { cellWidth: 22 }, 3: { cellWidth: 9, halign: 'right' }, 4: { cellWidth: 22 }, 5: { cellWidth: 11, halign: 'right' }, 6: { cellWidth: 11, halign: 'right' }, 7: { cellWidth: 9 }, 8: { cellWidth: 9, halign: 'right' }, 9: { cellWidth: 13, halign: 'right' } };
