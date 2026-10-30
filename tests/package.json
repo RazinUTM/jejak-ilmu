@@ -1,0 +1,14 @@
+{
+  "name": "jejak-ilmu-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sql": "node sql12.mjs",
+    "tingkatan": "node tingkatan.mjs",
+    "semua": "node sql12.mjs && node tingkatan.mjs && OLD_SQL=1 node tingkatan.mjs"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "0.5.11",
+    "esbuild": "0.24.2"
+  }
+}

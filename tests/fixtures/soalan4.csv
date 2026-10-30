@@ -1,0 +1,25 @@
+id,pelajaran,sp_kod,jenis,soalan,soalan_jawi,arab_jawi,pilihan_A,pilihan_B,pilihan_C,pilihan_D,pilihan_E,jawapan,urutan_1,urutan_2,urutan_3,urutan_4,urutan_5,urutan_6,penjelasan,ms,kbat,aktif
+T4-P1-Q01,1,1.1.1,mcq,Soalan ujian T4 pelajaran 1 nombor 1,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,10,N,Y
+T4-P1-Q02,1,1.1.2,mcq,Soalan ujian T4 pelajaran 1 nombor 2,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,10,N,Y
+T4-P1-Q03,1,1.1.1,mcq,Soalan ujian T4 pelajaran 1 nombor 3,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,10,N,Y
+T4-P1-Q04,1,1.1.2,mcq,Soalan ujian T4 pelajaran 1 nombor 4,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,10,N,Y
+T4-P1-Q05,1,1.1.1,mcq,Soalan ujian T4 pelajaran 1 nombor 5,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,10,N,Y
+T4-P1-Q06,1,1.1.2,mcq,Soalan ujian T4 pelajaran 1 nombor 6,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,10,Y,Y
+T4-P2-Q01,2,2.1.1,mcq,Soalan ujian T4 pelajaran 2 nombor 1,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,20,N,Y
+T4-P2-Q02,2,2.1.1,mcq,Soalan ujian T4 pelajaran 2 nombor 2,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,20,N,Y
+T4-P2-Q03,2,2.1.1,mcq,Soalan ujian T4 pelajaran 2 nombor 3,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,20,N,Y
+T4-P2-Q04,2,2.1.1,mcq,Soalan ujian T4 pelajaran 2 nombor 4,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,20,N,Y
+T4-P2-Q05,2,2.1.1,mcq,Soalan ujian T4 pelajaran 2 nombor 5,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,20,N,Y
+T4-P2-Q06,2,2.1.1,mcq,Soalan ujian T4 pelajaran 2 nombor 6,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,20,Y,Y
+T4-P3-Q01,3,3.1.1,mcq,Soalan ujian T4 pelajaran 3 nombor 1,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,30,N,Y
+T4-P3-Q02,3,3.1.1,mcq,Soalan ujian T4 pelajaran 3 nombor 2,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,30,N,Y
+T4-P3-Q03,3,3.1.1,mcq,Soalan ujian T4 pelajaran 3 nombor 3,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,30,N,Y
+T4-P3-Q04,3,3.1.1,mcq,Soalan ujian T4 pelajaran 3 nombor 4,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,30,N,Y
+T4-P3-Q05,3,3.1.1,mcq,Soalan ujian T4 pelajaran 3 nombor 5,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,30,N,Y
+T4-P3-Q06,3,3.1.1,mcq,Soalan ujian T4 pelajaran 3 nombor 6,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,30,Y,Y
+T4-P5-Q01,5,5.1.1,mcq,Soalan ujian T4 pelajaran 5 nombor 1,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,50,N,Y
+T4-P5-Q02,5,5.1.1,mcq,Soalan ujian T4 pelajaran 5 nombor 2,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,50,N,Y
+T4-P5-Q03,5,5.1.1,mcq,Soalan ujian T4 pelajaran 5 nombor 3,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,50,N,Y
+T4-P5-Q04,5,5.1.1,mcq,Soalan ujian T4 pelajaran 5 nombor 4,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,50,N,Y
+T4-P5-Q05,5,5.1.1,mcq,Soalan ujian T4 pelajaran 5 nombor 5,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,50,N,Y
+T4-P5-Q06,5,5.1.1,mcq,Soalan ujian T4 pelajaran 5 nombor 6,,,Jawapan betul,Pilihan dua,Pilihan tiga,Pilihan empat,,A,,,,,,,Penjelasan ujian.,50,Y,Y
