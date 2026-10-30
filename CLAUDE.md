@@ -38,8 +38,12 @@ Aplikasi e-pembelajaran Pendidikan Islam KSSM untuk kelas **Ustazah Nafisah**. P
 
 ## Imej ayat hafazan
 - Potong daripada PDF buku teks: render halaman pada 300 dpi, potong di antara jalur label dan jalur rujukan dengan margin luas (potongan pertama T2 memotong bahagian atas baris), simpan PNG dalam `docs/tN/img/ayat/`, kemudian isi `hafazan` dalam config (`id`, `surah`, `no`, `ayat`, `label`, `pel`, `ms`, `rujukan`, `img`).
+- Alat: `python3 tools/potong_ayat.py profil|potong BUKU.pdf HALAMAN_PDF x0 x1 y0 y1 [out.png]` — `profil` menyenaraikan julat baris berdakwat (abaikan ta'awwudh di atas dan baris rujukan di bawah), `potong` memotong tepat pada dakwat, membuang latar imbasan (PNG lutsinar, lebar 1100 px, margin 40 px, 16 warna). Imej T4 dihasilkan dengannya.
 
-## Status Tingkatan 4 (30 Okt 2026)
-- `docs/t4/` live, `demo:false`, belum ada pautan Sheet dan ayat hafazan → murid nampak "sedang disediakan".
-- Perlu: buku teks PI T4 (PDF) → senarai pelajaran, bidang, muka surat untuk helaian Pelajaran; ayat hafazan + imej; pautan CSV Sheet T4; nama kelas T4 ("4 X"). Murid diimport oleh guru melalui app T4 (Urus murid → Import).
+## Status Tingkatan 4 (30 Okt 2026, malam)
+- `docs/t4/` live, `demo:false`. Ayat hafazan SIAP dalam config (3 petikan: al-An'am 6:162–163, al-Kahfi 18:101–106, 18:107–110; imej `img/ayat/`). Pautan CSV Sheet masih kosong → murid nampak "sedang disediakan" sehingga Razin tampal pautan.
+- Buku teks PI T4 (imbasan CamScanner, Jawi sepenuhnya, tiada text layer; m.s. buku = halaman PDF − 7; imbasan tamat m.s. 210): 25 pelajaran, 6 bidang (Al-Quran 1–7, Hadis 8–9, Akidah 10–12, Fiqah 13–17, Sirah 18–21, Akhlak 22–25). Buku mencetak kod SP (cth. 1.26.1, 4.20.3) pada setiap seksyen; unit dalam satu pelajaran berkongsi kod SP yang sama (al-Kahfi Unit 1/2, Korban/Akikah, Dhuha/Gerhana, Orang Sakit/OKU). Nota guru m.s. 185 tersalah cetak "5.12.5" (sepatutnya 5.13.4).
+- Entri hafazan T4 = satu petikan (bukan satu ayat): `ayat` = ayat pertama petikan, `label` = julat; `ayatDariRujukan` memadankan rujukan "18:107–110" dengan entri yang `ayat` dalam julat itu. Pelajaran 5 (Ali Imran 137–139) ialah ayat kefahaman walaupun label QR buku kata "hafazan"; imej disediakan, entri dikomen dalam config.
+- Kelas T4: 4 Adil, 4 Akrab, 4 Amanah, 4 Amal, 4 Arif. Semua pelajaran dibuka minggu pertama (status `buka`). Murid diimport oleh guru melalui app T4 (Urus murid → Import).
+- CSV helaian Pelajaran, SP (134 kod) dan draf Soalan Pelajaran 1–2 dihantar kepada Razin (fail `*.csv` tidak di-commit: .gitignore). Sheet T4: https://docs.google.com/spreadsheets/d/1Lt3RZtJS6v4gNDQhYIGh7ZOFVTED25tt
 - Panduan langkah demi langkah (Docs): https://claude.ai/artifact/Lu5rsXEQd5guvQWrDeE6nQ

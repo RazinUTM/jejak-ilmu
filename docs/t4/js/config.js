@@ -11,11 +11,18 @@ window.JEJAK_CONFIG = {
   asas: '../',                      // fail bersama (app/, img/, js/vendor/) berada satu tingkat di atas folder ini
   guruNama: 'Ustazah Nafisah',
   demo: false,                      // jangan papar soalan contoh Tingkatan 2 semasa Sheet belum disambung
-  // Ayat hafazan buku teks. Letak imej dalam img/ayat/ folder ini. Kosongkan senarai ([]) jika tiada ayat hafazan.
-  // no = nombor surah, ayat = nombor ayat, pel = nombor pelajaran yang mengajar ayat ini, ms = muka surat buku teks.
+  // Ayat hafazan buku teks T4 (bidang al-Quran: "Bacaan dan Hafazan", SP 1.26.3 dan 1.27.3). Imej dipotong daripada buku teks (300 dpi) dalam img/ayat/.
+  // Setiap entri = satu petikan hafazan seperti dalam buku (bukan satu ayat): no = nombor surah, ayat = ayat PERTAMA petikan,
+  // label = julat ayat yang dipaparkan, pel = pelajaran, ms = muka surat buku teks. Pelajaran 4–7 ialah ayat kefahaman, bukan hafazan.
   hafazan: [
-    // { id: '2-255', surah: 'Al-Baqarah', no: 2, ayat: 255, label: '255', pel: 1, ms: 'm.s. 2–4', rujukan: 'Surah Al-Baqarah 2:255', img: 'img/ayat/al-baqarah-2-255.png' },
+    { id: '6-162',  surah: "al-An'am", no: 6,  ayat: 162, label: '162–163', pel: 1, ms: 'm.s. 2–6',   rujukan: "Surah al-An'am 6:162–163", img: 'img/ayat/al-anam-6-162-163.png' },
+    { id: '18-101', surah: 'al-Kahfi', no: 18, ayat: 101, label: '101–106', pel: 2, ms: 'm.s. 7–12',  rujukan: 'Surah al-Kahfi 18:101–106', img: 'img/ayat/al-kahfi-18-101-106.png' },
+    { id: '18-107', surah: 'al-Kahfi', no: 18, ayat: 107, label: '107–110', pel: 2, ms: 'm.s. 13–16', rujukan: 'Surah al-Kahfi 18:107–110', img: 'img/ayat/al-kahfi-18-107-110.png' },
+    // Pilihan: Ali Imran 137–139 (Pelajaran 5). Buku melabel QR-nya "bacaan ayat hafazan" tetapi tab sisi dan SP 1.30.x menyatakan "Bacaan dan Kefahaman"
+    // (tiada SP hafaz). Imej sudah disediakan; buang // di bawah jika Ustazah mahu ia dihafaz juga.
+    // { id: '3-137', surah: 'Ali Imran', no: 3, ayat: 137, label: '137–139', pel: 5, ms: 'm.s. 29–36', rujukan: 'Surah Ali Imran 3:137–139', img: 'img/ayat/ali-imran-3-137-139.png' },
   ],
+  hafazanLencana: "Hafiz al-An'am & al-Kahfi",   // nama lencana apabila semua petikan lulus (lalai: "Hafiz Tingkatan 4")
 
   // ================= SAMBUNGAN =================
   // Supabase SAMA untuk semua tingkatan. Kunci ini AWAM (publishable); JANGAN letak secret/service_role di sini.
