@@ -413,7 +413,7 @@ const doneToday=()=>state.dailyDate?state.dailyDate===todayKey():!!(state.dailyD
 const todayKey=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 function logAktiviti(xp){ if(!state.aktiviti) state.aktiviti={}; const k=todayKey(); const had=!!state.aktiviti[k]; state.aktiviti[k]=(state.aktiviti[k]||0)+xp; if(!had){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); state.streak=state.aktiviti[yk]?(state.streak||0)+1:1; state.usaha.hariAktif=Object.keys(state.aktiviti).filter(d=>d.slice(0,7)===k.slice(0,7)).length; } }
 let ULASAN=[]; let HAFAZAN=[];
-const APP_VERSION='2026-10-31b';
+const APP_VERSION='2026-10-31c';
 const ZON={timeZone:'Asia/Kuala_Lumpur'};
 const jamAMPM=t=>new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true,...ZON});
 const tarikhJam=t=>new Date(t).toLocaleDateString('ms-MY',{day:'numeric',month:'short',...ZON})+', '+jamAMPM(t);
@@ -626,6 +626,7 @@ function vUtama(){
   </div></header>
 
   <div class="gut stack body" style="padding-top:0">
+    ${kadPasang()}
     <div class="pesan">
       ${pose('point',96)}
       <div class="bubble">
@@ -1335,8 +1336,8 @@ async function loadGD(force){
   if(state.view==='guru') render();
 }
 function vGuruLive(){
-  const kls=KELAS_CFG.filter(k=>!/lain/i.test(k)); if(!GD.kelas||!KELAS_CFG.includes(GD.kelas)) GD.kelas=kls[0]||KELAS_CFG[0];
-  if(GD.pel==null){ const sd=PELAJARAN.find(p=>p.st==='sedang'); GD.pel=sd?sd.n:16; }
+  const kls=KELAS_CFG.filter(k=>!/lain/i.test(k)); if(!GD.kelas||!KELAS_CFG.includes(GD.kelas)||(/lain/i.test(GD.kelas)&&kls.length)) GD.kelas=kls[0]||KELAS_CFG[0];
+  if(GD.pel==null){ const sd=PELAJARAN.find(p=>p.st==='sedang'); GD.pel=sd?sd.n:(TKT===2?16:((PELAJARAN.find(p=>p.st!=='kunci')||PELAJARAN[0]||{n:1}).n)); }
   const key=GD.kelas+'|'+GD.pel; if(GD.key!==key||Date.now()-GD.t>60000) setTimeout(()=>loadGD(),0);
   const ready=GD.key===key&&GD.akt;
   const pel=GD.pel?(pelOf(GD.pel)||{rumi:'',n:GD.pel}):{rumi:'Semua pelajaran',n:0};
@@ -1538,6 +1539,22 @@ function vGuru(){
 }
 
 /* ---------- SHEETS ---------- */
+/* ---------- PASANG APP DI SKRIN UTAMA ---------- */
+// Android/Chrome: butang terus (beforeinstallprompt). iPhone: tiada API; tunjuk langkah Safari. Disembunyikan jika sudah dipasang atau ditutup (7 hari).
+let pasangEvt=null;
+addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); pasangEvt=e; if(state&&state.view==='utama'&&state.user) render(); });
+addEventListener('appinstalled',()=>{ pasangEvt=null; try{ localStorage.setItem('jejak-pasang'+SFX,'1'); }catch(e){} if(state.user) render(); toast('App dipasang. Buka dari ikon di skrin utama.'); });
+const IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+function sudahPasang(){ try{ if(matchMedia('(display-mode: standalone)').matches||navigator.standalone===true) return true; if(localStorage.getItem('jejak-pasang'+SFX)==='1') return true; const t=+localStorage.getItem('jejak-pasang-tutup'+SFX)||0; return Date.now()-t<7*864e5; }catch(e){ return false; } }
+function kadPasang(){ if(sudahPasang()||(!pasangEvt&&!IOS)) return '';
+  return `<div class="card pasang row" style="gap:12px;align-items:center"><div style="font-size:26px" aria-hidden="true">📲</div><div class="grow"><b>Pasang Jejak Ilmu di skrin utama</b><div class="small muted">Buka terus dari ikon, macam app biasa.</div></div><div class="row" style="gap:6px;flex-direction:column;align-items:flex-end"><button class="btn sm" data-act="pasang">Pasang</button><button class="link" data-act="pasang-tutup">Nanti</button></div></div>`; }
+async function pasangApp(){
+  if(pasangEvt){ const e=pasangEvt; pasangEvt=null; try{ e.prompt(); const r=await e.userChoice; if(r&&r.outcome==='accepted'){ try{ localStorage.setItem('jejak-pasang'+SFX,'1'); }catch(x){} } }catch(x){} render(); return; }
+  const safari=/Safari/.test(navigator.userAgent)&&!/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
+  openSheet(`<h3>Pasang di iPhone</h3>${safari?'':'<p class="small" style="margin-top:8px"><b>Buka pautan ini dalam Safari dahulu.</b> Pelayar lain dalam iPhone mungkin tiada pilihan ini.</p>'}
+    <ol class="small" style="margin:10px 0 0 18px;line-height:1.7"><li>Tekan butang <b>Kongsi</b> (petak dengan anak panah ke atas ⬆) di bawah skrin.</li><li>Tatal ke bawah, tekan <b>Add to Home Screen</b> (Tambah ke Skrin Utama).</li><li>Tekan <b>Add</b>. Ikon Ustazah Nafisah akan muncul di skrin utama.</li></ol>
+    <p class="small muted" style="margin-top:10px">Selepas itu, buka Jejak Ilmu dari ikon tersebut. Log masuk kamu kekal.</p>
+    <button class="btn" style="width:100%;margin-top:14px" data-act="close-sheet">Faham</button>`); }
 function openSheet(html){ const s=$('#sheet'); s.innerHTML=`<div class="panel"><div class="handle"></div>${html}</div>`; s.hidden=false; document.body.style.overflow='hidden'; }
 function closeSheet(){ $('#sheet').hidden=true; document.body.style.overflow=''; }
 
@@ -2005,6 +2022,8 @@ document.addEventListener('click',e=>{
   const el=e.target.closest('[data-act]'); if(!el) return;
   const act=el.dataset.act, v=el.dataset.v;
   if(act==='nav'){ if(v==='guru'&&!isGuru()){ toast('Papan guru hanya untuk akaun guru.'); return; } if(v==='laporan'&&SHEETS&&state.user) hari().laporan=true; state.view=v; save(); render(); window.scrollTo({top:0}); if(v==='laporan') tarikKemajuan(); }
+  else if(act==='pasang'){ pasangApp(); }
+  else if(act==='pasang-tutup'){ try{ localStorage.setItem('jejak-pasang-tutup'+SFX,String(Date.now())); }catch(e){} render(); }
   else if(act==='theme'){ state.theme={auto:'light',light:'dark',dark:'auto'}[state.theme]; applyTheme(); save(); toast('Tema: '+THEME_LABEL[state.theme]); if(!$('#gate').hidden) renderGate(); else render(); }
   else if(act==='theme-set'){ state.theme=v; applyTheme(); save(); render(); sheetSettings(); }
   else if(act==='skrip'){ state.skrip=v; save(); render(); if(!$('#sheet').hidden) sheetSettings(); }
