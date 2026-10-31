@@ -8,6 +8,7 @@ kemas kini di Sheet, bukan di sini. Format TSV (bukan CSV) supaya boleh ditampal
 | `pelajaran.tsv` | Pelajaran | 25 pelajaran, 6 bidang, m.s. ikut buku; `status` = `buka` (semua dibuka minggu pertama; tukar ke `kunci` ikut RPT). |
 | `sp.tsv` | SP | 134 kod SP seperti yang tercetak dalam buku (ditambah `JAWI` untuk Jawi Sprint). Nama ditulis supaya bermakna berdiri sendiri. |
 | `soalan_pelajaran1-2_draf.tsv` | Soalan | DRAF 38 soalan (Pelajaran 1–2 + 6 Jawi Sprint) untuk semakan Ustazah sebelum ditampal. |
+| `soalan_tajwid_pelajaran3_draf.tsv` | Soalan | DRAF 57 soalan Pelajaran 3 Hukum Tajwid (37 Tajwid Tap dengan pilihan Mad Silah/Mad Lazim/Qalqalah + 20 konsep/KBAT). Contoh ayat daripada buku m.s. 17–24. |
 | `sp_rujukan_buku.tsv` | — | Rujukan: setiap kemunculan kod SP dalam buku dengan m.s. dan tajuk seksyen asal (Rumi + Jawi). |
 
 Nota buku teks: m.s. buku = halaman PDF − 7. Unit dalam satu pelajaran berkongsi kod SP (al-Kahfi Unit 1/2 → 1.27.x; Korban/Akikah → 4.22.x;

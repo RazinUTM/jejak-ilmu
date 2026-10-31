@@ -191,16 +191,17 @@ function buildBank(soalanRows, spRows, pelRows){
       if(nm&&a1!==a0&&!a0.startsWith(a1)&&!a1.startsWith(a0.slice(0,4))){ const rj=pelRows.find(r=>(r.bidang||'').trim()===nm&&r.bidang_jawi); b.rumi=nm; b.jawi=rj?rj.bidang_jawi:''; } // cth. "Ibadah" dalam buku T4
       const ns=ls.flatMap(p=>String(p.ms||'').match(/\d+/g)||[]).map(Number); b.ms=ns.length?`${Math.min(...ns)}–${Math.max(...ns)}`:''; } }
   if(spRows&&spRows.length){ SPS={}; SP_NAMA={}; for(const r of spRows){ if(!r.kod) continue; const n=+r.pelajaran||0; (SPS[n]||=(SPS[n]=[])).push({k:r.kod,n:r.nama,jawi:r.nama_jawi||''}); SP_NAMA[r.kod]=r.nama; } SP16=SPS[16]||[]; }
-  const Qn={}; const bad=[];
+  const Qn={}; const bad=[]; const dup=[];
   for(const r of soalanRows){
     if(!r.id || /^n/i.test(r.aktif||'Y')) continue;
     const jenis=(r.jenis||'').toLowerCase(); const pil=['A','B','C','D','E'].map(L=>r['pilihan_'+L]).filter(Boolean); const urut=[1,2,3,4,5,6].map(k=>r['urutan_'+k]).filter(Boolean);
     const kb=/^y/i.test(r.kbat||'')||/kbat|sukar|tinggi/i.test(r.aras||''); const it={type:jenis,sp:r.sp_kod,pel:+r.pelajaran||0,ms:r.ms?+r.ms:null,q:r.soalan||'',jawi:r.soalan_jawi||'',why:r.penjelasan||'',kbat:kb,aras:kb?'kbat':(/sederhana/i.test(r.aras||'')?'sederhana':'mudah')};
     if(jenis==='order'){ if(urut.length<3){bad.push(r.id);continue;} it.items=urut; }
     else { const a=LETTER[(r.jawapan||'').toUpperCase()]; if(a==null){bad.push(r.id);continue;} it.ans=a;
-      if(jenis==='tajwid'){ it.ar=(r.arab_jawi||'').replace('[','<b>').replace(']','</b>'); }
+      if(jenis==='tajwid'){ it.ar=(r.arab_jawi||'').replace('[','<b>').replace(']','</b>'); if(pil.length){ if(pil.length<2||a>=pil.length){bad.push(r.id);continue;} it.opts=pil; } }   // tanpa pilihan = 5 hukum nun sakinah (T2)
       else { if(a>=pil.length||pil.length<2){bad.push(r.id);continue;} it.opts=pil; if(jenis==='fill') it.ar=r.arab_jawi||''; if(jenis==='jawi') it.w=r.arab_jawi||''; } }
     if(!['mcq','tf','order','tajwid','fill','jawi'].includes(jenis)){bad.push(r.id);continue;}
+    if(Qn[r.id]) dup.push(r.id);
     Qn[r.id]=it;
   }
   if(Object.keys(Qn).length){ Q=Qn; }
@@ -217,6 +218,7 @@ function buildBank(soalanRows, spRows, pelRows){
   const kb=by(q=>q.kbat); if(kb.length) S.dilema={t:'Dilema Akhlak (KBAT)',ids:kb,pick:Math.min(5,kb.length)};
   if(TKT===2) S.kuiz16=S.kuiz16||{t:'Kuiz Pelajaran 16',ids:by(q=>q.pel===16)};   // Nota Ustazah tayamum (buku T2)
   SETS=S;
+  buildBank.bad=bad; buildBank.dup=[...new Set(dup)];
   return {n:Object.keys(Qn).length,bad};
 }
 async function loadBank(){
@@ -429,7 +431,7 @@ const doneToday=()=>state.dailyDate?state.dailyDate===todayKey():!!(state.dailyD
 const todayKey=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 function logAktiviti(xp){ if(!state.aktiviti) state.aktiviti={}; const k=todayKey(); const had=!!state.aktiviti[k]; state.aktiviti[k]=(state.aktiviti[k]||0)+xp; if(!had){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); state.streak=state.aktiviti[yk]?(state.streak||0)+1:1; state.usaha.hariAktif=Object.keys(state.aktiviti).filter(d=>d.slice(0,7)===k.slice(0,7)).length; } }
 let ULASAN=[]; let HAFAZAN=[];
-const APP_VERSION='2026-10-31j';
+const APP_VERSION='2026-10-31k';
 const ZON={timeZone:'Asia/Kuala_Lumpur'};
 const jamAMPM=t=>new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true,...ZON});
 const tarikhJam=t=>new Date(t).toLocaleDateString('ms-MY',{day:'numeric',month:'short',...ZON})+', '+jamAMPM(t);
@@ -736,7 +738,7 @@ function vPeta(){
 
 function vCabaran(){
   const modes=[
-    {set:'tajwid',ic:'نْ',cls:'jawi',hue:'#7b58d6',t:'Tajwid Tap',d:'Kenal pasti hukum nun sakinah & tanwin pada kalimah. 6 soalan, susunan dikocok.'},
+    {set:'tajwid',ic:'نْ',cls:'jawi',hue:'#7b58d6',t:'Tajwid Tap',d:(TKT===2?'Kenal pasti hukum nun sakinah & tanwin pada kalimah.':'Kenal pasti hukum tajwid pada kalimah yang ditanda merah.')+' 6 soalan, susunan dikocok.'},
     {set:'susun',ic:'1→5',hue:'#d2608a',t:'Susun Langkah',d:'Susun langkah tayamum dan kronologi Hijrah mengikut urutan.'},
     {set:'jawi',ic:'ڤ',cls:'jawi',hue:'#c6962d',t:'Jawi Sprint',d:'Baca perkataan Jawi dari buku teks dalam 10 saat setiap satu.'},
     {set:'hafazan',ic:'آ',cls:'jawi',hue:'#3a7bd5',t:'Sambung Ayat',d:'Lengkapkan potongan ayat dan lafaz yang perlu dihafaz.'},
@@ -1328,7 +1330,7 @@ function kandunganCard(){
     <div class="tiles4" style="grid-template-columns:repeat(auto-fill,minmax(72px,1fr))">
       <div><b class="num">${ids.length}</b><span>soalan aktif</span></div>
       <div><b class="num">${kbat}</b><span>KBAT</span></div>
-      <div><b class="num">${open.length}<span style="font-size:13px;font-weight:600">/28</span></b><span>pelajaran dibuka</span></div>
+      <div><b class="num">${open.length}<span style="font-size:13px;font-weight:600">/${PELAJARAN.length}</span></b><span>pelajaran dibuka</span></div>
       <div><b class="num">${ROSTER?ROSTER.murid.filter(m=>!m.g).length:0}</b><span>akaun murid</span></div>
     </div>
     <p class="small" style="margin-top:10px">${sedang?`Pelajaran semasa (status <code>sedang</code>): <b>${sedang.n} · ${esc(sedang.rumi)}</b>. `:'Tiada pelajaran berstatus <code>sedang</code>; kad "Pelajaran semasa" murid akan jatuh ke pelajaran pertama yang dibuka. '}Berkunci: ${locked.map(p=>p.n).join(', ')||'tiada'}.</p>
@@ -1576,7 +1578,7 @@ function tindihEdit(rows){
   return rows;
 }
 const rowSoalan=id=>((buildBank.lastRows&&buildBank.lastRows.so)||[]).find(r=>r.id===id);
-function semakItem(id){ const it={id,...Q[id]}; if(it.type==='order') it.pool=shuffle(it.items); if(it.type==='tajwid') it.opts=TAJWID_OPTS.slice(); return it; }
+function semakItem(id){ const it={id,...Q[id]}; if(it.type==='order') it.pool=shuffle(it.items); if(it.type==='tajwid'&&!(it.opts&&it.opts.length)) it.opts=TAJWID_OPTS.slice(); return it; }
 function idsSemak(pel){ return Object.keys(Q).filter(id=>!pel||Q[id].pel===pel).sort((a,b)=>((Q[a].pel||99)-(Q[b].pel||99))||a.localeCompare(b,undefined,{numeric:true})); }
 // Penapis Semak: kategori (bidang atau jenis soalan) kemudian pelajaran
 const SEMAK_KAT=()=>[['semua','Semua',()=>true],
@@ -1606,10 +1608,15 @@ function gSemakCard(){
     ${(()=>{ const T=tandaSenarai(); if(!T.length) return ''; return `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><b class="small">🚩 ${T.length} soalan ditanda untuk dibetulkan</b>
       <div class="small muted" style="margin-top:4px">${T.map(id=>{ const r=rowSoalan(id); return `${esc(id)}${r&&r._baris?' (baris '+r._baris+')':''}`; }).join(' · ')}</div>
       <div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn sm" data-act="semak-tanda-mula">Semak yang ditanda</button><button class="btn sm ghost" data-act="semak-tanda-salin">Salin senarai</button><button class="btn sm ghost" data-act="semak-tanda-kosong">${tandaKosongSedia?'Pasti kosongkan?':'Kosongkan'}</button></div></div>`; })()}
+    ${amaranBank()}
     ${SHEET_URL?`<p class="small" style="margin-top:10px"><a class="link" href="${esc(urlSheet())}" target="_blank" rel="noopener">Buka Google Sheet (helaian Soalan) ↗</a></p>`:''}
   </div>`;
 }
 const SHEET_URL=String(_C.sheetUrl||'');
+// Amaran untuk guru: id soalan berulang (baris kemudian menindih yang awal, cth. baris T2 tertinggal dalam Sheet T4) dan baris yang ditolak
+function amaranBank(){ const d=buildBank.dup||[], x=buildBank.bad||[]; if(!d.length&&!x.length) return '';
+  const br=id=>{ const r=((buildBank.lastRows&&buildBank.lastRows.so)||[]).filter(q=>q.id===id).map(q=>q._baris).filter(Boolean); return r.length?' (baris '+r.join(', ')+')':''; };
+  return `<div class="note-demo" style="margin-top:12px">${d.length?`<b>⚠ ${d.length} id soalan berulang dalam Sheet:</b> ${d.map(id=>esc(id)+br(id)).join(' · ')}. Hanya baris terakhir dipaparkan; padam atau tukar id baris yang lama.`:''}${d.length&&x.length?'<br>':''}${x.length?`<b>⚠ ${x.length} baris tidak dipaparkan kepada murid</b> (jenis/jawapan/pilihan tidak lengkap): ${x.map(id=>esc(id)+br(id)).join(' · ')}.`:''}</div>`; }
 const GID_SOALAN=(/[?&#]gid=(\d+)/.exec(String(CFG.bankCsvUrl||''))||[])[1]||'';
 function urlSheet(baris){ if(!SHEET_URL) return ''; const asas=SHEET_URL.replace(/[?#].*$/,'').replace(/\/(edit|view|htmlview)\/?$/,''); return `${asas}/edit#gid=${GID_SOALAN}${baris?'&range=A'+baris:''}`; }
 async function salinTeks(t){ try{ await navigator.clipboard.writeText(t); return true; }catch(e){ try{ const ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); const ok=document.execCommand('copy'); ta.remove(); return ok; }catch(e2){ return false; } } }
@@ -1635,7 +1642,7 @@ function renderEdit(){
   if(['tajwid','fill','jawi'].includes(j)) f+=inp('arab_jawi',j==='tajwid'?'Teks Arab (kurung huruf yang ditanda dengan [ ])':j==='fill'?'Teks ayat (tempat kosong = ____)':'Perkataan Jawi',{area:j==='fill',rtl:true,rows:2});
   if(['mcq','fill','jawi'].includes(j)){ f+=L.map(x=>inp('pilihan_'+x,'Pilihan '+x,{rtl:j==='fill'&&isArabic(v('pilihan_'+x))})).join(''); f+=sel('jawapan','Jawapan betul',L.map(x=>[x,x+(v('pilihan_'+x)?' · '+v('pilihan_'+x).slice(0,50):'')])); }
   if(j==='tf') f+=sel('jawapan','Jawapan betul',[['A','A · Betul'],['B','B · Salah']]);
-  if(j==='tajwid') f+=sel('jawapan','Hukum yang betul',L.map((x,i)=>[x,x+' · '+(TAJWID_OPTS[i]||'')]));
+  if(j==='tajwid'){ const sendiri=L.some(x=>v('pilihan_'+x)); if(sendiri) f+=L.map(x=>inp('pilihan_'+x,'Pilihan '+x)).join(''); f+=sel('jawapan','Hukum yang betul',L.map((x,i)=>[x,x+' · '+(sendiri?v('pilihan_'+x):(TAJWID_OPTS[i]||''))])); }
   if(j==='order') f+=[1,2,3,4,5,6].map(k=>inp('urutan_'+k,`Langkah ${k} (urutan BETUL)`)).join('');
   f+=inp('penjelasan','Penjelasan (dibaca murid selepas menjawab)',{area:true,rows:4});
   f+=`<div class="row" style="gap:8px">${inp('ms','m.s.',{num:true})}${sel('aras','Aras',[['mudah','mudah'],['sederhana','sederhana'],['kbat','kbat']])}${sel('kbat','KBAT',[['N','N'],['Y','Y']])}</div>`;
@@ -1658,10 +1665,10 @@ async function simpanEdit(){
   // semakan sama seperti buildBank: jika gagal, soalan akan hilang daripada app
   const nv={...r,...baru}, j=String(nv.jenis||'').toLowerCase(), L=['A','B','C','D','E'];
   let err='';
-  if(['mcq','fill','jawi'].includes(j)){ const isi=L.map(x=>!!String(nv['pilihan_'+x]||'').trim()); const n=isi.filter(Boolean).length; const ai=L.indexOf(String(nv.jawapan||'').toUpperCase());
+  if(['mcq','fill','jawi'].includes(j)||(j==='tajwid'&&L.some(x=>String(nv['pilihan_'+x]||'').trim()))){ const isi=L.map(x=>!!String(nv['pilihan_'+x]||'').trim()); const n=isi.filter(Boolean).length; const ai=L.indexOf(String(nv.jawapan||'').toUpperCase());
     if(n<2) err='Perlu sekurang-kurangnya 2 pilihan jawapan.'; else if(isi.slice(0,n).some(x=>!x)) err='Isi pilihan mengikut urutan A, B, C… tanpa tempat kosong di tengah.'; else if(ai<0||!isi[ai]) err='Jawapan mesti menunjuk kepada pilihan yang berisi.'; }
   if(j==='tf'&&!['A','B'].includes(String(nv.jawapan||'').toUpperCase())) err='Jawapan Betul/Salah mesti A atau B.';
-  if(j==='tajwid'&&L.indexOf(String(nv.jawapan||'').toUpperCase())<0) err='Pilih hukum tajwid yang betul.';
+  if(j==='tajwid'&&!err&&L.indexOf(String(nv.jawapan||'').toUpperCase())<0) err='Pilih hukum tajwid yang betul.';
   if(j==='order'&&[1,2,3,4,5,6].map(k=>nv['urutan_'+k]).filter(x=>x&&String(x).trim()).length<3) err='Susun langkah perlu sekurang-kurangnya 3 langkah.';
   if(err){ toast(err,4200); return; }
   const btn=document.querySelector('[data-act="semak-simpan"]'); if(btn){ btn.disabled=true; btn.textContent='Menyimpan…'; }
@@ -1934,7 +1941,7 @@ let quiz=null;
 function prepItem(id){
   const it={id,...Q[id]};
   if(it.type==='order'){ it.pool=shuffle(it.items); return it; }
-  if(it.type==='tajwid') it.opts=TAJWID_OPTS.slice();
+  if(it.type==='tajwid'&&!(it.opts&&it.opts.length)) it.opts=TAJWID_OPTS.slice();
   if(it.opts&&it.type!=='tf'){ const idx=shuffle(it.opts.map((_,i)=>i)); it.opts=idx.map(i=>it.opts[i]); it.ans=idx.indexOf(it.ans); }
   return it;
 }
@@ -1978,7 +1985,7 @@ function renderQ(){
   if(it.type==='mcq'||it.type==='tf'){
     body=`${stem}${meta}<div class="opts">${it.opts.map((o,k)=>optBtn(k,L(k),`<span class="grow">${esc(o)}</span>`,answered,it.ans,pick)).join('')}</div>`;
   } else if(it.type==='tajwid'){
-    body=`<div class="qtext">Apakah hukum tajwid pada huruf yang bertanda merah?</div>${meta}<div class="arabic-box"><p class="quran">${it.ar.replace(/<b>/g,'<span class="hl">').replace(/<\/b>/g,'</span>')}</p></div>
+    body=`<div class="qtext">${esc(it.q||'Apakah hukum tajwid pada huruf yang bertanda merah?')}</div>${meta}<div class="arabic-box"><p class="quran">${it.ar.replace(/<b>/g,'<span class="hl">').replace(/<\/b>/g,'</span>')}</p></div>
       <div class="opts">${it.opts.map((o,k)=>optBtn(k,k+1,`<span class="grow">${esc(o)}</span>`,answered,it.ans,pick)).join('')}</div>`;
   } else if(it.type==='fill'){
     const arBox=isArabic(it.ar)?`<div class="arabic-box"><p class="quran">${it.ar.replace('____','<span class="hl">____</span>')}</p></div>`:(it.ar&&it.ar.trim()?`<div class="arabic-box"><p style="font-size:17px;font-weight:700;line-height:1.5">${esc(it.ar).replace('____','<span class="hl">____</span>')}</p></div>`:'');
