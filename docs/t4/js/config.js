@@ -1,6 +1,6 @@
 // Jejak Ilmu · tetapan TINGKATAN 4. Edit fail ini sahaja; kod app ada dalam ../app/jejak.js (dikongsi semua tingkatan).
 // Pautan CSV: Google Sheets → File → Share → Publish to web → pilih HELAIAN (bukan "Entire Document") → format CSV → Publish → salin pautan.
-// Sheet T4 disambung 31 Okt 2026 (Pelajaran, SP, Soalan). Pesanan belum: jangan terbitkan helaian Pesanan salinan T2.
+// Sheet T4 disambung 31 Okt 2026 (Pelajaran, SP, Soalan, Pesanan).
 window.JEJAK_CONFIG = {
   // ================= TINGKATAN INI =================
   id: 't4',                     // ruang nama storan telefon; JANGAN tukar selepas murid mula guna
@@ -32,7 +32,7 @@ window.JEJAK_CONFIG = {
   bankCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSWrx4_qAYV6uQF_5tpRJnxHHkjSEM6YdxMuAr-14NQnrqzIpR_oJPSlrZCh7kUNxHsq0jJRlCBRz0Z/pub?gid=1565894710&single=true&output=csv',        // helaian "Soalan"    (wajib)
   spCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSWrx4_qAYV6uQF_5tpRJnxHHkjSEM6YdxMuAr-14NQnrqzIpR_oJPSlrZCh7kUNxHsq0jJRlCBRz0Z/pub?gid=666182641&single=true&output=csv',          // helaian "SP"        (wajib untuk tingkatan selain 2)
   pelajaranCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSWrx4_qAYV6uQF_5tpRJnxHHkjSEM6YdxMuAr-14NQnrqzIpR_oJPSlrZCh7kUNxHsq0jJRlCBRz0Z/pub?gid=35581945&single=true&output=csv',   // helaian "Pelajaran" (wajib untuk tingkatan selain 2: senarai pelajaran, bidang, muka surat, status kunci/buka)
-  pesananCsvUrl: '',     // pilihan: helaian "Pesanan" (lajur: tarikh, teks)
+  pesananCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSWrx4_qAYV6uQF_5tpRJnxHHkjSEM6YdxMuAr-14NQnrqzIpR_oJPSlrZCh7kUNxHsq0jJRlCBRz0Z/pub?gid=1292877728&single=true&output=csv',     // pilihan: helaian "Pesanan" (lajur: tarikh, teks)
   hafazanCsvUrl: '',     // pilihan: helaian "Hafazan" (lajur: tarikh, ayat, rujukan, maksud)
   ulasanCsvUrl: '',      // pilihan: helaian "Ulasan" (lajur: nama, kelas, teks, tarikh)
   ai: true,              // butang draf AI (Ulasan Ustazah + refleksi laporan); fungsi Supabase 'ulasan-ai' dikongsi
