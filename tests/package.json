@@ -3,9 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "t2": "node t2.mjs",
     "sql": "node sql12.mjs",
     "tingkatan": "node tingkatan.mjs",
-    "semua": "node sql12.mjs && node tingkatan.mjs && OLD_SQL=1 node tingkatan.mjs"
+    "semua": "node t2.mjs && node sql12.mjs && node tingkatan.mjs && OLD_SQL=1 node tingkatan.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "0.5.11",
