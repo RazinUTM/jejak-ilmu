@@ -39,6 +39,7 @@ Aplikasi e-pembelajaran Pendidikan Islam KSSM untuk kelas **Ustazah Nafisah**. P
 ## Semak & betulkan soalan (Guru)
 - Kad dalam papan guru + butang "Semak" pada "Soalan paling kerap disalah jawab". Mod `quiz.semak`: tanpa XP/rekod, pilihan tidak dikocok (A–E = Sheet), boleh langkau, "Tunjuk jawapan", "✎ Edit".
 - Edit → `editSoalanUrl` (Google Apps Script Web App, `tools/sheet-edit/Kod.gs`, langkah dalam `BACA-SAYA.md`), dipasang dalam Sheet tingkatan itu. Skrip semak PIN guru via RPC `semak_pin`, tulis hanya medan kandungan, tolak jika baris sudah berubah dalam Sheet (konflik), catat helaian "Log Edit". Sheet kekal satu-satunya sumber; telefon guru menindih baris diedit sehingga CSV terbitan terkini (`tindihEdit`, maks 30 minit).
+- T4: Apps Script dipasang 31 Okt dalam Sheet T4 (akaun DELIMa @moe-dl.edu.my; risiko: akses "Anyone" mungkin disekat domain). URL dalam config T4.
 - Kuiz murid: butang ‹ untuk lihat semula soalan yang sudah dijawab (jawapan dikunci). Kad "Pasang app" dibuang atas permintaan Razin (murid guna pautan).
 
 ## Imej ayat hafazan
