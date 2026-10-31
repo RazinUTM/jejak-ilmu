@@ -23,10 +23,10 @@ window.JEJAK_CONFIG = {
   // Supabase (liga kelas + akaun). Kunci ini AWAM (publishable) dan selamat di pelayar; JANGAN letak secret/service_role di sini.
   supabaseUrl: 'https://pkuxiyabmxmksvccepra.supabase.co',
   supabaseKey: 'sb_publishable_frT2Hvd0DjIE2_no7MQB_Q_yCIJbHlg',
-  bankCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ-9Ei6Z4GFb365FHO3bSEi8SZWuBXbICeCuz7a85kt4zGCwIi9cI86q_iOBj-GBQ/pub?gid=1565894710&single=true&output=csv',        // helaian "Soalan"   (wajib untuk mod Sheets)
-  spCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ-9Ei6Z4GFb365FHO3bSEi8SZWuBXbICeCuz7a85kt4zGCwIi9cI86q_iOBj-GBQ/pub?gid=666182641&single=true&output=csv',          // helaian "SP"
-  pelajaranCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ-9Ei6Z4GFb365FHO3bSEi8SZWuBXbICeCuz7a85kt4zGCwIi9cI86q_iOBj-GBQ/pub?gid=35581945&single=true&output=csv',   // helaian "Pelajaran" (status kunci/buka)
-  pesananCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ-9Ei6Z4GFb365FHO3bSEi8SZWuBXbICeCuz7a85kt4zGCwIi9cI86q_iOBj-GBQ/pub?gid=1292877728&single=true&output=csv',     // helaian "Pesanan"   (lajur: tarikh, teks)
+  bankCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGvAfI5O1Gl65E7bMBSX6ljCmvE8DBa9tik8B6RgJKlVLqb0ZHIM2URZUbcvxVf9KZPRSx2O3CCJoc/pub?gid=1565894710&single=true&output=csv',        // helaian "Soalan"   (wajib untuk mod Sheets)
+  spCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGvAfI5O1Gl65E7bMBSX6ljCmvE8DBa9tik8B6RgJKlVLqb0ZHIM2URZUbcvxVf9KZPRSx2O3CCJoc/pub?gid=666182641&single=true&output=csv',          // helaian "SP"
+  pelajaranCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGvAfI5O1Gl65E7bMBSX6ljCmvE8DBa9tik8B6RgJKlVLqb0ZHIM2URZUbcvxVf9KZPRSx2O3CCJoc/pub?gid=35581945&single=true&output=csv',   // helaian "Pelajaran" (status kunci/buka)
+  pesananCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGvAfI5O1Gl65E7bMBSX6ljCmvE8DBa9tik8B6RgJKlVLqb0ZHIM2URZUbcvxVf9KZPRSx2O3CCJoc/pub?gid=1292877728&single=true&output=csv',     // helaian "Pesanan"   (lajur: tarikh, teks)
   sheetUrl: '',          // pautan Google Sheet (edit) untuk butang "Edit dalam Sheet" dalam Semak soalan guru
   editSoalanUrl: '',     // pilihan (lanjutan): Apps Script tools/sheet-edit/Kod.gs. TIDAK berfungsi dengan akaun DELIMa (domain sekat akses awam)
   hafazanCsvUrl: '',     // pilihan: helaian "Hafazan" (lajur: tarikh, ayat, rujukan, maksud) — baris terkini bertarikh <= hari ini dipaparkan
