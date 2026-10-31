@@ -17,7 +17,8 @@ if(TEMA) document.documentElement.setAttribute('data-tema',TEMA);
 // Warna kad laporan (imej PNG, sentiasa terang) dan confetti ikut tema
 const KAD=TEMA==='pink'?{a:'#f9cadb',b:'#e793b5',ink:'75,29,54',chip:'rgba(255,255,255,.55)',bg:'#fdf4f7',fg:'#33192a',muted:'#7c5a6c',ring:'#fbe1eb',acc:'#b23a6b',conf:['#e793b5','#c6962d','#f9cadb','#e8bb5b','#b23a6b']}
   :{a:'#7b58d6',b:'#43307f',ink:'255,255,255',chip:'rgba(255,255,255,.18)',bg:'#f6f2fb',fg:'#241b33',muted:'#6c607d',ring:'#e9e1f8',acc:'#6d4cc4',conf:['#7b58d6','#c6962d','#b39cf2','#e8bb5b','#d2608a']};                    // Tingkatan 2 kekal dengan kunci storan asal
-const UST={nama:_C.guruNama||'Ustazah Nafisah',bust:ASAS+'img/bust.webp',pose:{thumbs:ASAS+'img/pose-thumbs.webp',think:ASAS+'img/pose-think.webp',clap:ASAS+'img/pose-clap.webp',point:ASAS+'img/pose-point.webp'}};
+const AV=_C.avatar?String(_C.avatar).replace(/\/?$/,'/'):ASAS+'img/';   // folder avatar Ustazah: lalai ../img/ (ungu); T4 = img/ustazah/ (pink)
+const UST={nama:_C.guruNama||'Ustazah Nafisah',bust:AV+'bust.webp',pose:{thumbs:AV+'pose-thumbs.webp',think:AV+'pose-think.webp',clap:AV+'pose-clap.webp',point:AV+'pose-point.webp'}};
 const BIDANG = [
   {id:'quran',  rumi:'Al-Quran',                jawi:'القرءان',               hue:'#7b58d6', ms:'1–50'},
   {id:'hadis',  rumi:'Hadis',                   jawi:'حديث',                  hue:'#3a7bd5', ms:'51–66'},
@@ -428,7 +429,7 @@ const doneToday=()=>state.dailyDate?state.dailyDate===todayKey():!!(state.dailyD
 const todayKey=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 function logAktiviti(xp){ if(!state.aktiviti) state.aktiviti={}; const k=todayKey(); const had=!!state.aktiviti[k]; state.aktiviti[k]=(state.aktiviti[k]||0)+xp; if(!had){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); state.streak=state.aktiviti[yk]?(state.streak||0)+1:1; state.usaha.hariAktif=Object.keys(state.aktiviti).filter(d=>d.slice(0,7)===k.slice(0,7)).length; } }
 let ULASAN=[]; let HAFAZAN=[];
-const APP_VERSION='2026-10-31i';
+const APP_VERSION='2026-10-31j';
 const ZON={timeZone:'Asia/Kuala_Lumpur'};
 const jamAMPM=t=>new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true,...ZON});
 const tarikhJam=t=>new Date(t).toLocaleDateString('ms-MY',{day:'numeric',month:'short',...ZON})+', '+jamAMPM(t);

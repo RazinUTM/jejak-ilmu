@@ -10,7 +10,8 @@ window.JEJAK_CONFIG = {
   kelasAwalan: '4 ',            // hanya kelas yang bermula dengan "4 " dipaparkan, cth. "4 Adil" (Supabase dikongsi semua tingkatan)
   asas: '../',                      // fail bersama (app/, img/, js/vendor/) berada satu tingkat di atas folder ini
   guruNama: 'Ustazah Nafisah',
-  tema: 'pink',                     // warna app: 'pink' = pink lembut + emas (bezakan daripada T2 ungu). Kosongkan ('') untuk ungu asal.
+  tema: 'pink',
+  avatar: 'img/ustazah/',           // avatar Ustazah baju pink (bust, 4 pose, ikon app) dalam folder ini; kosongkan untuk avatar ungu dikongsi                     // warna app: 'pink' = pink lembut + emas (bezakan daripada T2 ungu). Kosongkan ('') untuk ungu asal.
   demo: false,                      // jangan papar soalan contoh Tingkatan 2 semasa Sheet belum disambung
   // Ayat hafazan buku teks T4 (bidang al-Quran: "Bacaan dan Hafazan", SP 1.26.3 dan 1.27.3). Imej dipotong daripada buku teks (300 dpi) dalam img/ayat/.
   // Setiap entri = satu petikan hafazan seperti dalam buku (bukan satu ayat): no = nombor surah, ayat = ayat PERTAMA petikan,

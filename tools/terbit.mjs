@@ -40,6 +40,7 @@ for (const f of folder) {
   if (f && C.asas !== '../') masalah.push(`${nama}: asas mesti '../'`);
   if (f && +C.tingkatan !== +f.slice(1)) masalah.push(`${nama}: tingkatan (${C.tingkatan}) tidak sepadan dengan nama folder`);
   if (f && C.kelasAwalan !== f.slice(1) + ' ') masalah.push(`${nama}: kelasAwalan sepatutnya '${f.slice(1)} '`);
+  if (C.avatar) for (const n of ['bust.webp', 'pose-thumbs.webp', 'pose-think.webp', 'pose-clap.webp', 'pose-point.webp', 'icon-192.png', 'icon-512.png']) if (!existsSync(join(dir, String(C.avatar).replace(/\/?$/, '/') + n))) masalah.push(`${nama}: avatar tiada: ${C.avatar}${n}`);
   for (const h of C.hafazan || []) { const p = String(h.img || '').split('?')[0]; if (p && !existsSync(join(dir, p))) masalah.push(`${nama}: imej ayat tiada: ${p}`); if (!h.id || !h.rujukan) masalah.push(`${nama}: ayat hafazan perlu id dan rujukan`); }
   const kurang = ['bankCsvUrl', ...(f ? ['spCsvUrl', 'pelajaranCsvUrl'] : [])].filter(k => !C[k]);
   console.log(`${nama.padEnd(22)} T${C.tingkatan}  ${(C.hafazan || []).length} ayat hafazan  ${kurang.length ? 'BELUM SEDIA (' + kurang.join(', ') + ' kosong; murid nampak "sedang disediakan")' : 'Sheet disambung'}`);

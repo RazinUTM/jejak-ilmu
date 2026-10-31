@@ -248,8 +248,9 @@ footer{padding-block:28px 40px;color:var(--muted);font-size:13px}
   var esc=function(x){ return String(x==null?'':x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); };
   var V={guru:C.guruNama||'Ustazah Nafisah', tajuk:pendek, tajukPendek:pendek, contohKelas:aw+'Amanah', hzKad:'Ayat Hafazan Tingkatan '+T};
   document.querySelectorAll('[data-k]').forEach(function(e){ var v=V[e.getAttribute('data-k')]; if(v!=null) e.textContent=v; });
-  document.querySelectorAll('img[data-src]').forEach(function(e){ e.src=A+e.getAttribute('data-src'); });
-  var ic=document.createElement('link'); ic.rel='icon'; ic.href=A+'img/icon-192.png'; document.head.appendChild(ic);
+  var AV=C.avatar?String(C.avatar).replace(/\/?$/,'/'):'';   // folder avatar khusus tingkatan (cth. T4 pink)
+  document.querySelectorAll('img[data-src]').forEach(function(e){ var d=e.getAttribute('data-src'); e.src=(AV&&/^img\/(bust|pose-)/.test(d))?AV+d.slice(4):A+d; });
+  var ic=document.createElement('link'); ic.rel='icon'; ic.href=AV?AV+'icon-192.png':A+'img/icon-192.png'; document.head.appendChild(ic);
   document.title='Panduan Murid · Jejak Ilmu T'+T;
   // Ayat hafazan
   if(!ADA&&T===2){ /* teks statik Tingkatan 2 */ }
