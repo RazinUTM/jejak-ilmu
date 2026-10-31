@@ -27,6 +27,7 @@ window.JEJAK_CONFIG = {
   spCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ-9Ei6Z4GFb365FHO3bSEi8SZWuBXbICeCuz7a85kt4zGCwIi9cI86q_iOBj-GBQ/pub?gid=666182641&single=true&output=csv',          // helaian "SP"
   pelajaranCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ-9Ei6Z4GFb365FHO3bSEi8SZWuBXbICeCuz7a85kt4zGCwIi9cI86q_iOBj-GBQ/pub?gid=35581945&single=true&output=csv',   // helaian "Pelajaran" (status kunci/buka)
   pesananCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ-9Ei6Z4GFb365FHO3bSEi8SZWuBXbICeCuz7a85kt4zGCwIi9cI86q_iOBj-GBQ/pub?gid=1292877728&single=true&output=csv',     // helaian "Pesanan"   (lajur: tarikh, teks)
+  editSoalanUrl: '',     // pilihan: URL Web App Google Apps Script (tools/sheet-edit/Kod.gs) supaya guru boleh edit soalan dari app terus ke Sheet
   hafazanCsvUrl: '',     // pilihan: helaian "Hafazan" (lajur: tarikh, ayat, rujukan, maksud) — baris terkini bertarikh <= hari ini dipaparkan
   ulasanCsvUrl: '',      // pilihan: helaian "Ulasan" (lajur: nama, kelas, teks, tarikh) — nama kosong = ulasan untuk seluruh kelas
   ai: true,             // butang draf AI (Ulasan Ustazah + refleksi laporan). Perlu fungsi Supabase 'ulasan-ai'; tukar ke false untuk sembunyikan

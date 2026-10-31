@@ -218,6 +218,7 @@ async function loadBank(){
     const [so,sp,pl,ps,ul,hf]=await Promise.all([fetchCSV(CFG.bankCsvUrl), CFG.spCsvUrl?fetchCSV(CFG.spCsvUrl):null, CFG.pelajaranCsvUrl?fetchCSV(CFG.pelajaranCsvUrl):null, CFG.pesananCsvUrl?fetchCSV(CFG.pesananCsvUrl).catch(()=>null):null, CFG.ulasanCsvUrl?fetchCSV(CFG.ulasanCsvUrl).catch(()=>null):null, CFG.hafazanCsvUrl?fetchCSV(CFG.hafazanCsvUrl).catch(()=>null):null]);
     if(ul&&ul.length) ULASAN=ul;
     if(hf&&hf.length) HAFAZAN=hf;
+    tindihEdit(so);
     const r=buildBank(so,sp,pl);
     { const today=todayKey(); const ok=(ps||[]).filter(x=>x.teks&&(!x.tarikh||x.tarikh.trim()<=today)).sort((a,b)=>(b.tarikh||'').localeCompare(a.tarikh||'')); PESANAN=[ok.length?ok[0].teks:'Selamat datang ke Jejak Ilmu. Mula dengan Cabaran Harian hari ini, lima minit sahaja.']; }
     try{ localStorage.setItem('jejak-bank-cache'+SFX,JSON.stringify({so,sp,pl,ps,t:Date.now()})); }catch(e){}
@@ -413,7 +414,7 @@ const doneToday=()=>state.dailyDate?state.dailyDate===todayKey():!!(state.dailyD
 const todayKey=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 function logAktiviti(xp){ if(!state.aktiviti) state.aktiviti={}; const k=todayKey(); const had=!!state.aktiviti[k]; state.aktiviti[k]=(state.aktiviti[k]||0)+xp; if(!had){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); state.streak=state.aktiviti[yk]?(state.streak||0)+1:1; state.usaha.hariAktif=Object.keys(state.aktiviti).filter(d=>d.slice(0,7)===k.slice(0,7)).length; } }
 let ULASAN=[]; let HAFAZAN=[];
-const APP_VERSION='2026-10-31d';
+const APP_VERSION='2026-10-31e';
 const ZON={timeZone:'Asia/Kuala_Lumpur'};
 const jamAMPM=t=>new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true,...ZON});
 const tarikhJam=t=>new Date(t).toLocaleDateString('ms-MY',{day:'numeric',month:'short',...ZON})+', '+jamAMPM(t);
@@ -1391,12 +1392,13 @@ function vGuruLive(){
         ${!ready?'<p class="small muted" style="margin-top:6px">…</p>':!weakest?'<p class="small muted" style="margin-top:6px">Belum ada jawapan untuk pelajaran ini dalam kelas ini.</p>'
           :lemahSp.length?`<h3 style="font-size:16px;margin-top:8px">Paling perlu diulang: ${esc(SP_NAMA[lemahSp[0].k]||lemahSp[0].k)} (${esc(lemahSp[0].k)}), purata ${lemahSp[0].v}%</h3>${lemahSp.length>1?`<p class="small" style="margin-top:4px">SP lain di bawah 70%: ${lemahSp.slice(1).map(o=>`${esc(o.k)} (${o.v}%)`).join(', ')}</p>`:''}`
           :`<h3 style="font-size:16px;margin-top:8px">Semua SP ${GD.pel?'pelajaran ini':'yang dicuba'} dikuasai (purata kelas 70% ke atas).</h3><p class="small muted" style="margin-top:4px">Terendah: ${esc(SP_NAMA[weakest.k]||weakest.k)} (${esc(weakest.k)}), ${weakest.v}%.</p>`}
-        ${ready&&weakest?(sukar.length?`<p class="small" style="margin-top:10px;font-weight:700">Soalan paling kerap disalah jawab:</p>${sukar.slice(0,5).map(x=>`<div class="student"><div class="av" style="background:color-mix(in srgb,var(--bad) 18%,var(--surface));color:var(--bad);font-size:12px">${Math.round(x.salah/x.cubaan*100)}%</div><div class="grow"><div class="nm" style="font-weight:600;font-size:13.5px">${esc(String(qText(x.soalan_id)).slice(0,140))}</div><div class="why">${esc(x.soalan_id)} · SP ${esc(x.sp_kod||'')} · ${x.salah} daripada ${x.cubaan} cubaan salah</div></div></div>`).join('')}<p class="small muted" style="margin-top:6px">Cadangan: bincang 5 minit dalam PdP seterusnya; jika hampir semua murid salah, semak juga soalan atau kunci jawapan dalam Sheets.</p>`
+        ${ready&&weakest?(sukar.length?`<p class="small" style="margin-top:10px;font-weight:700">Soalan paling kerap disalah jawab:</p>${sukar.slice(0,5).map(x=>`<div class="student"><div class="av" style="background:color-mix(in srgb,var(--bad) 18%,var(--surface));color:var(--bad);font-size:12px">${Math.round(x.salah/x.cubaan*100)}%</div><div class="grow"><div class="nm" style="font-weight:600;font-size:13.5px">${esc(String(qText(x.soalan_id)).slice(0,140))}</div><div class="why">${esc(x.soalan_id)} · SP ${esc(x.sp_kod||'')} · ${x.salah} daripada ${x.cubaan} cubaan salah</div></div>${Q[x.soalan_id]?`<button class="btn sm ghost" data-act="semak-id" data-v="${esc(x.soalan_id)}">Semak</button>`:''}</div>`).join('')}<p class="small muted" style="margin-top:6px">Cadangan: bincang 5 minit dalam PdP seterusnya; jika hampir semua murid salah, semak juga soalan atau kunci jawapan dalam Sheets.</p>`
           :'<p class="small muted" style="margin-top:8px">Tiada soalan yang kerap disalah jawab (30% atau lebih salah, sekurang-kurangnya 3 cubaan).</p>'):''}
       </div>
       ${gPesanCard()}
       ${gUlasanCard()}
       ${gLaporanCard()}
+      ${gSemakCard()}
     </div>
 
     <div class="section g-heat">
@@ -1538,6 +1540,97 @@ function vGuru(){
 }
 
 /* ---------- SHEETS ---------- */
+/* ---------- SEMAK & BETULKAN SOALAN (guru) ----------
+   Guru melalui soalan seperti murid (tanpa XP, tiada rekod jawapan, pilihan TIDAK dikocok supaya A–E sama dengan Sheet).
+   Edit dihantar ke Google Apps Script dalam Sheet tingkatan ini (config editSoalanUrl; kod: tools/sheet-edit/Kod.gs),
+   yang menyemak PIN guru (RPC semak_pin) dan menulis baris itu dalam helaian Soalan. Sheet kekal satu-satunya sumber.
+   Google menerbit semula CSV dalam ~5 minit; sementara itu telefon guru menindih baris yang diedit (tindihEdit). */
+const EDIT_URL=String(_C.editSoalanUrl||'');
+const KUNCI_EDIT='jejak-edit-tunggu'+SFX;
+const MEDAN_EDIT=['soalan','soalan_jawi','arab_jawi','pilihan_A','pilihan_B','pilihan_C','pilihan_D','pilihan_E','jawapan','urutan_1','urutan_2','urutan_3','urutan_4','urutan_5','urutan_6','penjelasan','ms','kbat','aras','aktif'];
+function editTunggu(){ try{ return JSON.parse(localStorage.getItem(KUNCI_EDIT)||'{}')||{}; }catch(e){ return {}; } }
+function tindihEdit(rows){
+  const E=editTunggu(); let ubah=false;
+  for(const [id,o] of Object.entries(E)){
+    if(!o||!o.baru||Date.now()-o.t>30*60e3){ delete E[id]; ubah=true; continue; }   // selepas 30 minit, CSV terbitan pasti sudah dikemas kini
+    const r=(rows||[]).find(x=>x.id===id); if(!r) continue;
+    if(Object.entries(o.baru).every(([k,v])=>String(r[k]||'').trim()===String(v).trim())){ delete E[id]; ubah=true; } else Object.assign(r,o.baru);
+  }
+  if(ubah) try{ localStorage.setItem(KUNCI_EDIT,JSON.stringify(E)); }catch(e){}
+  return rows;
+}
+const rowSoalan=id=>((buildBank.lastRows&&buildBank.lastRows.so)||[]).find(r=>r.id===id);
+function semakItem(id){ const it={id,...Q[id]}; if(it.type==='order') it.pool=shuffle(it.items); if(it.type==='tajwid') it.opts=TAJWID_OPTS.slice(); return it; }
+function idsSemak(pel){ return Object.keys(Q).filter(id=>!pel||Q[id].pel===pel).sort((a,b)=>((Q[a].pel||99)-(Q[b].pel||99))||a.localeCompare(b,undefined,{numeric:true})); }
+function startSemak(ids,t){
+  ids=ids.filter(id=>Q[id]); if(!ids.length){ toast('Tiada soalan untuk disemak.'); return; }
+  closeSheet();
+  quiz={key:'semak',semak:true,set:{t},items:ids.map(semakItem),i:0,maxI:0,answers:[],order:[],timer:null,tleft:0,ts:[],ms:[]};
+  $('#layer').hidden=false; document.body.style.overflow='hidden'; renderQ();
+}
+function gSemakCard(){
+  const pel=GD.pel||0, n=idsSemak(pel).length, semua=Object.keys(Q).length;
+  return `<div class="card" id="gsemak" style="margin-top:12px">
+    <div class="row" style="gap:12px;align-items:flex-start">${pose('thumbs',64)}<div class="grow"><div class="eyebrow">Semak &amp; betulkan soalan</div><p class="small muted" style="margin-top:4px">Lalui soalan seperti murid (tanpa XP, tidak direkod). Cuba jawab atau tekan <b>Tunjuk jawapan</b>. Jumpa soalan bermasalah atau mengelirukan? Tekan <b>✎ Edit</b>${EDIT_URL?'; pembetulan terus disimpan ke Google Sheet.':'.'}</p></div></div>
+    <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap">${pel?`<button class="btn sm" data-act="semak-mula" data-v="${pel}">Pelajaran ${pel} · ${n} soalan</button>`:''}<button class="btn sm ${pel?'ghost':''}" data-act="semak-mula" data-v="0">Semua soalan · ${semua}</button></div>
+    ${EDIT_URL?'':'<p class="small muted" style="margin-top:8px">Edit terus ke Google Sheet belum disambung (Apps Script). Semakan sudah boleh digunakan; pembetulan buat dalam Sheet dahulu.</p>'}
+  </div>`;
+}
+function renderEdit(){
+  const it=quiz.items[quiz.i]; const r=rowSoalan(it.id); if(!r){ toast('Baris soalan tidak dijumpai.'); return; }
+  const j=String(r.jenis||it.type||'').toLowerCase(), L=['A','B','C','D','E'];
+  const v=k=>String(r[k]==null?'':r[k]);
+  const inp=(k,lbl,o={})=>`<div class="field" style="margin-top:10px"><label for="ed-${k}">${lbl}</label>${o.area?`<textarea id="ed-${k}" data-k="${k}" rows="${o.rows||3}"${o.rtl?' dir="rtl" style="font-family:var(--jawi);font-size:18px"':''}>${esc(v(k))}</textarea>`:`<input id="ed-${k}" data-k="${k}" value="${esc(v(k))}"${o.rtl?' dir="rtl" style="font-family:var(--jawi);font-size:18px"':''}${o.num?' inputmode="numeric"':''}>`}</div>`;
+  const sel=(k,lbl,opts)=>{ const kini=v(k).trim(); const ada=opts.some(([x])=>x.toUpperCase()===kini.toUpperCase()); return `<div class="field" style="margin-top:10px"><label for="ed-${k}">${lbl}</label><select id="ed-${k}" data-k="${k}">${ada?'':`<option value="${esc(kini)}" selected>${esc(kini||'(kosong)')}</option>`}${opts.map(([x,t])=>`<option value="${esc(x)}" ${ada&&x.toUpperCase()===kini.toUpperCase()?'selected':''}>${esc(t)}</option>`).join('')}</select></div>`; };
+  let f='';
+  if(!['tajwid','jawi'].includes(j)||v('soalan')) f+=inp('soalan','Soalan',{area:true});
+  if(['mcq','tf','order','fill'].includes(j)||v('soalan_jawi')) f+=inp('soalan_jawi','Soalan (Jawi, pilihan)',{area:true,rows:2,rtl:true});
+  if(['tajwid','fill','jawi'].includes(j)) f+=inp('arab_jawi',j==='tajwid'?'Teks Arab (kurung huruf yang ditanda dengan [ ])':j==='fill'?'Teks ayat (tempat kosong = ____)':'Perkataan Jawi',{area:j==='fill',rtl:true,rows:2});
+  if(['mcq','fill','jawi'].includes(j)){ f+=L.map(x=>inp('pilihan_'+x,'Pilihan '+x,{rtl:j==='fill'&&isArabic(v('pilihan_'+x))})).join(''); f+=sel('jawapan','Jawapan betul',L.map(x=>[x,x+(v('pilihan_'+x)?' · '+v('pilihan_'+x).slice(0,50):'')])); }
+  if(j==='tf') f+=sel('jawapan','Jawapan betul',[['A','A · Betul'],['B','B · Salah']]);
+  if(j==='tajwid') f+=sel('jawapan','Hukum yang betul',L.map((x,i)=>[x,x+' · '+(TAJWID_OPTS[i]||'')]));
+  if(j==='order') f+=[1,2,3,4,5,6].map(k=>inp('urutan_'+k,`Langkah ${k} (urutan BETUL)`)).join('');
+  f+=inp('penjelasan','Penjelasan (dibaca murid selepas menjawab)',{area:true,rows:4});
+  f+=`<div class="row" style="gap:8px">${inp('ms','m.s.',{num:true})}${sel('aras','Aras',[['mudah','mudah'],['sederhana','sederhana'],['kbat','kbat']])}${sel('kbat','KBAT',[['N','N'],['Y','Y']])}</div>`;
+  f+=sel('aktif','Status',[['Y','Y · dipaparkan kepada murid'],['N','N · sembunyikan soalan ini']]);
+  $('#layer').innerHTML=`<div class="inner"><div class="qbar gut"><button class="icon" data-act="semak-batal" aria-label="Batal">‹</button><div class="grow"><div class="qtype" style="margin:0">Edit soalan · ${esc(it.id)}</div></div></div>
+    <div class="gut" style="padding-block:6px 24px">
+      <p class="small muted">Jenis <b>${esc(j)}</b> · Pelajaran ${esc(v('pelajaran'))} · SP ${esc(v('sp_kod'))}. Id, jenis, pelajaran dan SP hanya boleh diubah dalam Google Sheet.</p>
+      ${EDIT_URL?'':'<p class="note-demo" style="margin-top:10px">Edit terus belum disambung: Apps Script belum dipasang dalam Google Sheet (lihat tools/sheet-edit/BACA-SAYA.md). Buat pembetulan dalam Sheet buat masa ini.</p>'}
+      <div id="ed-borang">${f}</div>
+      <p class="small muted" style="margin-top:12px">Disimpan terus ke baris ${esc(it.id)} dalam helaian Soalan. Murid nampak pembetulan dalam ~5 minit (Google menerbit semula CSV), selepas muat semula app.</p>
+      <div class="row" style="gap:8px;margin-top:12px"><button class="btn ghost grow" data-act="semak-batal">Batal</button><button class="btn grow" data-act="semak-simpan" ${EDIT_URL?'':'disabled'}>Simpan ke Sheet</button></div>
+    </div></div>`;
+  $('#layer').scrollTop=0;
+}
+async function simpanEdit(){
+  const it=quiz.items[quiz.i]; const r=rowSoalan(it.id); if(!r||!EDIT_URL) return;
+  const baru={}, asal={};
+  for(const el of document.querySelectorAll('#ed-borang [data-k]')){ const k=el.dataset.k, nv=el.value.trim(), ov=String(r[k]==null?'':r[k]).trim(); if(MEDAN_EDIT.includes(k)&&nv!==ov){ baru[k]=nv; asal[k]=ov; } }
+  if(!Object.keys(baru).length){ toast('Tiada perubahan.'); return; }
+  // semakan sama seperti buildBank: jika gagal, soalan akan hilang daripada app
+  const nv={...r,...baru}, j=String(nv.jenis||'').toLowerCase(), L=['A','B','C','D','E'];
+  let err='';
+  if(['mcq','fill','jawi'].includes(j)){ const isi=L.map(x=>!!String(nv['pilihan_'+x]||'').trim()); const n=isi.filter(Boolean).length; const ai=L.indexOf(String(nv.jawapan||'').toUpperCase());
+    if(n<2) err='Perlu sekurang-kurangnya 2 pilihan jawapan.'; else if(isi.slice(0,n).some(x=>!x)) err='Isi pilihan mengikut urutan A, B, C… tanpa tempat kosong di tengah.'; else if(ai<0||!isi[ai]) err='Jawapan mesti menunjuk kepada pilihan yang berisi.'; }
+  if(j==='tf'&&!['A','B'].includes(String(nv.jawapan||'').toUpperCase())) err='Jawapan Betul/Salah mesti A atau B.';
+  if(j==='tajwid'&&L.indexOf(String(nv.jawapan||'').toUpperCase())<0) err='Pilih hukum tajwid yang betul.';
+  if(j==='order'&&[1,2,3,4,5,6].map(k=>nv['urutan_'+k]).filter(x=>x&&String(x).trim()).length<3) err='Susun langkah perlu sekurang-kurangnya 3 langkah.';
+  if(err){ toast(err,4200); return; }
+  const btn=document.querySelector('[data-act="semak-simpan"]'); if(btn){ btn.disabled=true; btn.textContent='Menyimpan…'; }
+  let res=null; const ctl=new AbortController(); const tm=setTimeout(()=>ctl.abort(),30000);
+  try{ const h=await fetch(EDIT_URL,{method:'POST',body:JSON.stringify({aksi:'edit',nama:state.user&&state.user.nama,kelas:state.user&&state.user.kelas,pin:state.user&&state.user.pin,id:it.id,asal,baru}),signal:ctl.signal}); res=await h.json(); }catch(e){ res=null; } finally{ clearTimeout(tm); }
+  if(!res||!res.ok){
+    const m=!res?'Tidak dapat dihantar ke Google Sheet. Semak internet dan cuba lagi.':res.ralat==='pin'?'PIN guru tidak disahkan. Log keluar dan log masuk semula sebagai guru.':res.ralat==='konflik'?`Soalan ini sudah diubah dalam Google Sheet (${res.konflik.map(x=>x.medan).join(', ')}). Muat semula app untuk dapatkan versi terkini, kemudian edit semula.`:res.ralat==='tiada'?`Id ${it.id} tidak dijumpai dalam helaian Soalan.`:res.ralat==='helaian'?'Helaian "Soalan" tidak dijumpai dalam Google Sheet ini.':'Tidak berjaya disimpan ('+res.ralat+').';
+    if(btn){ btn.disabled=false; btn.textContent='Simpan ke Sheet'; } toast(m,6000); return;
+  }
+  Object.assign(r,baru);
+  try{ const E=editTunggu(); E[it.id]={baru:{...((E[it.id]||{}).baru||{}),...baru},t:Date.now()}; localStorage.setItem(KUNCI_EDIT,JSON.stringify(E)); }catch(e){}
+  try{ const kk='jejak-bank-cache'+SFX; const c=JSON.parse(localStorage.getItem(kk)||'null'); if(c&&c.so){ const cr=c.so.find(x=>x.id===it.id); if(cr) Object.assign(cr,baru); localStorage.setItem(kk,JSON.stringify(c)); } }catch(e){}
+  rebuildSets(); recomputePelajaran();
+  if(Q[it.id]){ quiz.items[quiz.i]=semakItem(it.id); quiz.answers[quiz.i]=null; quiz.order=[]; renderQ(); toast('Disimpan dalam Google Sheet. Murid nampak dalam ~5 minit.',4200); }
+  else { quiz.items.splice(quiz.i,1); quiz.answers.splice(quiz.i,1); toast('Disimpan. Soalan ini kini disembunyikan daripada murid.',4200); if(!quiz.items.length){ closeQuiz(); return; } if(quiz.i>=quiz.items.length) quiz.i=quiz.items.length-1; renderQ(); }
+}
 function openSheet(html){ const s=$('#sheet'); s.innerHTML=`<div class="panel"><div class="handle"></div>${html}</div>`; s.hidden=false; document.body.style.overflow='hidden'; }
 function closeSheet(){ $('#sheet').hidden=true; document.body.style.overflow=''; }
 
@@ -1860,16 +1953,18 @@ function renderQ(){
   let fb='';
   if(answered){
     const correctText = it.type==='order' ? `Urutan betul: ${it.items.map((x,k)=>(k+1)+'. '+x).join(' · ')}` : (it.type==='fill'&&isArabic(it.opts[it.ans])) ? '' : `Jawapan: ${it.opts[it.ans]}`;
-    const say = a.ok ? PUJIAN[quiz.i%PUJIAN.length] : (a.timeout ? 'Masa tamat. Tak apa, tengok bacaannya.' : PUJUK[quiz.i%PUJUK.length]);
+    const say = quiz.semak ? (a.pick===-1?'Kunci jawapan':a.ok?'Betul.':'Salah.') : a.ok ? PUJIAN[quiz.i%PUJIAN.length] : (a.timeout ? 'Masa tamat. Tak apa, tengok bacaannya.' : PUJUK[quiz.i%PUJUK.length]);
     fb=`<div class="feedback ${a.ok?'ok':'ko'}">
-      <div class="fh"><img src="${a.ok?UST.pose.thumbs:UST.pose.think}" alt=""><div><b>${esc(say)} <span style="color:${a.ok?'var(--good)':'var(--muted)'}">${a.ok?'+10 XP':'+3 XP usaha'}</span></b><small>${UST.nama}</small></div></div>
-      ${!a.ok&&correctText?`<p class="small" style="font-weight:700;margin-bottom:4px">${esc(correctText)}</p>`:''}
+      <div class="fh"><img src="${a.ok?UST.pose.thumbs:UST.pose.think}" alt=""><div><b>${esc(say)} ${quiz.semak?'':`<span style="color:${a.ok?'var(--good)':'var(--muted)'}">${a.ok?'+10 XP':'+3 XP usaha'}</span>`}</b><small>${UST.nama}</small></div></div>
+      ${(!a.ok||quiz.semak)&&correctText?`<p class="small" style="font-weight:700;margin-bottom:4px">${esc(correctText)}</p>`:''}
       <p class="small">${it.why?esc(it.why):(it.type==='jawi'?`Bacaan: <b>${esc(it.opts[it.ans])}</b>. Perkataan ini muncul dalam tajuk pelajaran buku teks.`:'')}</p>
       ${it.ms?`<div class="ref">Rujuk Buku Teks Tingkatan ${TKT}, m.s. ${it.ms}</div>`:''}</div>
-      <div class="qfoot"><button class="btn block" data-act="next">${quiz.i+1<quiz.items.length?'Soalan seterusnya':'Lihat keputusan'}</button></div>`;
+      <div class="qfoot">${quiz.semak?`<div class="row" style="gap:8px"><button class="btn ghost" data-act="semak-edit">✎ Edit</button><button class="btn grow" data-act="next">${quiz.i+1<quiz.items.length?'Seterusnya':'Selesai semak'}</button></div>`:`<button class="btn block" data-act="next">${quiz.i+1<quiz.items.length?'Soalan seterusnya':'Lihat keputusan'}</button>`}</div>`;
+  } else if(quiz.semak){
+    fb=`<div class="qfoot"><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ghost" data-act="semak-edit">✎ Edit</button><button class="btn ghost grow" data-act="semak-jawapan">Tunjuk jawapan</button><button class="btn grow" data-act="next">${quiz.i+1<quiz.items.length?'Langkau':'Selesai semak'}</button></div></div>`;
   }
-  const lihat=quiz.i<(quiz.maxI||0);   // soalan lama: lihat sahaja, jawapan tidak boleh diubah
-  $('#layer').innerHTML=`<div class="inner">${qHead()}<div class="gut" style="padding-block:6px 16px;flex:1;display:flex;flex-direction:column"><div class="qtype">${typeLabel} · ${esc(quiz.set.t)}</div>${lihat?'<p class="small muted" style="margin:-2px 0 6px">Lihat semula sahaja · jawapan tidak boleh diubah</p>':''}${body}${fb}</div></div>`;
+  const lihat=!quiz.semak&&quiz.i<(quiz.maxI||0);   // soalan lama: lihat sahaja, jawapan tidak boleh diubah
+  $('#layer').innerHTML=`<div class="inner">${qHead()}<div class="gut" style="padding-block:6px 16px;flex:1;display:flex;flex-direction:column"><div class="qtype">${quiz.semak?`Semak · ${esc(it.id)} · `:''}${typeLabel} · ${esc(quiz.set.t)}</div>${lihat?'<p class="small muted" style="margin:-2px 0 6px">Lihat semula sahaja · jawapan tidak boleh diubah</p>':''}${body}${fb}</div></div>`;
   if(it.type==='jawi'&&quiz.set.timed&&!answered&&!quiz.timer){
     quiz.tleft=(quiz.tl&&quiz.tl[quiz.i]!=null)?quiz.tl[quiz.i]:quiz.set.timed;   // kembali ke soalan bermasa: sambung baki masa, bukan mula semula
     quiz.timer=setInterval(()=>{ quiz.tleft--; const tb=$('#tbar'),tn=$('#tnum'); if(tb) tb.style.width=(quiz.tleft/quiz.set.timed*100)+'%'; if(tn) tn.textContent=quiz.tleft; if(quiz.tleft<=0){ clearInterval(quiz.timer); quiz.timer=null; answer(-1,true); } },1000);
@@ -1885,7 +1980,7 @@ function answer(pick,timeout=false){
   renderQ();
 }
 function prevQ(){ if(!quiz||quiz.i<=0) return; if(quiz.timer){ clearInterval(quiz.timer); quiz.timer=null; (quiz.tl||(quiz.tl={}))[quiz.i]=quiz.tleft; } quiz.i--; renderQ(); }
-function nextQ(){ if(!quiz||quiz.answers[quiz.i]==null) return; if(quiz.timer){ clearInterval(quiz.timer); quiz.timer=null; } quiz.i++; if(quiz.i>(quiz.maxI||0)){ quiz.maxI=quiz.i; quiz.order=[]; } if(quiz.i>=quiz.items.length) return finishQuiz(); renderQ(); }
+function nextQ(){ if(!quiz||(!quiz.semak&&quiz.answers[quiz.i]==null)) return; if(quiz.timer){ clearInterval(quiz.timer); quiz.timer=null; } quiz.i++; if(quiz.i>(quiz.maxI||0)){ quiz.maxI=quiz.i; quiz.order=[]; } if(quiz.i>=quiz.items.length){ if(quiz.semak){ closeQuiz(); toast('Semakan selesai.'); return; } return finishQuiz(); } renderQ(); }
 function finishQuiz(){
   const n=quiz.items.length, c=quiz.answers.filter(a=>a&&a.ok).length;
   const xpBetul=c*10, xpUsaha=(n-c)*3; let gained=xpBetul+xpUsaha; if(c===n) gained+=20;
@@ -2063,6 +2158,12 @@ document.addEventListener('click',e=>{
   else if(act==='unplace'){ quiz.order=quiz.order.filter(x=>x!==el.dataset.x); renderQ(); }
   else if(act==='check-order'){ answer(null); }
   else if(act==='next'){ nextQ(); }
+  else if(act==='semak-mula'){ const pel=+v||0; startSemak(idsSemak(pel),pel?`Pelajaran ${pel}`:'Semua soalan'); }
+  else if(act==='semak-id'){ startSemak([v],'Soalan '+v); }
+  else if(act==='semak-jawapan'){ answer(-1); }
+  else if(act==='semak-edit'){ renderEdit(); }
+  else if(act==='semak-batal'){ renderQ(); }
+  else if(act==='semak-simpan'){ simpanEdit(); }
   else if(act==='prev'){ prevQ(); }
   else if(act==='tasmik'){ openTasmik(); }
   else if(act==='rec-share'){ shareRec(); }

@@ -36,6 +36,11 @@ Aplikasi e-pembelajaran Pendidikan Islam KSSM untuk kelas **Ustazah Nafisah**. P
 - Guru: Peti Tasmik paling atas. Tindakan memadam mesti ada pengesahan.
 - Level 1–10 (200 XP setiap level), 11–15 tahap mentor (Level 15 maks). Hafazan: TP3+ = lulus, menunggu semakan = separuh.
 
+## Semak & betulkan soalan (Guru)
+- Kad dalam papan guru + butang "Semak" pada "Soalan paling kerap disalah jawab". Mod `quiz.semak`: tanpa XP/rekod, pilihan tidak dikocok (A–E = Sheet), boleh langkau, "Tunjuk jawapan", "✎ Edit".
+- Edit → `editSoalanUrl` (Google Apps Script Web App, `tools/sheet-edit/Kod.gs`, langkah dalam `BACA-SAYA.md`), dipasang dalam Sheet tingkatan itu. Skrip semak PIN guru via RPC `semak_pin`, tulis hanya medan kandungan, tolak jika baris sudah berubah dalam Sheet (konflik), catat helaian "Log Edit". Sheet kekal satu-satunya sumber; telefon guru menindih baris diedit sehingga CSV terbitan terkini (`tindihEdit`, maks 30 minit).
+- Kuiz murid: butang ‹ untuk lihat semula soalan yang sudah dijawab (jawapan dikunci). Kad "Pasang app" dibuang atas permintaan Razin (murid guna pautan).
+
 ## Imej ayat hafazan
 - Potong daripada PDF buku teks: render halaman pada 300 dpi, potong di antara jalur label dan jalur rujukan dengan margin luas (potongan pertama T2 memotong bahagian atas baris), simpan PNG dalam `docs/tN/img/ayat/`, kemudian isi `hafazan` dalam config (`id`, `surah`, `no`, `ayat`, `label`, `pel`, `ms`, `rujukan`, `img`).
 - Alat: `python3 tools/potong_ayat.py profil|potong BUKU.pdf HALAMAN_PDF x0 x1 y0 y1 [out.png]` — `profil` menyenaraikan julat baris berdakwat (abaikan ta'awwudh di atas dan baris rujukan di bawah), `potong` memotong tepat pada dakwat, membuang latar imbasan (PNG lutsinar, lebar 1100 px, margin 40 px, 16 warna). Imej T4 dihasilkan dengannya.
