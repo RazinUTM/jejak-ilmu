@@ -414,7 +414,7 @@ const doneToday=()=>state.dailyDate?state.dailyDate===todayKey():!!(state.dailyD
 const todayKey=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 function logAktiviti(xp){ if(!state.aktiviti) state.aktiviti={}; const k=todayKey(); const had=!!state.aktiviti[k]; state.aktiviti[k]=(state.aktiviti[k]||0)+xp; if(!had){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); state.streak=state.aktiviti[yk]?(state.streak||0)+1:1; state.usaha.hariAktif=Object.keys(state.aktiviti).filter(d=>d.slice(0,7)===k.slice(0,7)).length; } }
 let ULASAN=[]; let HAFAZAN=[];
-const APP_VERSION='2026-10-31g';
+const APP_VERSION='2026-10-31h';
 const ZON={timeZone:'Asia/Kuala_Lumpur'};
 const jamAMPM=t=>new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true,...ZON});
 const tarikhJam=t=>new Date(t).toLocaleDateString('ms-MY',{day:'numeric',month:'short',...ZON})+', '+jamAMPM(t);
@@ -1562,6 +1562,13 @@ function tindihEdit(rows){
 const rowSoalan=id=>((buildBank.lastRows&&buildBank.lastRows.so)||[]).find(r=>r.id===id);
 function semakItem(id){ const it={id,...Q[id]}; if(it.type==='order') it.pool=shuffle(it.items); if(it.type==='tajwid') it.opts=TAJWID_OPTS.slice(); return it; }
 function idsSemak(pel){ return Object.keys(Q).filter(id=>!pel||Q[id].pel===pel).sort((a,b)=>((Q[a].pel||99)-(Q[b].pel||99))||a.localeCompare(b,undefined,{numeric:true})); }
+// Penapis Semak: kategori (bidang atau jenis soalan) kemudian pelajaran
+const SEMAK_KAT=()=>[['semua','Semua',()=>true],
+  ...BIDANG.map(b=>[b.id,b.rumi,q=>{ const p=pelOf(q.pel); return !!p&&p.b===b.id; }]),
+  ['tajwid','Tajwid',q=>q.type==='tajwid'||/tajwid/i.test((pelOf(q.pel)||{}).rumi||'')],
+  ['fill','Sambung ayat',q=>q.type==='fill'],['jawi','Jawi',q=>q.type==='jawi'],['order','Susun langkah',q=>q.type==='order'],['kbat','KBAT',q=>!!q.kbat]];
+let SK={kat:'semua',pel:0};
+function idsSemakF(kat,pel){ const k=SEMAK_KAT().find(x=>x[0]===kat)||SEMAK_KAT()[0]; return idsSemak(0).filter(id=>k[2](Q[id])&&(!pel||Q[id].pel===pel)); }
 function startSemak(ids,t){
   ids=ids.filter(id=>Q[id]); if(!ids.length){ toast('Tiada soalan untuk disemak.'); return; }
   closeSheet();
@@ -1569,10 +1576,17 @@ function startSemak(ids,t){
   $('#layer').hidden=false; document.body.style.overflow='hidden'; renderQ();
 }
 function gSemakCard(){
-  const pel=GD.pel||0, n=idsSemak(pel).length, semua=Object.keys(Q).length;
   return `<div class="card" id="gsemak" style="margin-top:12px">
     <div class="row" style="gap:12px;align-items:flex-start">${pose('thumbs',64)}<div class="grow"><div class="eyebrow">Semak &amp; betulkan soalan</div><p class="small muted" style="margin-top:4px">Lalui soalan seperti murid (tanpa XP, tidak direkod). Cuba jawab atau tekan <b>Tunjuk jawapan</b>. Jumpa soalan bermasalah atau mengelirukan? Tekan <b>🚩 Tanda</b>, kemudian betulkan dalam Google Sheet${EDIT_URL?' atau terus dengan <b>✎ Edit</b>':' (butang <b>Edit dalam Sheet</b> menunjukkan baris dan menyalin id soalan)'}.</p></div></div>
-    <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap">${pel?`<button class="btn sm" data-act="semak-mula" data-v="${pel}">Pelajaran ${pel} · ${n} soalan</button>`:''}<button class="btn sm ${pel?'ghost':''}" data-act="semak-mula" data-v="0">Semua soalan · ${semua}</button></div>
+    ${(()=>{ const kat=SEMAK_KAT().map(([k,l])=>[k,l,idsSemakF(k,0).length]).filter(x=>x[0]==='semua'||x[2]>0);
+      if(!kat.some(x=>x[0]===SK.kat)) SK.kat='semua';
+      const dlmKat=idsSemakF(SK.kat,0); const pels=[...new Set(dlmKat.map(id=>Q[id].pel))].filter(Boolean).sort((a,b)=>a-b);
+      if(SK.pel&&!pels.includes(SK.pel)) SK.pel=0;
+      const n=idsSemakF(SK.kat,SK.pel).length; const lblKat=(kat.find(x=>x[0]===SK.kat)||[])[1]||'Semua';
+      return `<div class="small muted" style="margin-top:12px;font-weight:700">Kategori</div>
+      <div class="chips" style="margin-top:6px" role="group" aria-label="Kategori soalan">${kat.map(([k,l,c])=>`<button data-act="semak-kat" data-v="${k}" aria-pressed="${SK.kat===k}">${esc(l)} · ${c}</button>`).join('')}</div>
+      <div class="field" style="margin-top:10px"><label for="semak-pel">Pelajaran</label><select id="semak-pel"><option value="0">Semua pelajaran${SK.kat==='semua'?'':' ('+esc(lblKat)+')'} · ${dlmKat.length}</option>${pels.map(n2=>{ const p=pelOf(n2)||{}; return `<option value="${n2}" ${SK.pel===n2?'selected':''}>${n2} · ${esc(p.rumi||'')} · ${idsSemakF(SK.kat,n2).length}</option>`; }).join('')}</select></div>
+      <button class="btn sm" style="margin-top:10px" data-act="semak-mula-f" ${n?'':'disabled'}>Mula semak · ${n} soalan</button>`; })()}
     ${(()=>{ const T=tandaSenarai(); if(!T.length) return ''; return `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><b class="small">🚩 ${T.length} soalan ditanda untuk dibetulkan</b>
       <div class="small muted" style="margin-top:4px">${T.map(id=>{ const r=rowSoalan(id); return `${esc(id)}${r&&r._baris?' (baris '+r._baris+')':''}`; }).join(' · ')}</div>
       <div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn sm" data-act="semak-tanda-mula">Semak yang ditanda</button><button class="btn sm ghost" data-act="semak-tanda-salin">Salin senarai</button><button class="btn sm ghost" data-act="semak-tanda-kosong">${tandaKosongSedia?'Pasti kosongkan?':'Kosongkan'}</button></div></div>`; })()}
@@ -2178,6 +2192,8 @@ document.addEventListener('click',e=>{
   else if(act==='check-order'){ answer(null); }
   else if(act==='next'){ nextQ(); }
   else if(act==='semak-mula'){ const pel=+v||0; startSemak(idsSemak(pel),pel?`Pelajaran ${pel}`:'Semua soalan'); }
+  else if(act==='semak-kat'){ SK.kat=v; SK.pel=0; render(); }
+  else if(act==='semak-mula-f'){ const k=(SEMAK_KAT().find(x=>x[0]===SK.kat)||[])[1]||'Semua'; startSemak(idsSemakF(SK.kat,SK.pel),[SK.kat==='semua'?'':k,SK.pel?'Pelajaran '+SK.pel:''].filter(Boolean).join(' · ')||'Semua soalan'); }
   else if(act==='semak-id'){ startSemak([v],'Soalan '+v); }
   else if(act==='semak-jawapan'){ answer(-1); }
   else if(act==='semak-edit'){ if(EDIT_URL) renderEdit(); else editDalamSheet(quiz.items[quiz.i].id); }
@@ -2222,7 +2238,7 @@ document.addEventListener('click',e=>{
   else if(act==='reset'&&SHEETS&&state.user){ let ok=true; try{ ok=window.confirm('Padam semua XP dan kemajuan kamu dalam telefon ini?'); }catch(e){} if(!ok) return; freshProgress(); save(); closeSheet(); render(); toast('Kemajuan kamu diset semula.'); }
   else if(act==='reset'){ try{ localStorage.removeItem(LS); }catch(err){} state=JSON.parse(JSON.stringify(DEFAULT_STATE)); PELAJARAN.find(p=>p.n===16).m=60; applyTheme(); closeSheet(); gate={kelas:kelasMula(),nama:null,pin:''}; showGate(); toast('Data demo diset semula.'); }
 });
-document.addEventListener('change',e=>{ if(e.target&&e.target.id==='gd-pel'){ GD.pel=+e.target.value; render(); } });
+document.addEventListener('change',e=>{ if(e.target&&e.target.id==='gd-pel'){ GD.pel=+e.target.value; render(); } if(e.target&&e.target.id==='semak-pel'){ SK.pel=+e.target.value; render(); } });
 document.addEventListener('submit',e=>{ if(e.target.id==='furus'){ e.preventDefault(); urusSubmit(); return; } if(e.target.id==='ftugasan'){ e.preventDefault(); closeSheet(); toast('Tugasan dihantar kepada 30 murid (demo). Notifikasi + peringatan 1 hari sebelum tarikh akhir.'); } });
 document.addEventListener('change',e=>{ if(e.target.id==='janji'&&rec){ rec.janji=e.target.checked; const b=$('[data-act="rec-start"]'); if(b) b.disabled=!rec.janji; } });
 $('#sheet').addEventListener('click',e=>{ if(e.target.id==='sheet'){ if(rec&&rec.ctx==='pesanan'){ stopRec(); rec=null; } closeSheet(); } });
