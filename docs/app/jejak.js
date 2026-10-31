@@ -413,7 +413,7 @@ const doneToday=()=>state.dailyDate?state.dailyDate===todayKey():!!(state.dailyD
 const todayKey=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 function logAktiviti(xp){ if(!state.aktiviti) state.aktiviti={}; const k=todayKey(); const had=!!state.aktiviti[k]; state.aktiviti[k]=(state.aktiviti[k]||0)+xp; if(!had){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); state.streak=state.aktiviti[yk]?(state.streak||0)+1:1; state.usaha.hariAktif=Object.keys(state.aktiviti).filter(d=>d.slice(0,7)===k.slice(0,7)).length; } }
 let ULASAN=[]; let HAFAZAN=[];
-const APP_VERSION='2026-10-31c';
+const APP_VERSION='2026-10-31d';
 const ZON={timeZone:'Asia/Kuala_Lumpur'};
 const jamAMPM=t=>new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true,...ZON});
 const tarikhJam=t=>new Date(t).toLocaleDateString('ms-MY',{day:'numeric',month:'short',...ZON})+', '+jamAMPM(t);
@@ -626,7 +626,6 @@ function vUtama(){
   </div></header>
 
   <div class="gut stack body" style="padding-top:0">
-    ${kadPasang()}
     <div class="pesan">
       ${pose('point',96)}
       <div class="bubble">
@@ -1539,22 +1538,6 @@ function vGuru(){
 }
 
 /* ---------- SHEETS ---------- */
-/* ---------- PASANG APP DI SKRIN UTAMA ---------- */
-// Android/Chrome: butang terus (beforeinstallprompt). iPhone: tiada API; tunjuk langkah Safari. Disembunyikan jika sudah dipasang atau ditutup (7 hari).
-let pasangEvt=null;
-addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); pasangEvt=e; if(state&&state.view==='utama'&&state.user) render(); });
-addEventListener('appinstalled',()=>{ pasangEvt=null; try{ localStorage.setItem('jejak-pasang'+SFX,'1'); }catch(e){} if(state.user) render(); toast('App dipasang. Buka dari ikon di skrin utama.'); });
-const IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-function sudahPasang(){ try{ if(matchMedia('(display-mode: standalone)').matches||navigator.standalone===true) return true; if(localStorage.getItem('jejak-pasang'+SFX)==='1') return true; const t=+localStorage.getItem('jejak-pasang-tutup'+SFX)||0; return Date.now()-t<7*864e5; }catch(e){ return false; } }
-function kadPasang(){ if(sudahPasang()||(!pasangEvt&&!IOS)) return '';
-  return `<div class="card pasang row" style="gap:12px;align-items:center"><div style="font-size:26px" aria-hidden="true">📲</div><div class="grow"><b>Pasang Jejak Ilmu di skrin utama</b><div class="small muted">Buka terus dari ikon, macam app biasa.</div></div><div class="row" style="gap:6px;flex-direction:column;align-items:flex-end"><button class="btn sm" data-act="pasang">Pasang</button><button class="link" data-act="pasang-tutup">Nanti</button></div></div>`; }
-async function pasangApp(){
-  if(pasangEvt){ const e=pasangEvt; pasangEvt=null; try{ e.prompt(); const r=await e.userChoice; if(r&&r.outcome==='accepted'){ try{ localStorage.setItem('jejak-pasang'+SFX,'1'); }catch(x){} } }catch(x){} render(); return; }
-  const safari=/Safari/.test(navigator.userAgent)&&!/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
-  openSheet(`<h3>Pasang di iPhone</h3>${safari?'':'<p class="small" style="margin-top:8px"><b>Buka pautan ini dalam Safari dahulu.</b> Pelayar lain dalam iPhone mungkin tiada pilihan ini.</p>'}
-    <ol class="small" style="margin:10px 0 0 18px;line-height:1.7"><li>Tekan butang <b>Kongsi</b> (petak dengan anak panah ke atas ⬆) di bawah skrin.</li><li>Tatal ke bawah, tekan <b>Add to Home Screen</b> (Tambah ke Skrin Utama).</li><li>Tekan <b>Add</b>. Ikon Ustazah Nafisah akan muncul di skrin utama.</li></ol>
-    <p class="small muted" style="margin-top:10px">Selepas itu, buka Jejak Ilmu dari ikon tersebut. Log masuk kamu kekal.</p>
-    <button class="btn" style="width:100%;margin-top:14px" data-act="close-sheet">Faham</button>`); }
 function openSheet(html){ const s=$('#sheet'); s.innerHTML=`<div class="panel"><div class="handle"></div>${html}</div>`; s.hidden=false; document.body.style.overflow='hidden'; }
 function closeSheet(){ $('#sheet').hidden=true; document.body.style.overflow=''; }
 
@@ -1840,7 +1823,7 @@ function startQuiz(setKey,retry=false){
 function closeQuiz(){ if(quiz&&quiz.timer) clearInterval(quiz.timer); quiz=null; stopRec(); if(rec&&rec.real) rec.real.cancel(); rec=null; $('#layer').hidden=true; document.body.style.overflow=''; render(); }
 function qHead(){
   const n=quiz.items.length;
-  return `<div class="qbar gut"><button class="icon" data-act="quiz-close" aria-label="Tutup">✕</button><div class="bar grow"><i style="width:${(quiz.i/n)*100}%"></i></div><span class="qcount num">${quiz.i+1}/${n}</span></div>`;
+  return `<div class="qbar gut"><button class="icon" data-act="quiz-close" aria-label="Tutup">✕</button>${quiz.i>0?'<button class="icon" data-act="prev" aria-label="Soalan sebelum (lihat sahaja)">‹</button>':''}<div class="bar grow"><i style="width:${(quiz.i/n)*100}%"></i></div><span class="qcount num">${quiz.i+1}/${n}</span></div>`;
 }
 function optBtn(k,label,inner,answered,ans,pick){ let cls=''; if(answered){ if(k===ans) cls='correct'; else if(k===pick) cls='wrong'; } return `<button class="opt ${cls}" data-act="pick" data-k="${k}" ${answered?'disabled':''}><span class="k">${label}</span>${inner}</button>`; }
 function renderQ(){
@@ -1867,7 +1850,7 @@ function renderQ(){
       <div class="bigword ${isArabic(it.w)?'jawi':''}" ${isArabic(it.w)?'':'style="font-size:1.6rem;font-weight:800"'}>${isArabic(it.w)?it.w:esc(it.w)}</div>
       <div class="opts">${it.opts.map((o,k)=>optBtn(k,L(k),`<span class="grow">${esc(o)}</span>`,answered,it.ans,pick)).join('')}</div>`;
   } else if(it.type==='order'){
-    const placed=quiz.order; const pool=it.pool.filter(x=>!placed.includes(x));
+    const placed=answered&&a.order?a.order:quiz.order; const pool=it.pool.filter(x=>!placed.includes(x));
     body=`${stem}${meta}
       <p class="small muted" style="margin-top:10px">Tekan langkah mengikut urutan. Tekan semula untuk keluarkan.</p>
       <div class="slots">${placed.map((x,k)=>{ let cls=''; if(answered) cls=(it.items[k]===x)?'ok':'ko'; return `<button class="slot ${cls}" data-act="unplace" data-x="${esc(x)}" ${answered?'disabled':''}><span class="n">${k+1}</span><span class="grow">${esc(x)}</span></button>`; }).join('')||'<p class="small muted" style="padding:8px 0">Belum ada langkah dipilih.</p>'}</div>
@@ -1885,9 +1868,10 @@ function renderQ(){
       ${it.ms?`<div class="ref">Rujuk Buku Teks Tingkatan ${TKT}, m.s. ${it.ms}</div>`:''}</div>
       <div class="qfoot"><button class="btn block" data-act="next">${quiz.i+1<quiz.items.length?'Soalan seterusnya':'Lihat keputusan'}</button></div>`;
   }
-  $('#layer').innerHTML=`<div class="inner">${qHead()}<div class="gut" style="padding-block:6px 16px;flex:1;display:flex;flex-direction:column"><div class="qtype">${typeLabel} · ${esc(quiz.set.t)}</div>${body}${fb}</div></div>`;
+  const lihat=quiz.i<(quiz.maxI||0);   // soalan lama: lihat sahaja, jawapan tidak boleh diubah
+  $('#layer').innerHTML=`<div class="inner">${qHead()}<div class="gut" style="padding-block:6px 16px;flex:1;display:flex;flex-direction:column"><div class="qtype">${typeLabel} · ${esc(quiz.set.t)}</div>${lihat?'<p class="small muted" style="margin:-2px 0 6px">Lihat semula sahaja · jawapan tidak boleh diubah</p>':''}${body}${fb}</div></div>`;
   if(it.type==='jawi'&&quiz.set.timed&&!answered&&!quiz.timer){
-    quiz.tleft=quiz.set.timed;
+    quiz.tleft=(quiz.tl&&quiz.tl[quiz.i]!=null)?quiz.tl[quiz.i]:quiz.set.timed;   // kembali ke soalan bermasa: sambung baki masa, bukan mula semula
     quiz.timer=setInterval(()=>{ quiz.tleft--; const tb=$('#tbar'),tn=$('#tnum'); if(tb) tb.style.width=(quiz.tleft/quiz.set.timed*100)+'%'; if(tn) tn.textContent=quiz.tleft; if(quiz.tleft<=0){ clearInterval(quiz.timer); quiz.timer=null; answer(-1,true); } },1000);
   }
 }
@@ -1896,11 +1880,12 @@ function answer(pick,timeout=false){
   quiz.ms[quiz.i]=quiz.ts[quiz.i]?Date.now()-quiz.ts[quiz.i]:null;
   if(quiz.timer){ clearInterval(quiz.timer); quiz.timer=null; }
   let ok; if(it.type==='order') ok=quiz.order.every((x,k)=>x===it.items[k]); else ok=pick===it.ans;
-  quiz.answers[quiz.i]={pick,ok,timeout};
+  quiz.answers[quiz.i]={pick,ok,timeout,order:it.type==='order'?quiz.order.slice():null};
   buzz(ok?30:[40,60,40]);
   renderQ();
 }
-function nextQ(){ quiz.i++; quiz.order=[]; if(quiz.i>=quiz.items.length) return finishQuiz(); renderQ(); }
+function prevQ(){ if(!quiz||quiz.i<=0) return; if(quiz.timer){ clearInterval(quiz.timer); quiz.timer=null; (quiz.tl||(quiz.tl={}))[quiz.i]=quiz.tleft; } quiz.i--; renderQ(); }
+function nextQ(){ if(!quiz||quiz.answers[quiz.i]==null) return; if(quiz.timer){ clearInterval(quiz.timer); quiz.timer=null; } quiz.i++; if(quiz.i>(quiz.maxI||0)){ quiz.maxI=quiz.i; quiz.order=[]; } if(quiz.i>=quiz.items.length) return finishQuiz(); renderQ(); }
 function finishQuiz(){
   const n=quiz.items.length, c=quiz.answers.filter(a=>a&&a.ok).length;
   const xpBetul=c*10, xpUsaha=(n-c)*3; let gained=xpBetul+xpUsaha; if(c===n) gained+=20;
@@ -2022,8 +2007,6 @@ document.addEventListener('click',e=>{
   const el=e.target.closest('[data-act]'); if(!el) return;
   const act=el.dataset.act, v=el.dataset.v;
   if(act==='nav'){ if(v==='guru'&&!isGuru()){ toast('Papan guru hanya untuk akaun guru.'); return; } if(v==='laporan'&&SHEETS&&state.user) hari().laporan=true; state.view=v; save(); render(); window.scrollTo({top:0}); if(v==='laporan') tarikKemajuan(); }
-  else if(act==='pasang'){ pasangApp(); }
-  else if(act==='pasang-tutup'){ try{ localStorage.setItem('jejak-pasang-tutup'+SFX,String(Date.now())); }catch(e){} render(); }
   else if(act==='theme'){ state.theme={auto:'light',light:'dark',dark:'auto'}[state.theme]; applyTheme(); save(); toast('Tema: '+THEME_LABEL[state.theme]); if(!$('#gate').hidden) renderGate(); else render(); }
   else if(act==='theme-set'){ state.theme=v; applyTheme(); save(); render(); sheetSettings(); }
   else if(act==='skrip'){ state.skrip=v; save(); render(); if(!$('#sheet').hidden) sheetSettings(); }
@@ -2080,6 +2063,7 @@ document.addEventListener('click',e=>{
   else if(act==='unplace'){ quiz.order=quiz.order.filter(x=>x!==el.dataset.x); renderQ(); }
   else if(act==='check-order'){ answer(null); }
   else if(act==='next'){ nextQ(); }
+  else if(act==='prev'){ prevQ(); }
   else if(act==='tasmik'){ openTasmik(); }
   else if(act==='rec-share'){ shareRec(); }
   else if(act==='tasmik-kirim'){ kirimTasmik(); }
