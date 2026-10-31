@@ -500,3 +500,47 @@ table.ht td.c{font-weight:800;min-width:44px}
 .conf{position:fixed;inset:0;pointer-events:none;z-index:45}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 .note-demo{font-size:12px;color:var(--muted);padding:10px 12px;border:1px dashed var(--line);border-radius:12px}
+
+/* ===== Tema "pink" (Tingkatan 4: pink lembut + emas). Dihidupkan oleh config `tema:'pink'` → <html data-tema="pink">.
+   Tingkatan 2 tiada data-tema, jadi semua di bawah tidak menyentuhnya. Band atas pink lembut → teks plum gelap (--band-ink);
+   mod gelap kekal band mawar gelap + teks putih. Kontras (WCAG): fg/bg 14.8, muted/putih 5.9, putih/accent 5.7, band-ink/band 8.2+. */
+:root[data-tema="pink"]{
+  --bg:#fdf4f7; --surface:#ffffff; --surface-2:#fae6ee; --fg:#33192a; --muted:#7c5a6c; --line:#f0d6e1;
+  --accent:#b23a6b; --accent-ink:#ffffff; --accent-soft:#fbe1eb; --accent-deep:#7a2248;
+  --band-a:#fcd9e6; --band-b:#f4b8cd; --band-ink:#4b1d36; --band-gold:#8a5e0e;
+  --band-glass:rgba(255,255,255,.55); --band-glass-line:rgba(255,255,255,.85);
+  --gold:#c6962d; --gold-ink:#3b2a05; --gold-soft:#f7ebd0; --gold-text:#6b4a08;
+  --scrim:rgba(45,16,32,.5); --shadow:0 10px 30px rgba(90,30,60,.10);
+}
+@media (prefers-color-scheme: dark){
+  :root[data-tema="pink"]:not([data-theme="light"]){
+    --bg:#1b1016; --surface:#25151e; --surface-2:#32202b; --fg:#f9e9f1; --muted:#c5a4b5; --line:#47293a;
+    --accent:#f49cc0; --accent-ink:#2b0e1d; --accent-soft:#4a2238; --accent-deep:#3a1a2b;
+    --band-a:#9a3f67; --band-b:#4e1c35; --band-ink:#ffffff; --band-gold:#e8bb5b;
+    --band-glass:rgba(255,255,255,.14); --band-glass-line:rgba(255,255,255,.2);
+    --gold:#e8bb5b; --gold-ink:#2a1d05; --gold-soft:#3a2f16; --gold-text:#f3d58e;
+    --scrim:rgba(0,0,0,.62); --shadow:0 10px 30px rgba(0,0,0,.45); color-scheme:dark;
+  }
+}
+:root[data-tema="pink"][data-theme="dark"]{
+  --bg:#1b1016; --surface:#25151e; --surface-2:#32202b; --fg:#f9e9f1; --muted:#c5a4b5; --line:#47293a;
+  --accent:#f49cc0; --accent-ink:#2b0e1d; --accent-soft:#4a2238; --accent-deep:#3a1a2b;
+  --band-a:#9a3f67; --band-b:#4e1c35; --band-ink:#ffffff; --band-gold:#e8bb5b;
+  --band-glass:rgba(255,255,255,.14); --band-glass-line:rgba(255,255,255,.2);
+  --gold:#e8bb5b; --gold-ink:#2a1d05; --gold-soft:#3a2f16; --gold-text:#f3d58e;
+  --scrim:rgba(0,0,0,.62); --shadow:0 10px 30px rgba(0,0,0,.45); color-scheme:dark;
+}
+:root[data-tema="pink"] .band,:root[data-tema="pink"] .gate .hero{color:var(--band-ink)}
+:root[data-tema="pink"] .band .eyebrow{color:color-mix(in srgb,var(--band-ink) 78%,transparent)}
+:root[data-tema="pink"] .band .wordmark,:root[data-tema="pink"] .gate .hero .wordmark{color:var(--band-gold)}
+:root[data-tema="pink"] .tbtn{background:var(--band-glass);border-color:var(--band-glass-line)}
+:root[data-tema="pink"] .tbtn svg{stroke:var(--band-ink)}
+:root[data-tema="pink"] .stat{background:var(--band-glass);border-color:var(--band-glass-line)}
+:root[data-tema="pink"] .lvlbar{background:color-mix(in srgb,var(--band-ink) 16%,transparent)}
+:root[data-tema="pink"] .band .toggle{background:var(--band-glass)}
+:root[data-tema="pink"] .band .toggle button{color:color-mix(in srgb,var(--band-ink) 80%,transparent)}
+:root[data-tema="pink"] .band .toggle button[aria-pressed="true"]{color:var(--fg)}
+:root[data-tema="pink"] .bahu .m.kosong{border-color:color-mix(in srgb,var(--band-ink) 45%,transparent);color:var(--band-ink)}
+:root[data-tema="pink"] .bahu .m.lagi{background:var(--band-glass);color:var(--band-ink);box-shadow:0 0 0 2px color-mix(in srgb,var(--band-ink) 30%,transparent)}
+:root[data-tema="pink"] .bahu .lbl{color:var(--band-ink)}
+:root[data-tema="pink"] .tbtn svg [fill]:not([fill="none"]){fill:var(--band-ink)}

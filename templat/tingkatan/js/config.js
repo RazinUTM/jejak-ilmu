@@ -10,6 +10,7 @@ window.JEJAK_CONFIG = {
   kelasAwalan: '{{N}} ',            // hanya kelas yang bermula dengan "{{N}} " dipaparkan, cth. "{{N}} Adil" (Supabase dikongsi semua tingkatan)
   asas: '../',                      // fail bersama (app/, img/, js/vendor/) berada satu tingkat di atas folder ini
   guruNama: 'Ustazah Nafisah',
+  tema: '',                         // warna app: '' = ungu asal; 'pink' = pink lembut + emas (seperti T4). Tema baharu: tambah blok [data-tema] dalam app/jejak.css + panduan.html
   demo: false,                      // jangan papar soalan contoh Tingkatan 2 semasa Sheet belum disambung
   // Ayat hafazan buku teks. Letak imej dalam img/ayat/ folder ini. Kosongkan senarai ([]) jika tiada ayat hafazan.
   // no = nombor surah, ayat = nombor ayat, pel = nombor pelajaran yang mengajar ayat ini, ms = muka surat buku teks.

@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#6d4cc4">
 <title>Panduan Murid · Jejak Ilmu</title>
 <script src="js/config.js"></script>
+<script>(function(){ var t=(window.JEJAK_CONFIG||{}).tema; if(!t) return; document.documentElement.setAttribute("data-tema",t); var m=document.querySelector('meta[name="theme-color"]'); if(m&&t==="pink") m.content="#fcd9e6"; })();</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Great+Vibes&display=swap">
 <style>
 /* One readable column; prints cleanly; projected in class at laptop width. */
@@ -24,6 +25,20 @@
     --gold:#e8bb5b; --gold-soft:#3a2f16; --gold-text:#f3d58e; --good:#3fc48a; --bad:#f07a66; color-scheme:dark;
   }
 }
+/* Tema pink (config tema:'pink', Tingkatan 4): sama seperti app/jejak.css */
+:root[data-tema="pink"]{
+  --bg:#fdf4f7; --surface:#ffffff; --surface-2:#fae6ee; --fg:#33192a; --muted:#7c5a6c; --line:#f0d6e1;
+  --accent:#b23a6b; --accent-ink:#ffffff; --accent-soft:#fbe1eb; --band-a:#fcd9e6; --band-b:#f4b8cd; --band-ink:#4b1d36; --band-gold:#8a5e0e;
+}
+@media (prefers-color-scheme: dark){
+  :root[data-tema="pink"]:not([data-theme="light"]){
+    --bg:#1b1016; --surface:#25151e; --surface-2:#32202b; --fg:#f9e9f1; --muted:#c5a4b5; --line:#47293a;
+    --accent:#f49cc0; --accent-ink:#2b0e1d; --accent-soft:#4a2238; --band-a:#9a3f67; --band-b:#4e1c35; --band-ink:#ffffff; --band-gold:#e8bb5b;
+  }
+}
+:root[data-tema="pink"] .hero{color:var(--band-ink)}
+:root[data-tema="pink"] .hero .script{color:var(--band-gold)}
+:root[data-tema="pink"] .tag.wajib,:root[data-tema="pink"] .step .n,:root[data-tema="pink"] .cta{color:var(--accent-ink)}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
