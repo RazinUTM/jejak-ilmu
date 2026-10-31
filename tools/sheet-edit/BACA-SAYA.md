@@ -1,5 +1,9 @@
 # Edit soalan dari app terus ke Google Sheet (Apps Script)
 
+> **Status (31 Okt 2026): TIDAK digunakan untuk T4.** Sheet T4 dimiliki akaun DELIMa (@moe-dl.edu.my); domain itu menyekat
+> Web App walaupun "Who has access: Anyone" dipilih (pelayar tanpa log masuk dapat "You need access"). App kini guna
+> "Edit dalam Sheet" (`sheetUrl` dalam config). Skrip ini hanya berfungsi jika Sheet dimiliki akaun Gmail biasa.
+
 Ciri **Guru → Semak & betulkan soalan** boleh digunakan tanpa langkah ini (semak sahaja). Untuk butang
 **Simpan ke Sheet** berfungsi, pasang skrip ini **sekali** dalam Google Sheet tingkatan itu (T4 = Sheet T4).
 

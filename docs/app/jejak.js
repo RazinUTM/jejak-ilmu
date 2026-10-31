@@ -170,7 +170,7 @@ function parseCSV(text){
     if(q){ if(c==='"'){ if(text[i+1]==='"'){ cell+='"'; i++; } else q=false; } else cell+=c; }
     else if(c==='"') q=true; else if(c===','){ row.push(cell); cell=''; } else if(c==='\n'){ row.push(cell); rows.push(row); row=[]; cell=''; } else if(c!=='\r') cell+=c; }
   if(cell!==''||row.length){ row.push(cell); rows.push(row); }
-  const head=(rows.shift()||[]).map(h=>h.trim()); return rows.filter(r=>r.some(v=>v&&v.trim())).map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]||'').trim()])));
+  const head=(rows.shift()||[]).map(h=>h.trim()); return rows.map((r,n)=>[r,n+2]).filter(([r])=>r.some(v=>v&&v.trim())).map(([r,n])=>({...Object.fromEntries(head.map((h,i)=>[h,(r[i]||'').trim()])),_baris:n}));
 }
 async function fetchCSV(url){ const res=await fetch(url,{cache:'no-store'}); if(!res.ok) throw new Error('HTTP '+res.status); return parseCSV(await res.text()); }
 const BIDANG_BY_NAME={'al-quran':'quran','al quran':'quran','quran':'quran','tilawah al-quran':'quran','hadis':'hadis','hadith':'hadis','akidah':'akidah','fiqah':'fiqah','fiqh':'fiqah','ibadah':'fiqah','sirah dan tamadun islam':'sirah','sirah':'sirah','tamadun islam':'sirah','akhlak islamiah':'akhlak','akhlak islamiyah':'akhlak','adab dan akhlak islamiah':'akhlak','akhlak':'akhlak'};
@@ -414,7 +414,7 @@ const doneToday=()=>state.dailyDate?state.dailyDate===todayKey():!!(state.dailyD
 const todayKey=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 function logAktiviti(xp){ if(!state.aktiviti) state.aktiviti={}; const k=todayKey(); const had=!!state.aktiviti[k]; state.aktiviti[k]=(state.aktiviti[k]||0)+xp; if(!had){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); state.streak=state.aktiviti[yk]?(state.streak||0)+1:1; state.usaha.hariAktif=Object.keys(state.aktiviti).filter(d=>d.slice(0,7)===k.slice(0,7)).length; } }
 let ULASAN=[]; let HAFAZAN=[];
-const APP_VERSION='2026-10-31f';
+const APP_VERSION='2026-10-31g';
 const ZON={timeZone:'Asia/Kuala_Lumpur'};
 const jamAMPM=t=>new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true,...ZON});
 const tarikhJam=t=>new Date(t).toLocaleDateString('ms-MY',{day:'numeric',month:'short',...ZON})+', '+jamAMPM(t);
@@ -1571,11 +1571,28 @@ function startSemak(ids,t){
 function gSemakCard(){
   const pel=GD.pel||0, n=idsSemak(pel).length, semua=Object.keys(Q).length;
   return `<div class="card" id="gsemak" style="margin-top:12px">
-    <div class="row" style="gap:12px;align-items:flex-start">${pose('thumbs',64)}<div class="grow"><div class="eyebrow">Semak &amp; betulkan soalan</div><p class="small muted" style="margin-top:4px">Lalui soalan seperti murid (tanpa XP, tidak direkod). Cuba jawab atau tekan <b>Tunjuk jawapan</b>. Jumpa soalan bermasalah atau mengelirukan? Tekan <b>✎ Edit</b>${EDIT_URL?'; pembetulan terus disimpan ke Google Sheet.':'.'}</p></div></div>
+    <div class="row" style="gap:12px;align-items:flex-start">${pose('thumbs',64)}<div class="grow"><div class="eyebrow">Semak &amp; betulkan soalan</div><p class="small muted" style="margin-top:4px">Lalui soalan seperti murid (tanpa XP, tidak direkod). Cuba jawab atau tekan <b>Tunjuk jawapan</b>. Jumpa soalan bermasalah atau mengelirukan? Tekan <b>🚩 Tanda</b>, kemudian betulkan dalam Google Sheet${EDIT_URL?' atau terus dengan <b>✎ Edit</b>':' (butang <b>Edit dalam Sheet</b> menunjukkan baris dan menyalin id soalan)'}.</p></div></div>
     <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap">${pel?`<button class="btn sm" data-act="semak-mula" data-v="${pel}">Pelajaran ${pel} · ${n} soalan</button>`:''}<button class="btn sm ${pel?'ghost':''}" data-act="semak-mula" data-v="0">Semua soalan · ${semua}</button></div>
-    ${EDIT_URL?'':'<p class="small muted" style="margin-top:8px">Edit terus ke Google Sheet belum disambung (Apps Script). Semakan sudah boleh digunakan; pembetulan buat dalam Sheet dahulu.</p>'}
+    ${(()=>{ const T=tandaSenarai(); if(!T.length) return ''; return `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><b class="small">🚩 ${T.length} soalan ditanda untuk dibetulkan</b>
+      <div class="small muted" style="margin-top:4px">${T.map(id=>{ const r=rowSoalan(id); return `${esc(id)}${r&&r._baris?' (baris '+r._baris+')':''}`; }).join(' · ')}</div>
+      <div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn sm" data-act="semak-tanda-mula">Semak yang ditanda</button><button class="btn sm ghost" data-act="semak-tanda-salin">Salin senarai</button><button class="btn sm ghost" data-act="semak-tanda-kosong">${tandaKosongSedia?'Pasti kosongkan?':'Kosongkan'}</button></div></div>`; })()}
+    ${SHEET_URL?`<p class="small" style="margin-top:10px"><a class="link" href="${esc(urlSheet())}" target="_blank" rel="noopener">Buka Google Sheet (helaian Soalan) ↗</a></p>`:''}
   </div>`;
 }
+const SHEET_URL=String(_C.sheetUrl||'');
+const GID_SOALAN=(/[?&#]gid=(\d+)/.exec(String(CFG.bankCsvUrl||''))||[])[1]||'';
+function urlSheet(baris){ if(!SHEET_URL) return ''; const asas=SHEET_URL.replace(/[?#].*$/,'').replace(/\/(edit|view|htmlview)\/?$/,''); return `${asas}/edit#gid=${GID_SOALAN}${baris?'&range=A'+baris:''}`; }
+async function salinTeks(t){ try{ await navigator.clipboard.writeText(t); return true; }catch(e){ try{ const ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); const ok=document.execCommand('copy'); ta.remove(); return ok; }catch(e2){ return false; } } }
+async function editDalamSheet(id){
+  const r=rowSoalan(id); const b=r&&r._baris; const ok=await salinTeks(id);
+  if(SHEET_URL){ window.open(urlSheet(b),'_blank','noopener'); toast(`Google Sheet dibuka${b?' pada baris '+b:''}. Id ${id}${ok?' disalin (boleh cari dengan Ctrl+F)':''}.`,5000); }
+  else toast(`Dalam Google Sheet, buka helaian Soalan${b?', baris '+b:''} (id ${id}${ok?', sudah disalin':''}). Murid nampak pembetulan dalam ~5 minit.`,6500);
+}
+// Tanda soalan bermasalah (disimpan dalam telefon guru sahaja)
+const KUNCI_TANDA='jejak-tanda'+SFX; let tandaKosongSedia=false;
+function tandaSenarai(){ try{ return (JSON.parse(localStorage.getItem(KUNCI_TANDA)||'[]')||[]).filter(id=>typeof id==='string'); }catch(e){ return []; } }
+function tandaSimpan(L){ try{ localStorage.setItem(KUNCI_TANDA,JSON.stringify(L)); }catch(e){} }
+function tandaTogol(id){ const L=tandaSenarai(); const i=L.indexOf(id); if(i>=0) L.splice(i,1); else L.push(id); tandaSimpan(L); return i<0; }
 function renderEdit(){
   const it=quiz.items[quiz.i]; const r=rowSoalan(it.id); if(!r){ toast('Baris soalan tidak dijumpai.'); return; }
   const j=String(r.jenis||it.type||'').toLowerCase(), L=['A','B','C','D','E'];
@@ -1959,10 +1976,12 @@ function renderQ(){
       ${(!a.ok||quiz.semak)&&correctText?`<p class="small" style="font-weight:700;margin-bottom:4px">${esc(correctText)}</p>`:''}
       <p class="small">${it.why?esc(it.why):(it.type==='jawi'?`Bacaan: <b>${esc(it.opts[it.ans])}</b>. Perkataan ini muncul dalam tajuk pelajaran buku teks.`:'')}</p>
       ${it.ms?`<div class="ref">Rujuk Buku Teks Tingkatan ${TKT}, m.s. ${it.ms}</div>`:''}</div>
-      <div class="qfoot">${quiz.semak?`<div class="row" style="gap:8px"><button class="btn ghost" data-act="semak-edit">✎ Edit</button><button class="btn grow" data-act="next">${quiz.i+1<quiz.items.length?'Seterusnya':'Selesai semak'}</button></div>`:`<button class="btn block" data-act="next">${quiz.i+1<quiz.items.length?'Soalan seterusnya':'Lihat keputusan'}</button>`}</div>`;
+      <div class="qfoot">${quiz.semak?`<div class="row" style="gap:8px"><button class="btn grow" data-act="next">${quiz.i+1<quiz.items.length?'Seterusnya':'Selesai semak'}</button></div>`:`<button class="btn block" data-act="next">${quiz.i+1<quiz.items.length?'Soalan seterusnya':'Lihat keputusan'}</button>`}</div>`;
   } else if(quiz.semak){
-    fb=`<div class="qfoot"><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ghost" data-act="semak-edit">✎ Edit</button><button class="btn ghost grow" data-act="semak-jawapan">Tunjuk jawapan</button><button class="btn grow" data-act="next">${quiz.i+1<quiz.items.length?'Langkau':'Selesai semak'}</button></div></div>`;
+    fb=`<div class="qfoot"><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ghost grow" data-act="semak-jawapan">Tunjuk jawapan</button><button class="btn grow" data-act="next">${quiz.i+1<quiz.items.length?'Langkau':'Selesai semak'}</button></div></div>`;
   }
+  if(quiz.semak){ const ditanda=tandaSenarai().includes(it.id); const r0=rowSoalan(it.id);
+    body+=`<div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center"><button class="btn sm ${ditanda?'':'ghost'}" data-act="semak-tanda" aria-pressed="${ditanda}">${ditanda?'🚩 Ditanda':'🚩 Tanda'}</button><button class="btn sm ghost" data-act="semak-edit">${EDIT_URL?'✎ Edit':'✎ Edit dalam Sheet'}</button><span class="small muted">${r0&&r0._baris?'Baris '+r0._baris+' dalam Sheet':''}</span></div>`; }
   const lihat=!quiz.semak&&quiz.i<(quiz.maxI||0);   // soalan lama: lihat sahaja, jawapan tidak boleh diubah
   $('#layer').innerHTML=`<div class="inner">${qHead()}<div class="gut" style="padding-block:6px 16px;flex:1;display:flex;flex-direction:column"><div class="qtype">${quiz.semak?`Semak · ${esc(it.id)} · `:''}${typeLabel} · ${esc(quiz.set.t)}</div>${lihat?'<p class="small muted" style="margin:-2px 0 6px">Lihat semula sahaja · jawapan tidak boleh diubah</p>':''}${body}${fb}</div></div>`;
   if(it.type==='jawi'&&quiz.set.timed&&!answered&&!quiz.timer){
@@ -2161,7 +2180,11 @@ document.addEventListener('click',e=>{
   else if(act==='semak-mula'){ const pel=+v||0; startSemak(idsSemak(pel),pel?`Pelajaran ${pel}`:'Semua soalan'); }
   else if(act==='semak-id'){ startSemak([v],'Soalan '+v); }
   else if(act==='semak-jawapan'){ answer(-1); }
-  else if(act==='semak-edit'){ renderEdit(); }
+  else if(act==='semak-edit'){ if(EDIT_URL) renderEdit(); else editDalamSheet(quiz.items[quiz.i].id); }
+  else if(act==='semak-tanda'){ const on=tandaTogol(quiz.items[quiz.i].id); renderQ(); toast(on?'Ditanda. Senarai ada dalam kad Semak di tab Guru.':'Tanda dibuang.'); }
+  else if(act==='semak-tanda-mula'){ startSemak(tandaSenarai(),'Soalan ditanda'); }
+  else if(act==='semak-tanda-salin'){ const T=tandaSenarai(); const t=T.map(id=>{ const r=rowSoalan(id)||{}; return `${id}${r._baris?' (baris '+r._baris+')':''} · Pelajaran ${r.pelajaran||'-'} · ${String(r.soalan||r.arab_jawi||'').slice(0,80)}`; }).join('\n'); salinTeks(t).then(ok=>toast(ok?`${T.length} soalan disalin. Tampal dalam nota atau WhatsApp.`:'Tidak dapat menyalin.')); }
+  else if(act==='semak-tanda-kosong'){ if(!tandaKosongSedia){ tandaKosongSedia=true; render(); setTimeout(()=>{ if(tandaKosongSedia){ tandaKosongSedia=false; render(); } },4000); } else { tandaKosongSedia=false; tandaSimpan([]); render(); toast('Senarai tanda dikosongkan.'); } }
   else if(act==='semak-batal'){ renderQ(); }
   else if(act==='semak-simpan'){ simpanEdit(); }
   else if(act==='prev'){ prevQ(); }

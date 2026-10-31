@@ -33,7 +33,8 @@ window.JEJAK_CONFIG = {
   spCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSWrx4_qAYV6uQF_5tpRJnxHHkjSEM6YdxMuAr-14NQnrqzIpR_oJPSlrZCh7kUNxHsq0jJRlCBRz0Z/pub?gid=666182641&single=true&output=csv',          // helaian "SP"        (wajib untuk tingkatan selain 2)
   pelajaranCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSWrx4_qAYV6uQF_5tpRJnxHHkjSEM6YdxMuAr-14NQnrqzIpR_oJPSlrZCh7kUNxHsq0jJRlCBRz0Z/pub?gid=35581945&single=true&output=csv',   // helaian "Pelajaran" (wajib untuk tingkatan selain 2: senarai pelajaran, bidang, muka surat, status kunci/buka)
   pesananCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSWrx4_qAYV6uQF_5tpRJnxHHkjSEM6YdxMuAr-14NQnrqzIpR_oJPSlrZCh7kUNxHsq0jJRlCBRz0Z/pub?gid=1292877728&single=true&output=csv',     // pilihan: helaian "Pesanan" (lajur: tarikh, teks)
-  editSoalanUrl: 'https://script.google.com/macros/s/AKfycbxhmlM6D6PxVwzfGKTRl37k2kVrUI8qBpBM4QvufLYlB0YR2aM50BZlZJFMFr2ZZqRJpw/exec',     // pilihan: URL Web App Google Apps Script (tools/sheet-edit/Kod.gs) supaya guru boleh edit soalan dari app terus ke Sheet
+  sheetUrl: '',          // pautan Google Sheet (edit) untuk butang "Edit dalam Sheet" dalam Semak soalan guru
+  editSoalanUrl: '',     // pilihan (lanjutan): Apps Script tools/sheet-edit/Kod.gs. TIDAK berfungsi dengan akaun DELIMa (domain sekat akses awam)
   hafazanCsvUrl: '',     // pilihan: helaian "Hafazan" (lajur: tarikh, ayat, rujukan, maksud)
   ulasanCsvUrl: '',      // pilihan: helaian "Ulasan" (lajur: nama, kelas, teks, tarikh)
   ai: true,              // butang draf AI (Ulasan Ustazah + refleksi laporan); fungsi Supabase 'ulasan-ai' dikongsi

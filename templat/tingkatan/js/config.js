@@ -26,7 +26,8 @@ window.JEJAK_CONFIG = {
   spCsvUrl: '',          // helaian "SP"        (wajib untuk tingkatan selain 2)
   pelajaranCsvUrl: '',   // helaian "Pelajaran" (wajib untuk tingkatan selain 2: senarai pelajaran, bidang, muka surat, status kunci/buka)
   pesananCsvUrl: '',     // pilihan: helaian "Pesanan" (lajur: tarikh, teks)
-  editSoalanUrl: '',     // pilihan: URL Web App Google Apps Script (tools/sheet-edit/Kod.gs) supaya guru boleh edit soalan dari app terus ke Sheet
+  sheetUrl: '',          // pautan Google Sheet (edit) untuk butang "Edit dalam Sheet" dalam Semak soalan guru
+  editSoalanUrl: '',     // pilihan (lanjutan): Apps Script tools/sheet-edit/Kod.gs. TIDAK berfungsi dengan akaun DELIMa (domain sekat akses awam)
   hafazanCsvUrl: '',     // pilihan: helaian "Hafazan" (lajur: tarikh, ayat, rujukan, maksud)
   ulasanCsvUrl: '',      // pilihan: helaian "Ulasan" (lajur: nama, kelas, teks, tarikh)
   ai: true,              // butang draf AI (Ulasan Ustazah + refleksi laporan); fungsi Supabase 'ulasan-ai' dikongsi
