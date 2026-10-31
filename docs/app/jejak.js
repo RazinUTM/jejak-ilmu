@@ -175,7 +175,13 @@ function parseCSV(text){
 async function fetchCSV(url){ const res=await fetch(url,{cache:'no-store'}); if(!res.ok) throw new Error('HTTP '+res.status); return parseCSV(await res.text()); }
 const BIDANG_BY_NAME={'al-quran':'quran','al quran':'quran','quran':'quran','tilawah al-quran':'quran','hadis':'hadis','hadith':'hadis','akidah':'akidah','fiqah':'fiqah','fiqh':'fiqah','ibadah':'fiqah','sirah dan tamadun islam':'sirah','sirah':'sirah','tamadun islam':'sirah','akhlak islamiah':'akhlak','akhlak islamiyah':'akhlak','adab dan akhlak islamiah':'akhlak','akhlak':'akhlak'};
 const LETTER={A:0,B:1,C:2,D:3,E:4};
+let BANK_AMARAN=[];   // helaian Google Sheet yang pautannya memberi data salah (dipaparkan kepada guru)
+const ada=(rows,...k)=>Array.isArray(rows)&&rows.length>0&&k.every(x=>x in rows[0]);
+const rowsSoalanSah=rows=>ada(rows,'id','jenis','jawapan');
+const rowsSpSah=rows=>ada(rows,'kod','nama')&&!('jawapan' in rows[0]);
+const rowsPelSah=rows=>ada(rows,'n','rumi')&&rows.some(r=>+r.n>=1);
 function buildBank(soalanRows, spRows, pelRows){
+  if(pelRows&&!rowsPelSah(pelRows)) pelRows=null; if(spRows&&!rowsSpSah(spRows)) spRows=null; if(soalanRows&&soalanRows.length&&!rowsSoalanSah(soalanRows)) soalanRows=[];
   buildBank.lastRows={so:soalanRows,sp:spRows,pl:pelRows};
   if(pelRows&&pelRows.length){ PELAJARAN=pelRows.map(r=>({n:+r.n,b:BIDANG_BY_NAME[(r.bidang||'').trim().toLowerCase()]||'quran',rumi:r.rumi,jawi:r.jawi||'',ms:r.ms||'',m:null,st:(r.status||'kunci').toLowerCase()})).filter(p=>p.n>=1&&p.n<=99).sort((a,b)=>a.n-b.n);
     // Nama bidang dan julat muka surat ikut buku teks tingkatan ini (helaian Pelajaran), bukan buku Tingkatan 2.
@@ -218,13 +224,21 @@ async function loadBank(){
     const [so,sp,pl,ps,ul,hf]=await Promise.all([fetchCSV(CFG.bankCsvUrl), CFG.spCsvUrl?fetchCSV(CFG.spCsvUrl):null, CFG.pelajaranCsvUrl?fetchCSV(CFG.pelajaranCsvUrl):null, CFG.pesananCsvUrl?fetchCSV(CFG.pesananCsvUrl).catch(()=>null):null, CFG.ulasanCsvUrl?fetchCSV(CFG.ulasanCsvUrl).catch(()=>null):null, CFG.hafazanCsvUrl?fetchCSV(CFG.hafazanCsvUrl).catch(()=>null):null]);
     if(ul&&ul.length) ULASAN=ul;
     if(hf&&hf.length) HAFAZAN=hf;
-    tindihEdit(so);
-    const r=buildBank(so,sp,pl);
+    // Pautan CSV yang menunjuk helaian salah (cth. tab Pelajaran/SP dipadam atau dicipta semula → Google memberi tab pertama):
+    // jangan guna; ambil salinan baik terakhir dalam telefon ini.
+    const KB='jejak-bank-baik'+SFX; let baik={}; try{ baik=JSON.parse(localStorage.getItem(KB)||'{}')||{}; }catch(e){}
+    BANK_AMARAN=[]; const pilih=(nama,rows,sah)=>{ if(rows==null||sah(rows)){ if(rows&&rows.length) baik[nama]=rows; return rows; } BANK_AMARAN.push(nama); return baik[nama]||null; };
+    let so2=pilih('Soalan',so,rowsSoalanSah), sp2=pilih('SP',sp,rowsSpSah), pl2=pilih('Pelajaran',pl,rowsPelSah);
+    try{ localStorage.setItem(KB,JSON.stringify(baik)); }catch(e){}
+    if(!so2) so2=[];
+    tindihEdit(so2);
+    const r=buildBank(so2,sp2,pl2);
     { const today=todayKey(); const ok=(ps||[]).filter(x=>x.teks&&(!x.tarikh||x.tarikh.trim()<=today)).sort((a,b)=>(b.tarikh||'').localeCompare(a.tarikh||'')); PESANAN=[ok.length?ok[0].teks:'Selamat datang ke Jejak Ilmu. Mula dengan Cabaran Harian hari ini, lima minit sahaja.']; }
     try{ localStorage.setItem('jejak-bank-cache'+SFX,JSON.stringify({so,sp,pl,ps,t:Date.now()})); }catch(e){}
     return r;
   }catch(e){
-    try{ const c=JSON.parse(localStorage.getItem('jejak-bank-cache'+SFX)||'null'); if(c){ const r=buildBank(c.so,c.sp,c.pl); r.cached=true; return r; } }catch(e2){}
+    try{ const c=JSON.parse(localStorage.getItem('jejak-bank-cache'+SFX)||'null'); let baik={}; try{ baik=JSON.parse(localStorage.getItem('jejak-bank-baik'+SFX)||'{}')||{}; }catch(e3){}
+      if(c||baik.Soalan){ const g=(x,sah,n)=>x&&sah(x)?x:(baik[n]||null); const r=buildBank(g(c&&c.so,rowsSoalanSah,'Soalan')||[],g(c&&c.sp,rowsSpSah,'SP'),g(c&&c.pl,rowsPelSah,'Pelajaran')); r.cached=true; return r; } }catch(e2){}
     return {error:String(e)};
   }
 }
@@ -414,7 +428,7 @@ const doneToday=()=>state.dailyDate?state.dailyDate===todayKey():!!(state.dailyD
 const todayKey=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 function logAktiviti(xp){ if(!state.aktiviti) state.aktiviti={}; const k=todayKey(); const had=!!state.aktiviti[k]; state.aktiviti[k]=(state.aktiviti[k]||0)+xp; if(!had){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); state.streak=state.aktiviti[yk]?(state.streak||0)+1:1; state.usaha.hariAktif=Object.keys(state.aktiviti).filter(d=>d.slice(0,7)===k.slice(0,7)).length; } }
 let ULASAN=[]; let HAFAZAN=[];
-const APP_VERSION='2026-10-31h';
+const APP_VERSION='2026-10-31i';
 const ZON={timeZone:'Asia/Kuala_Lumpur'};
 const jamAMPM=t=>new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true,...ZON});
 const tarikhJam=t=>new Date(t).toLocaleDateString('ms-MY',{day:'numeric',month:'short',...ZON})+', '+jamAMPM(t);
@@ -1379,6 +1393,7 @@ function vGuruLive(){
     <img class="poster" src="${UST.pose.point}" alt="" loading="lazy">
   </div></header>
   <div class="gut body">
+    ${BANK_AMARAN.length?`<div class="banner" style="margin-bottom:12px;border-color:var(--bad)"><b>Google Sheet perlu disemak.</b> Pautan CSV untuk helaian <b>${BANK_AMARAN.map(esc).join(', ')}</b> dalam js/config.js tidak memberi helaian itu (tab mungkin dipadam, dinamakan semula atau dicipta semula, jadi nombor gid berubah). App menggunakan salinan baik terakhir${BANK_AMARAN.includes('Pelajaran')&&TKT===2?' / senarai pelajaran terbina':''}. Pulihkan tab melalui File → Version history, atau terbitkan semula tab itu dan kemas kini pautan dalam config.</div>`:''}
     <div class="g-tasmik">${gTasmikCard()}</div>
     <div class="g-cerapan">
       <div class="card" style="margin-top:16px">
