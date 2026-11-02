@@ -431,7 +431,7 @@ const doneToday=()=>state.dailyDate?state.dailyDate===todayKey():!!(state.dailyD
 const todayKey=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 function logAktiviti(xp){ if(!state.aktiviti) state.aktiviti={}; const k=todayKey(); const had=!!state.aktiviti[k]; state.aktiviti[k]=(state.aktiviti[k]||0)+xp; if(!had){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); state.streak=state.aktiviti[yk]?(state.streak||0)+1:1; state.usaha.hariAktif=Object.keys(state.aktiviti).filter(d=>d.slice(0,7)===k.slice(0,7)).length; } }
 let ULASAN=[]; let HAFAZAN=[];
-const APP_VERSION='2026-10-31k';
+const APP_VERSION='2026-11-02a';
 const ZON={timeZone:'Asia/Kuala_Lumpur'};
 const jamAMPM=t=>new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true,...ZON});
 const tarikhJam=t=>new Date(t).toLocaleDateString('ms-MY',{day:'numeric',month:'short',...ZON})+', '+jamAMPM(t);
@@ -1314,7 +1314,7 @@ function guruLigaCard(){
     <div class="row" style="justify-content:space-between"><div class="eyebrow">Liga semua kelas · hidup (XP minggu ini)</div><div class="row" style="gap:6px"><button class="btn sm ghost" data-act="urus">Urus murid</button><span class="pill good">sebenar</span></div></div>
     <div class="tiles4" style="grid-template-columns:repeat(auto-fill,minmax(104px,1fr))">${Object.entries(by).filter(([k])=>!/lain/i.test(k)).map(([k,l])=>`<div><b class="num">${l.reduce((a,r)=>a+(+r.xp_minggu),0)}</b><span>${esc(k)} · ${l.filter(r=>r.aktif_terakhir&&new Date(r.aktif_terakhir).getTime()>minggu).length}/${l.length} aktif</span></div>`).join('')}</div>
     ${Object.entries(by).map(([k,l])=>`<details style="margin-top:10px"><summary class="small" style="font-weight:800;cursor:pointer">${esc(k)}: 3 teratas ${l.slice(0,3).map(r=>esc(r.nama)+' ('+r.xp_minggu+')').join(', ')}</summary>
-      <div class="tablewrap" style="margin-top:6px"><table class="ht" style="min-width:0"><thead><tr><th>#</th><th>Murid</th><th>Minggu</th><th>Jumlah</th><th>Aktif terakhir</th></tr></thead><tbody>${l.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.nama)}</td><td class="num">${r.xp_minggu}</td><td class="num">${r.xp_jumlah}</td><td class="${r.aktif_terakhir?'':'muted'}">${r.aktif_terakhir?new Date(r.aktif_terakhir).toLocaleString('ms-MY',{weekday:'short',hour:'2-digit',minute:'2-digit'}):'belum'}</td></tr>`).join('')}</tbody></table></div></details>`).join('')}
+      <div class="tablewrap" style="margin-top:6px"><table class="ht" style="min-width:0"><thead><tr><th>#</th><th>Murid</th><th>Minggu</th><th>Jumlah</th><th>Aktif terakhir</th></tr></thead><tbody>${l.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.nama)}</td><td class="num">${r.xp_minggu}</td><td class="num">${r.xp_jumlah}</td><td class="${r.aktif_terakhir?'':'muted'}">${r.aktif_terakhir?new Date(r.aktif_terakhir).toLocaleDateString('ms-MY',{weekday:'short',...ZON})+' '+jamAMPM(r.aktif_terakhir):'belum'}</td></tr>`).join('')}</tbody></table></div></details>`).join('')}
   </div>`;
 }
 function kandunganCard(){
