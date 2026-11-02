@@ -4,7 +4,7 @@
 -- Laporan "Semua kelas" dari app Tingkatan 4 meminta 'T4', jadi hanya kelas Tingkatan 4 dikira.
 
 create or replace function public.pesanan_terkini(p_nama text, p_kelas text, p_pin text) returns json
-language plpgsql stable security definer set search_path = public, extensions as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare a public.akaun; m public.pesanan_guru;
 begin
   a := public._akaun(p_nama, p_kelas, p_pin);
@@ -34,7 +34,7 @@ end $$;
 
 create or replace function public.guru_pesanan_senarai(p_nama text, p_kelas text, p_pin text)
 returns table (id bigint, kelas text, teks text, durasi_s int, ada_audio boolean, created_at timestamptz, didengar int, sasaran int)
-language plpgsql stable security definer set search_path = public, extensions as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare g public.akaun;
 begin
   g := public._akaun(p_nama, p_kelas, p_pin);
@@ -47,7 +47,7 @@ begin
 end $$;
 
 create or replace function public.guru_laporan_harian(p_nama text, p_kelas text, p_pin text, p_kelas_tapis text, p_dari date, p_hingga date default null) returns json
-language plpgsql stable security definer set search_path = public, extensions as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare g public.akaun; t0 timestamptz; t1 timestamptz; semua boolean; awalan text; out json;
 begin
   g := public._akaun(p_nama, p_kelas, p_pin);

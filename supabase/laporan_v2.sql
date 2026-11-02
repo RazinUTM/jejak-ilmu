@@ -2,7 +2,7 @@
 -- Jalankan SELEPAS laporan.sql. Menggantikan guru_laporan_harian (tandatangan sama). Selamat dijalankan semula.
 
 create or replace function public.guru_laporan_harian(p_nama text, p_kelas text, p_pin text, p_kelas_tapis text, p_dari date, p_hingga date default null) returns json
-language plpgsql stable security definer set search_path = public, extensions as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare g public.akaun; t0 timestamptz; t1 timestamptz; semua boolean; out json;
 begin
   g := public._akaun(p_nama, p_kelas, p_pin);

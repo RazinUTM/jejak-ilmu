@@ -42,7 +42,7 @@ end $$;
 -- Guru: penguasaan murid × SP (purata berwajaran 12 cubaan terkini; cubaan terbaharu paling berat).
 create or replace function public.guru_penguasaan(p_nama text, p_kelas text, p_pin text, p_kelas_tapis text, p_pel int default null)
 returns table (nama text, sp_kod text, mastery int, cubaan int)
-language plpgsql stable security definer set search_path = public, extensions as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare g public.akaun;
 begin
   g := public._akaun(p_nama, p_kelas, p_pin);
@@ -63,7 +63,7 @@ end $$;
 -- Guru: aktiviti setiap murid dalam kelas (termasuk yang belum pernah menjawab).
 create or replace function public.guru_aktiviti(p_nama text, p_kelas text, p_pin text, p_kelas_tapis text)
 returns table (nama text, terakhir timestamptz, jawapan_7h int, betul_7h int, hari_aktif_7h int, sp_lemah int, masa_median_ms int)
-language plpgsql stable security definer set search_path = public, extensions as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare g public.akaun;
 begin
   g := public._akaun(p_nama, p_kelas, p_pin);
@@ -92,7 +92,7 @@ end $$;
 -- Guru: soalan paling banyak dijawab salah (min 3 cubaan).
 create or replace function public.guru_soalan_sukar(p_nama text, p_kelas text, p_pin text, p_kelas_tapis text, p_pel int default null)
 returns table (soalan_id text, sp_kod text, cubaan int, salah int)
-language plpgsql stable security definer set search_path = public, extensions as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare g public.akaun;
 begin
   g := public._akaun(p_nama, p_kelas, p_pin);
