@@ -18,10 +18,13 @@ Aplikasi e-pembelajaran Pendidikan Islam KSSM untuk kelas **Ustazah Nafisah**. P
 ## Supabase (satu projek untuk semua tingkatan)
 - Projek `pkuxiyabmxmksvccepra`. App guna kunci publishable sahaja. Semua akses melalui fungsi RPC `security definer` yang menyemak nama + kelas + PIN (bcrypt); RLS tanpa polisi.
 - Kelas dibezakan oleh awalan nama ("2 Arif", "4 Adil"). Skop "semua kelas" tingkatan = token `T2`/`T4` (lihat `supabase/tingkatan.sql`).
-- Razin menjalankan SQL sendiri di SQL Editor. Fail diberi bernombor: 1 liga, 3 urus_murid, 4 tasmik_import, 5 jawapan, 6 pesanan, 7 laporan, 8 fungsi ulasan-ai, 9 laporan_v2, 10 liga_lencana, 11 reaksi, 12 tingkatan. Fail SQL baharu: nombor seterusnya, selamat dijalankan semula (`create or replace`, `if not exists`).
+- Razin menjalankan SQL sendiri di SQL Editor. Fail diberi bernombor: 1 liga, 3 urus_murid, 4 tasmik_import, 5 jawapan, 6 pesanan, 7 laporan, 8 fungsi ulasan-ai, 9 laporan_v2, 10 liga_lencana, 11 reaksi, 12 tingkatan, 13 akaun_kunci (had cubaan PIN; jalankan semula selepas mana-mana fail 1–12 dijalankan semula). Fail SQL baharu: nombor seterusnya, selamat dijalankan semula (`create or replace`, `if not exists`).
 - Fungsi Edge `ulasan-ai` (`supabase/functions/ulasan-ai/index.ts`): Claude API, model lalai `claude-sonnet-5-5`, structured outputs (`output_config.format` json_schema, `additionalProperties:false`). JANGAN guna `tool_choice` paksa (400 pada model 5.5). Secret `ANTHROPIC_API_KEY`; "Verify JWT with legacy secret" mesti OFF. Nama murid tidak dihantar kepada AI; guru mengesahkan setiap draf.
 
 ## Keselamatan dan privasi (murid bawah umur)
+- Had cubaan PIN (fail 13): 5 salah → kunci 1 min, ke-6 → 5 min, seterusnya 15 min; PIN ditukar → kunci dibuang. Setiap fungsi yang memanggil `_akaun` MESTI volatile (PostgREST jalankan fungsi STABLE secara read-only); `tests/kunci.mjs` menyemaknya.
+- `docs/js/roster.js` AWAM: nama + kelas sahaja, JANGAN letak hash PIN (boleh diteka di luar talian). PIN hanya disemak oleh `semak_pin`.
+- Ayat al-Quran: jangan letak tanda (bold/warna) di dalam ayat. Tajwid Tap memaparkan ayat asal + kotak Fokus berasingan. AI tidak menaip ayat; Ustazah menyemak setiap ayat.
 - Simpan nama + kelas sahaja. Jangan commit PIN, fail `akaun_murid_SULIT.sql`, kunci service_role atau kunci API. Jangan terbitkan helaian Murid.
 - Ujian guna data rekaan sahaja (`tests/`, guru ujian PIN 999999).
 

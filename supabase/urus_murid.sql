@@ -11,7 +11,7 @@ $$;
 -- Senarai penuh untuk guru (dengan id).
 create or replace function public.guru_senarai(p_nama text, p_kelas text, p_pin text)
 returns table (id bigint, nama text, kelas text, guru boolean)
-language plpgsql stable security definer set search_path = public, extensions as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare g public.akaun;
 begin
   g := public._akaun(p_nama, p_kelas, p_pin);

@@ -42,7 +42,7 @@ end $$;
 -- Murid lihat tasmik sendiri + gred/komen Ustazah.
 create or replace function public.tasmik_saya(p_nama text, p_kelas text, p_pin text)
 returns table (id bigint, rujukan text, durasi_s int, intai int, gred text, komen text, created_at timestamptz, disemak_at timestamptz)
-language plpgsql stable security definer set search_path = public, extensions as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare a public.akaun;
 begin
   a := public._akaun(p_nama, p_kelas, p_pin);
@@ -55,7 +55,7 @@ end $$;
 create or replace function public.guru_tasmik(p_nama text, p_kelas text, p_pin text, p_kelas_tapis text default null)
 returns table (id bigint, nama text, kelas text, rujukan text, durasi_s int, intai int, saiz int, ada_audio boolean,
                gred text, komen text, created_at timestamptz, disemak_at timestamptz)
-language plpgsql stable security definer set search_path = public, extensions as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare g public.akaun;
 begin
   g := public._akaun(p_nama, p_kelas, p_pin);
@@ -70,7 +70,7 @@ end $$;
 
 -- Guru: ambil audio satu rakaman.
 create or replace function public.guru_tasmik_audio(p_nama text, p_kelas text, p_pin text, p_id bigint) returns json
-language plpgsql stable security definer set search_path = public, extensions as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare g public.akaun; t public.tasmik_rekod;
 begin
   g := public._akaun(p_nama, p_kelas, p_pin);

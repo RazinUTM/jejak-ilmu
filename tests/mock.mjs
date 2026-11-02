@@ -12,7 +12,7 @@ export const HERE = dirname(fileURLToPath(import.meta.url));
 export const ROOT = join(HERE, '..');
 export const FIX = n => readFileSync(join(HERE, 'fixtures', n), 'utf8');
 export const GURU = { p_nama: 'Ustazah Nafisah', p_kelas: 'Guru', p_pin: '999999' };   // akaun ujian sahaja
-export const SQL = ['liga.sql','urus_murid.sql','tasmik_import.sql','jawapan.sql','pesanan.sql','laporan.sql','laporan_v2.sql','liga_lencana.sql','reaksi.sql','tingkatan.sql'];
+export const SQL = ['liga.sql','urus_murid.sql','tasmik_import.sql','jawapan.sql','pesanan.sql','laporan.sql','laporan_v2.sql','liga_lencana.sql','reaksi.sql','tingkatan.sql','akaun_kunci.sql'];
 export const TABLE_FNS = new Set(['liga_kelas','liga_semua','senarai_murid','guru_senarai','tasmik_saya','guru_tasmik','guru_penguasaan','guru_aktiviti','guru_soalan_sukar','guru_pesanan_senarai','guru_ulasan_senarai','liga_kelas_v2']);
 
 export async function makeDB({ tanpa = [] } = {}) {
@@ -26,7 +26,14 @@ export async function callRpc(db, fn, args) {
   const keys = Object.keys(args);
   const ph = keys.map((k, i) => `${k} => $${i + 1}${k === 'p_rows' || k === 'p_data' ? '::json' : Array.isArray(args[k]) ? '::text[]' : ''}`).join(', ');
   const sql = TABLE_FNS.has(fn) ? `select * from public.${fn}(${ph})` : `select public.${fn}(${ph}) as j`;
-  const res = (await db.query(sql, keys.map(k => (k === 'p_rows' || k === 'p_data') ? JSON.stringify(args[k]) : args[k]))).rows;
+  const vals = keys.map(k => (k === 'p_rows' || k === 'p_data') ? JSON.stringify(args[k]) : args[k]);
+  // Seperti PostgREST: fungsi STABLE/IMMUTABLE dijalankan dalam transaksi read-only.
+  const vol = (await db.query(`select provolatile from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = $1 limit 1`, [fn])).rows[0];
+  const ro = vol && vol.provolatile !== 'v';
+  if (ro) await db.exec('begin transaction read only');
+  let res;
+  try { res = (await db.query(sql, vals)).rows; if (ro) await db.exec('commit'); }
+  catch (e) { if (ro) await db.exec('rollback'); throw e; }
   return TABLE_FNS.has(fn) ? res : res[0].j;
 }
 

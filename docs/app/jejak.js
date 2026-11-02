@@ -74,6 +74,9 @@ const CFG=window.JEJAK_CONFIG||{}; const SHEETS=!!CFG.bankCsvUrl;
 let ROSTER=(window.JEJAK_ROSTER&&Array.isArray(window.JEJAK_ROSTER.murid)&&window.JEJAK_ROSTER.murid.length)?window.JEJAK_ROSTER:null;
 let KELAS_CFG=ROSTER?[...new Set(ROSTER.murid.filter(m=>!m.g).map(m=>m.k))].sort((x,y)=>(/lain/i.test(x)-/lain/i.test(y))||x.localeCompare(y)):(CFG.kelas||(TKT===2?['2 Amanah','2 Bestari','2 Cekal']:[]));
 const HARIAN_MIX=Object.assign({mudah:6,sederhana:3,kbat:1},CFG.harian||{});
+// Ayat dipapar tanpa sebarang tanda dalam ayat; huruf yang dinilai dipapar berasingan (kotak Fokus).
+const ayatAsal=s=>String(s||'').replace(/<\/?b>/g,'');
+const tajwidFokus=s=>{ const m=String(s||'').match(/<b>([\s\S]*?)<\/b>/); return m?m[1].trim():''; };
 async function pinHash(pin,nama,kelas){ const enc=new TextEncoder(); const key=await crypto.subtle.importKey('raw',enc.encode(String(pin)),'PBKDF2',false,['deriveBits']); const bits=await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:enc.encode(`${ROSTER.salt}|${nama}|${kelas}`),iterations:ROSTER.iter||60000},key,256); return [...new Uint8Array(bits)].map(b=>b.toString(16).padStart(2,'0')).join(''); }
 SP_NAMA['1.13.1']='Hukum nun sakinah dan tanwin'; SP_NAMA['5.5.2']='Faktor yang mendorong Hijrah'; SP_NAMA['JAWI']='Kemahiran membaca Jawi'; SP_NAMA['AKHLAK']='Akhlak: adab berjiran (contoh guru)';
 const TAJWID_OPTS = ['Izhar Halqi','Idgham Maal Ghunnah','Idgham Bila Ghunnah','Iqlab',"Ikhfa' Haqiqi"];
@@ -431,7 +434,7 @@ const doneToday=()=>state.dailyDate?state.dailyDate===todayKey():!!(state.dailyD
 const todayKey=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 function logAktiviti(xp){ if(!state.aktiviti) state.aktiviti={}; const k=todayKey(); const had=!!state.aktiviti[k]; state.aktiviti[k]=(state.aktiviti[k]||0)+xp; if(!had){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0'); state.streak=state.aktiviti[yk]?(state.streak||0)+1:1; state.usaha.hariAktif=Object.keys(state.aktiviti).filter(d=>d.slice(0,7)===k.slice(0,7)).length; } }
 let ULASAN=[]; let HAFAZAN=[];
-const APP_VERSION='2026-10-31k';
+const APP_VERSION='2026-11-02a';
 const ZON={timeZone:'Asia/Kuala_Lumpur'};
 const jamAMPM=t=>new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true,...ZON});
 const tarikhJam=t=>new Date(t).toLocaleDateString('ms-MY',{day:'numeric',month:'short',...ZON})+', '+jamAMPM(t);
@@ -1370,7 +1373,7 @@ function vGuruLive(){
   const dicuba=ready?murid.filter(n=>M[n]).length:0;
   const hariLalu=t=>t?Math.floor((now-new Date(t).getTime())/864e5):null;
   const perhatian=ready?GD.akt.map(a=>{ const d=hariLalu(a.terakhir); const why=[]; if(d==null) why.push('belum pernah menjawab'); else if(d>=5) why.push(`tidak aktif ${d} hari`); if(a.sp_lemah>=3) why.push(`${a.sp_lemah} SP di bawah 50%`); else if(a.jawapan_7h>=10&&a.betul_7h/a.jawapan_7h<0.4) why.push(`ketepatan ${Math.round(a.betul_7h/a.jawapan_7h*100)}% minggu ini`); return {n:a.nama,why,d}; }).filter(x=>x.why.length).sort((x,y)=>(y.d??999)-(x.d??999)):[];
-  const qText=id=>{ const q=Q[id]; if(!q) return id; return q.q||q.ar||q.w||id; };
+  const qText=id=>{ const q=Q[id]; if(!q) return id; return q.q||ayatAsal(q.ar)||q.w||id; };
   const sukar=ready?(GD.sukar||[]).filter(x=>x.salah>0&&x.salah/x.cubaan>=0.3):[];
   const lemahSp=avgSp.map((v,i)=>({v,k:spList[i]})).filter(o=>o.v!=null&&o.v<70).sort((a,b)=>a.v-b.v);
   const pelOpts=`<option value="0" ${!GD.pel?'selected':''}>Semua pelajaran</option>`+PELAJARAN.filter(p=>SETS['kuiz'+p.n]||(state.user&&state.user.guru)).map(p=>`<option value="${p.n}" ${p.n===GD.pel?'selected':''}>Pelajaran ${p.n} · ${esc(p.rumi)}</option>`).join('');
@@ -1930,7 +1933,7 @@ async function gateLogin(){
   let ok=false, srv=null;
   if(SB&&m){ try{ srv=await rpc('semak_pin',{p_nama:m.n,p_kelas:m.k,p_pin:gate.pin}); ok=!!(srv&&srv.ok); }catch(e){ srv=null; } }
   if(srv===null){ if(m&&m.h){ try{ ok=(await pinHash(gate.pin,m.n,m.k))===m.h; }catch(e){ ok=false; } } else { const er=$('#g-err'); if(er){ er.textContent='Tidak dapat menyemak PIN: semak sambungan internet dan cuba lagi.'; er.hidden=false; } if(btn){ btn.disabled=false; btn.textContent='Masuk'; } return; } }
-  if(!ok){ buzz([40,60,40]); const er=$('#g-err'); if(er) er.hidden=false; if(btn){ btn.disabled=false; btn.textContent='Masuk'; } gate.pin=''; const inp=$('#g-pin'); if(inp){ inp.value=''; inp.focus(); } return; }
+  if(!ok){ buzz([40,60,40]); const er=$('#g-err'); if(er){ er.textContent=(srv&&srv.dikunci)?'Terlalu banyak cubaan PIN. Akaun dikunci sementara: tunggu beberapa minit, kemudian cuba lagi.':'PIN tidak sepadan. Cuba lagi, atau minta Ustazah semak.'; er.hidden=false; } if(btn){ btn.disabled=false; btn.textContent='Masuk'; } gate.pin=''; const inp=$('#g-pin'); if(inp){ inp.value=''; inp.focus(); } return; }
   const same=state.user&&state.user.nama===m.n&&state.user.kelas===m.k; if(!same) saveUserSnap(); state.user={nama:m.n,kelas:m.k,guru:!!(srv?srv.guru:m.g),pin:SB?gate.pin:undefined}; state.nama=m.n; state.kelas=m.k; if(!same){ freshProgress(); loadUserSnap(state.user); } rebuildSets(); pS.t=0; gP.t=0; gP.rows=null; syncLast=''; syncTarikAt=0; tSaya={rows:null,t:0,err:false};
   if(srv&&srv.ok&&!state.user.guru){ if(!srv.migrasi&&state.xp>0&&!state.migrasiDihantar){ state.outbox=(state.outbox||[]).filter(x=>x.sebab!=='migrasi'); state.outbox.unshift({xp:Math.min(state.xp,5000),sebab:'migrasi'}); state.migrasiDihantar=true; } if(srv.xp>state.xp) state.xp=srv.xp; setTimeout(()=>flushXP(),50); } save(); hideGate(); render(); if(srv&&srv.ok&&!state.user.guru) tarikKemajuan(true); toast(m.g?`Selamat datang, ${m.n}. Mod guru aktif.`:`Selamat datang, ${m.n}. Hanya nama dan kelas kamu disimpan.`);
 }
@@ -1985,7 +1988,8 @@ function renderQ(){
   if(it.type==='mcq'||it.type==='tf'){
     body=`${stem}${meta}<div class="opts">${it.opts.map((o,k)=>optBtn(k,L(k),`<span class="grow">${esc(o)}</span>`,answered,it.ans,pick)).join('')}</div>`;
   } else if(it.type==='tajwid'){
-    body=`<div class="qtext">${esc(it.q||'Apakah hukum tajwid pada huruf yang bertanda merah?')}</div>${meta}<div class="arabic-box"><p class="quran">${it.ar.replace(/<b>/g,'<span class="hl">').replace(/<\/b>/g,'</span>')}</p></div>
+    const fokus=tajwidFokus(it.ar);
+    body=`<div class="qtext">${esc(it.q||(fokus?'Apakah hukum tajwid bagi huruf dalam kotak Fokus?':'Apakah hukum tajwid dalam potongan ayat ini?'))}</div>${meta}<div class="arabic-box"><p class="quran">${esc(ayatAsal(it.ar))}</p>${fokus?`<div class="tj-fokus"><span class="tj-fokus-l">Fokus</span><span class="quran" dir="rtl">${esc(fokus)}</span></div>`:''}</div>
       <div class="opts">${it.opts.map((o,k)=>optBtn(k,k+1,`<span class="grow">${esc(o)}</span>`,answered,it.ans,pick)).join('')}</div>`;
   } else if(it.type==='fill'){
     const arBox=isArabic(it.ar)?`<div class="arabic-box"><p class="quran">${it.ar.replace('____','<span class="hl">____</span>')}</p></div>`:(it.ar&&it.ar.trim()?`<div class="arabic-box"><p style="font-size:17px;font-weight:700;line-height:1.5">${esc(it.ar).replace('____','<span class="hl">____</span>')}</p></div>`:'');
