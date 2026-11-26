@@ -33,6 +33,19 @@ const home = await A.evaluate(() => document.body.innerText.replace(/\s+/g, ' ')
 cek('T2: home Ayat Hafazan Tingkatan 2 + Ali Imran', /Ayat Hafazan Tingkatan 2/.test(home) && /Ali Imran/.test(home), home.slice(0, 200));
 cek('T2: home lebar telefon tanpa overflow', (await overflow(A)) <= 0, await overflow(A));
 await A.screenshot({ path: OUT + 't2-home.png' });
+// Tajwid Tap: ayat dipapar tanpa tanda dalam ayat; huruf yang dinilai dalam kotak Fokus (luar ayat).
+for (const dark of [false, true]) {
+  const P = dark ? await page(390, 844, true) : A; if (dark) await login(P, 'Ali Ujian', '2 Arif', '1111');
+  await P.evaluate(() => startQuiz('tajwid')); await P.waitForTimeout(250);
+  const tj = await P.evaluate(() => { const box = document.querySelector('#layer .arabic-box'); const ayat = box && box.querySelector(':scope > p.quran'); const f = box && box.querySelector('.tj-fokus .quran');
+    return { inVerse: ayat ? ayat.querySelectorAll('span,b').length : -1, ayat: ayat ? ayat.textContent : '', fokus: f ? f.textContent : '', it: quiz.items[quiz.i].ar }; });
+  const expAyat = tj.it.replace(/<\/?b>/g, ''), expF = (tj.it.match(/<b>([\s\S]*?)<\/b>/) || [])[1];
+  cek(`Tajwid${dark ? ' (gelap)' : ''}: ayat tanpa tanda, sama dengan sumber`, tj.inVerse === 0 && tj.ayat === expAyat, JSON.stringify(tj));
+  cek(`Tajwid${dark ? ' (gelap)' : ''}: kotak Fokus = huruf yang dinilai`, tj.fokus === (expF || '').trim(), JSON.stringify(tj));
+  cek(`Tajwid${dark ? ' (gelap)' : ''}: tanpa overflow`, (await overflow(P)) <= 0, await overflow(P));
+  await P.screenshot({ path: OUT + `t2-tajwid${dark ? '-gelap' : ''}.png` });
+  await P.evaluate(() => closeQuiz()); if (dark) await P.context().close();
+}
 // kuiz: jawab 2, kembali ‹, cuba tekan pilihan (mesti dikunci), maju, habiskan
 await A.evaluate(() => startQuiz('kuiz16')); await A.waitForTimeout(200);
 const n = await A.evaluate(() => quiz.items.length); const xp0 = await A.evaluate(() => state.xp);

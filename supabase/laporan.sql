@@ -36,7 +36,7 @@ alter table public.ulasan enable row level security;
 
 -- Murid: ambil salinan kemajuan + penguasaan SP dari log jawapan (sama di semua telefon) + ulasan terkini.
 create or replace function public.ambil_kemajuan(p_nama text, p_kelas text, p_pin text) returns json
-language plpgsql stable security definer set search_path = public, extensions as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare a public.akaun; k public.kemajuan; u public.ulasan; sp json;
 begin
   a := public._akaun(p_nama, p_kelas, p_pin);
@@ -63,7 +63,7 @@ end $$;
 create or replace function public.guru_ulasan_senarai(p_nama text, p_kelas text, p_pin text, p_kelas_tapis text)
 returns table (akaun_id bigint, nama text, hari_aktif int, jawapan int, betul int, tasmik int, tasmik_intai int,
                xp_14h int, sp_kuat json, sp_lemah json, ulasan text, ulasan_sumber text, ulasan_at timestamptz)
-language plpgsql stable security definer set search_path = public, extensions as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare g public.akaun;
 begin
   g := public._akaun(p_nama, p_kelas, p_pin);
@@ -113,7 +113,7 @@ end $$;
 -- ===================== LAPORAN HARIAN PdP =====================
 -- Bukti aktiviti setiap murid dalam satu kelas bagi julat tarikh (waktu Malaysia), termasuk murid yang tidak aktif.
 create or replace function public.guru_laporan_harian(p_nama text, p_kelas text, p_pin text, p_kelas_tapis text, p_dari date, p_hingga date default null) returns json
-language plpgsql stable security definer set search_path = public, extensions as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare g public.akaun; t0 timestamptz; t1 timestamptz; out json;
 begin
   g := public._akaun(p_nama, p_kelas, p_pin);
