@@ -43,7 +43,7 @@ end $$;
 
 -- Murid / guru: kiraan semasa.
 create or replace function public.reaksi_kiraan(p_nama text, p_kelas text, p_pin text, p_kunci text) returns json
-language plpgsql stable security definer set search_path = public, extensions as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare a public.akaun;
 begin
   a := public._akaun(p_nama, p_kelas, p_pin);
@@ -53,7 +53,7 @@ end $$;
 
 -- Guru: kiraan dan senarai nama bagi beberapa pesanan sekaligus.
 create or replace function public.guru_reaksi(p_nama text, p_kelas text, p_pin text, p_kunci text[]) returns json
-language plpgsql stable security definer set search_path = public, extensions as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare g public.akaun;
 begin
   g := public._akaun(p_nama, p_kelas, p_pin);
